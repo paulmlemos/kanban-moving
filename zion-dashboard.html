@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -599,107 +599,12 @@ function avgFreq(list){
   return `a cada ${(mpc/12).toFixed(1)} anos`;
 }
 
-// ─── DADOS ESTÁTICOS ──────────────────────────────────────
-// [nome, nascimento, profissão, entrada, email]
+// ─── DADOS ────────────────────────────────────────────────
+// Dados carregados via Google Apps Script (configurar pelo ⚙ no header)
 const STATIC_DATA = {
-  breno: [
-    ['Etienne Antônia Magalhães Nunes','16/08/1954','Aposentada','9/25','contato@distribuidoradeguste.com.br'],
-    ['Edson Vander de Olibeira','08/05/1972','Aposentado','8/25','edjoinville@hotmail.com'],
-    ['Matheus Vasques Klug','27/05/1999','Empresário','8/25','matheuusklug@gmail.com'],
-    ['Caio Nunes Vieira','29/06/1977','Chef de cozinha','8/23','ncaio342@yahoo.com'],
-    ['Rafael Girardi','17/04/2006','Marceneiro','6/25','rafaelgrd6@gmail.com'],
-    ['Asafe Costa Rodrigues','30/10/1999','Bancário','6/25','saferodrigues13@gmail.com'],
-    ['Juan Felipe Rico Albano','16/06/1993','Gerente de Cafeteria','6/25','juanfe626@gmail.com'],
-    ['Irineu Sena de Andrade','24/12/1966','Pastor','6/23','neu.sena@hotmail.com'],
-    ['Samuel Girardi','28/01/2002','Marceneiro','5/25','samuelgrd2@gmail.com'],
-    ['Talyta Rodrigues de Andrade Soto','01/08/1996','Auxiliar Administrativa','5/23','tatah.andrade96@gmail.com'],
-    ['Fernando Augusto de Oliveira','08/04/1968','Empresário','4/25','fernandoaoliver@gmail.com'],
-    ['Célia Américo de Oliveira','25/08/1968','Aposentada','4/25','celiajoinville5@gmail.com'],
-    ['Elzirene Rodrigues de Oliveira Andrade','09/02/1967','Aposentada','4/25','neu.sena@hotmail.com'],
-    ['Juliana Nunes Vieira','10/12/2004','Pensionista','3/25','jujununesvieira@yahoo.com.br'],
-    ['Simone Lutz','06/09/1967','Aposentada','3/25','simone.lutz@hotmail.com'],
-    ['Camila Victoria Reggiardo Ruiz de Andrade','13/02/1997','Do Lar','3/25','camilavicreggiardo@gmail.com'],
-    ['Jean Guilherme Rodrigues de Andrade','19/06/1994','Bancário','3/25','andrade.jean@live.com'],
-    ['Mara Cristina de Souza','29/05/1965','Professora','11/25','discipulamara@gmail.com'],
-    ['Marcelo Bittencourt Martinez','08/07/1967','Uber','10/25','marbmar08@gmail.com'],
-    ['André Eduardo Pessoa','01/01/1979','Empresário','10/25','aepessoa5@gmail.com'],
-    ['Henrique Gabriel Casagrande','06/02/2007','Empresário','10/25','henriquecasagrande2007@gmail.com'],
-    ['Patrícia Conceição Bologna Soto Vieira','08/12/1978','Empresária','3/26','patibolo.soto@gmail.com'],
-    ['Filipe Von Anht de Quadros','18/07/2002','Auditor Fiscal do Trabalho','2/26','filipe.quadros18@gmail.com'],
-    ['Claudio José Muliterno','09/03/1964','Empresário','3/26','claudiomuliterno@yahoo.com.br'],
-  ],
-  edmar: [
-    ['Edmar de Mello','27/02/1982','Consultor Financeiro','10/22','edkmello@gmail.com'],
-    ['Airton Suzim','28/01/1964','Guincheiro','2/24','gitosuzin64@gmail.com'],
-    ['Andreia de Mello','16/09/1976','Metalúrgica','2/23','andreiamellooo76@gmail.com'],
-    ['Everson Nunes','05/02/1973','Instrutor','2/25','investeversonnnunes1973@gmail.com'],
-    ['Jaqueline Ana Faria','19/09/1988','Professora','6/24','jaquelinenzi@gmail.com'],
-    ['Jeferson Batista Garcia','31/07/1982','Metalúrgica','11/24','jefersongarcias@gmail.com'],
-    ['Jorge Marin','05/01/1954','Aposentado','5/25','sitomazimarin@gmail.com'],
-    ['Josiel Garcia','07/04/1995','Autônomo','2/25','josielgarcia324@gmail.com'],
-    ['Leandro Radaelli','27/06/2007','Estagiário','7/25','augusto.leandro.mello@gmail.com'],
-    ['Luciano Boss','26/01/1967','Autônomo','8/24','Lucianoboss67@gmail.com'],
-    ['Luiz Claudio','01/02/1963','Autônomo','2/25','Luiztorquilho123@gmail.com'],
-    ['Mariana de Almeida','10/05/1992','Professora','5/25','marianahoch@gmail.com'],
-    ['Marina Maurer','16/10/2001','Autônoma','5/25','marinaboss7@gmail.com'],
-    ['Orildo Poltronieri','03/04/1963','Aposentado','5/24','drataiarapoltronieri@gmail.com'],
-    ['Renan Porn Peres','17/01/1993','Empreendedor','6/23','renanpperes@gmail.com'],
-    ['Sabrina Boss','20/04/1998','Autônoma','5/25','sabrinamaurerboss@gmail.com'],
-    ['Taiara Poltronieri','19/08/1994','Professora','1/24','taiarapoltronieri@gmail.com'],
-    ['Veronica Dalle Grave','28/08/1991','Fisioterapeuta','8/23','verodallegrave@gmail.com'],
-  ],
-  everton: [
-    ['Marcos Augusto Tomazi','08/05/1969','Dentista','9/25','mtomazi8@gmail.com'],
-    ['Marcos Rogério Gross','06/07/1970','Autônomo','5/22','marcosrgross@gmail.com'],
-    ['Pablo Souza da Silva','25/06/1995','Barbeiro','11/21','pablosouza17@live.com'],
-    ['Paulo Luan Panarotto','08/10/2001','Técnico de Informática','10/22','paulo.luang@hotmail.com'],
-    ['Ronei de Oliveira Castilhos','15/01/1956','Aposentado','10/25','roneicastilhos63@gmail.com'],
-    ['Éverton Samuel Jiacomin','03/03/1990','Empresário','9/24','evertonsamuel@zionprivatefinance.com.br'],
-    ['Rodrigo Antoniazzi Sirena','19/12/1981','Empresário','2/26','rasirena@hotmail.com'],
-  ],
-  eduardo: [
-    ['Antônio Luiz Barbosa de Oliveira','23/06/1955','Aposentado da Brigada Militar','12/22','antonioliveira@gmail.com'],
-    ['Daniel Martins de Oliveira Gomes','13/01/2003','Estoquista','5/24','danielmog@gmail.com'],
-    ['Giovana Maria Leite de Souza','06/11/1996','Médica','9/22','md.giovanasouza@gmail.com'],
-    ['Joana Maria Leite de Souza','21/11/1963','Engenheira Agrônoma','5/24','marialeitejoana.312@gmail.com'],
-    ['José Maria Saraiva de Oliveira','15/02/1925','Capitão da Reserva','10/25','jodyoliveira@gmail.com'],
-    ['Luísa Helena Silva de Oliveira','06/06/1994','Corretora de Imóveis','7/25','luisa.h.s.oliveira@gmail.com'],
-  ],
-  ivan: [],
-  jocemar: [
-    ['Carlos Cesar Coelho de Souza','25/01/1971','Empresário','5/26','carloscesarm12@hotmail.com'],
-    ['Vanessa Rossetti Barros','13/12/1986','Empresária','5/26','vanessabarros0441@gmail.com'],
-  ],
-  peterson: [
-    ['Erijhónison Felix De Araujo','20/08/1995','Professor','2/24','erijhonisonedf@gmail.com'],
-    ['Esaú Cesario Vieira','03/08/1990','Professor','11/23','cesariovieiraesau@gmail.com'],
-    ['João Pedro Galdino Sampaio','27/03/1999','Engenheiro','8/25','joaopgaldino03@gmail.com'],
-    ['Genival Gomes De Melo','05/08/1968','Marceneiro','7/24','genibigode1@gmail.com'],
-    ['Israel Cabral Possidonio','24/01/2000','Técnico de Equipamentos','11/25','israelcabralpossidonio@gmail.com'],
-    ['Washington Jonas Biano Silva','24/12/1991','Técnico de Equipamentos','11/25','washingtonjonas@hotmail.com'],
-    ['Emanuely Graca Monteiro De Morais','30/10/2006','Autônoma','12/25','monteiroemanuely637@gmail.com'],
-    ['Túlio Gustavo Galvão De Lima','16/07/1995','Administrador','11/25','tulioggalvao@gmail.com'],
-    ['Maria das Vitorias dos Santos Oliveira','01/08/1980','Professora','10/23','josivania_oliveira@hotmail.com'],
-    ['Rubens Teles Monteiro','10/03/1989','Professor','10/23','rubens.engenheiroquimico@gmail.com'],
-  ],
-  talita: [],
-  tiago: [],
-  vanessa: [
-    ['Valéria Carmen Pretto Nichetti','08/06/1957','Aposentada','12/25','valeriacarmenprettonichetti@gmail.com'],
-    ['Simone Testolin','24/11/1977','Vendedora','12/25','simotche@yahoo.com.br'],
-  ],
-  victor: [
-    ['Lenir de Souza dos Passos','03/12/1975','Empresária','9/25','lenirpassos@gmail.com'],
-    ['Aline Wartha dos Passos','25/05/1986','Empresária','12/24','alinewarthadospassos@gmail.com'],
-    ['Arnelio João Wartha','25/09/1968','Aposentado','8/25','arneliowartha@gmail.com'],
-    ['Clarice F. Vieira Wartha','17/03/1964','Aposentada','3/25','claricewartha@gmail.com'],
-    ['Clavio Pedro Gracioli','11/10/1960','Aposentado','12/25','claviogracioli@gmail.com'],
-    ['Marcelo Schena Gracioli','11/05/1988','Empresário','8/25','marcelo-2s@hotmail.com'],
-    ['Carolina Souza dos Passos','06/07/2004','Atriz','1/26','carolinasdp74@gmail.com'],
-    ['Claudinei Rodrigues da Silva','12/05/1969','Pintor','2/26','claudinei.crs@gmail.com'],
-    ['Marcio Cardoso','14/04/1985','Empresário','1/26','marciosam85@icloud.com'],
-  ],
-  vinicius: [],
+  breno:[], edmar:[], everton:[], eduardo:[], ivan:[],
+  jocemar:[], peterson:[], talita:[], tiago:[],
+  vanessa:[], victor:[], vinicius:[],
 };
 
 // ─── DATA SOURCE ──────────────────────────────────────────
