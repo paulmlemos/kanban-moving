@@ -1747,8 +1747,10 @@ async function _loadFromCloud() {
 }
 
 function _subscribeToChanges() {
+  let _firstSnap = true;
   _fsdb.collection('kanban').doc('state').onSnapshot(snap => {
     if (!snap.exists) return;
+    if (_firstSnap) { _firstSnap = false; return; }
     const { data, ts } = snap.data();
     if (Date.now() - _lastLocalWrite < 4000) return;
     Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v));
