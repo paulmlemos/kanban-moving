@@ -1525,6 +1525,107 @@
     .result-field-obs { align-items:flex-start; }
     .result-obs { flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:5px; padding:4px 7px; font-size:10px; font-family:inherit; color:var(--text); outline:none; resize:none; min-height:34px; transition:border-color .15s; }
     .result-obs:focus { border-color:rgba(124,92,252,.4); }
+
+    /* ══════════════════════════════════════════════
+       MOBILE — max-width: 768px
+    ══════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+
+      /* ── HEADER ── */
+      .mm-brand-row {
+        padding: 10px 14px 9px;
+        gap: 10px;
+      }
+      .mm-logo { height: 24px; }
+      .mm-tagline { display: none; }
+      .mm-date-badge { font-size: 9px; padding: 4px 9px; }
+      .mm-nav-row {
+        padding: 7px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .week-nav { flex-wrap: wrap; gap: 6px; }
+      .week-label { min-width: 130px; font-size: 12px; }
+      .header-right { flex-wrap: wrap; gap: 8px; }
+      .legend { display: none; }
+      #btnClear { display: none; }
+
+      /* ── DASHBOARD ── */
+      .dash-section { padding: 12px 12px 14px; }
+      .dash-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .dash-card-val { font-size: 22px; }
+
+      /* ── STATS BAR ── */
+      .stats-bar { flex-wrap: wrap; padding: 8px 12px; gap: 8px; }
+      .progress-track { width: 100%; order: 3; flex: 1 1 100%; }
+      .stats-badges { margin-left: 0; flex-wrap: wrap; }
+
+      /* ── BOARD ── */
+      .board-wrapper { padding: 8px; }
+      .board { grid-template-columns: repeat(5, minmax(170px, 1fr)); }
+
+      /* ── SEÇÕES — padding geral ── */
+      .tasks-section,
+      .tw-section,
+      .notas-section,
+      .cap-section,
+      .ficha-section,
+      .fin-section,
+      .result-section,
+      .crono-section { padding: 0 10px 32px; }
+
+      /* ── SEÇÕES — headers ── */
+      .tasks-section-header,
+      .tw-section-header { flex-wrap: wrap; gap: 8px; padding: 20px 0 12px; }
+      .tasks-global-stats { flex-wrap: wrap; gap: 6px; }
+
+      /* ── GRIDS 5→2 colunas ── */
+      .tasks-grid {
+        grid-template-columns: repeat(2, 1fr);
+        min-width: 0;
+      }
+      .tw-grid {
+        grid-template-columns: repeat(2, 1fr);
+        min-width: 0;
+      }
+      .notas-grid {
+        grid-template-columns: repeat(2, 1fr);
+        min-width: 0;
+      }
+      .ficha-grid {
+        grid-template-columns: repeat(2, 1fr);
+        min-width: 0;
+      }
+      .fin-grid {
+        grid-template-columns: repeat(2, 1fr);
+        min-width: 0;
+      }
+      .result-grid {
+        grid-template-columns: repeat(2, 1fr);
+        min-width: 0;
+      }
+
+      /* ── CAPTAÇÕES ── */
+      .cap-body {
+        flex-direction: column;
+        min-width: 0;
+      }
+      .cap-grid { grid-template-columns: repeat(2, 1fr); }
+      .mini-cal { width: 100%; position: static; }
+
+      /* ── CRONOGRAMAS — accordion body 3→1 coluna ── */
+      .crono-acc-body {
+        grid-template-columns: 1fr;
+      }
+
+      /* ── BOTÕES — área de toque maior ── */
+      .btn { padding: 8px 13px; }
+
+      /* ── TASK LIST — altura máxima maior ── */
+      .task-list { max-height: none; }
+      .tw-body { max-height: none; }
+      .nota-list { max-height: none; }
+    }
   </style>
 </head>
 <body>
