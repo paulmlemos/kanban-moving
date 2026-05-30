@@ -477,6 +477,12 @@
       flex-direction: column;
       border-top: 3px solid var(--client-color, rgba(255,255,255,0.15));
     }
+    .task-panel.is-internal {
+      border-top-color: #7c5cfc;
+      border-color: rgba(124,92,252,0.25);
+      background: rgba(124,92,252,0.04);
+    }
+    .task-panel.is-internal .task-panel-name { color: var(--accent-text); }
 
     .task-panel-header {
       padding: 11px 13px 9px;
@@ -806,7 +812,7 @@
     }
     .tw-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(7, minmax(140px, 1fr));
       gap: 12px;
       min-width: 1050px;
     }
@@ -1526,6 +1532,44 @@
     .result-obs { flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:5px; padding:4px 7px; font-size:10px; font-family:inherit; color:var(--text); outline:none; resize:none; min-height:34px; transition:border-color .15s; }
     .result-obs:focus { border-color:rgba(124,92,252,.4); }
 
+    /* ── SECTION NAV ────────────────────────────── */
+    .mm-snav {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      background: rgba(8,8,8,0.97);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: none;
+      white-space: nowrap;
+      padding: 0 16px;
+    }
+    .mm-snav::-webkit-scrollbar { display: none; }
+    .mm-snav-inner {
+      display: inline-flex;
+      gap: 0;
+      min-width: 100%;
+    }
+    .mm-snav-link {
+      display: inline-block;
+      padding: 9px 14px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .mm-snav-link:hover { color: var(--text); }
+    .mm-snav-link.active { color: var(--accent-text); border-bottom-color: var(--accent); }
+
+    /* scroll-margin para compensar header + section nav */
+    .sec-anchor { scroll-margin-top: 120px; }
+
     /* ══════════════════════════════════════════════
        MOBILE — max-width: 768px
     ══════════════════════════════════════════════ */
@@ -1585,9 +1629,10 @@
         min-width: 0;
       }
       .tw-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(7, minmax(140px, 1fr));
         min-width: 0;
       }
+      #taskWeeklyWrap { overflow-x: auto; }
       .notas-grid {
         grid-template-columns: repeat(2, 1fr);
         min-width: 0;
@@ -1664,8 +1709,24 @@
   </div>
 </header>
 
+<!-- NAV DE SEÇÕES -->
+<nav class="mm-snav" id="mmSnav">
+  <div class="mm-snav-inner">
+    <a class="mm-snav-link" href="#sec-kanban">Kanban</a>
+    <a class="mm-snav-link" href="#sec-dashboard">Dashboard</a>
+    <a class="mm-snav-link" href="#sec-captacoes">Captações</a>
+    <a class="mm-snav-link" href="#taskWeeklyWrap">Ger. Semanal</a>
+    <a class="mm-snav-link" href="#sec-tarefas">Tarefas</a>
+    <a class="mm-snav-link" href="#sec-fichas">Fichas</a>
+    <a class="mm-snav-link" href="#sec-notas">Notas</a>
+    <a class="mm-snav-link" href="#sec-financeiro">Financeiro</a>
+    <a class="mm-snav-link" href="#sec-resultados">Resultados</a>
+    <a class="mm-snav-link" href="#sec-cronogramas">Cronogramas</a>
+  </div>
+</nav>
+
 <!-- DASHBOARD -->
-<div class="dash-section">
+<div class="dash-section sec-anchor" id="sec-dashboard">
   <div class="dash-grid" id="dashGrid"></div>
 </div>
 
@@ -1681,12 +1742,12 @@
 </div>
 
 <!-- BOARD -->
-<div class="board-wrapper">
+<div class="board-wrapper sec-anchor" id="sec-kanban">
   <div class="board" id="board"></div>
 </div>
 
 <!-- CAPTAÇÕES -->
-<div class="cap-section">
+<div class="cap-section sec-anchor" id="sec-captacoes">
   <div class="cap-section-header">
     <span class="cap-section-title">Controle de Captações</span>
   </div>
@@ -1699,7 +1760,7 @@
 <div class="cal-tooltip" id="calTooltip"></div>
 
 <!-- WEEKLY TASK MANAGER -->
-<div class="tw-section" id="taskWeeklyWrap">
+<div class="tw-section sec-anchor" id="taskWeeklyWrap">
   <div class="tw-section-header">
     <span class="tw-section-title">Gerenciador Semanal de Tarefas</span>
     <div style="display:flex;align-items:center;gap:12px;">
@@ -1720,7 +1781,7 @@
 </div>
 
 <!-- TASK MANAGER -->
-<div class="tasks-section">
+<div class="tasks-section sec-anchor" id="sec-tarefas">
   <div class="tasks-section-header">
     <span class="tasks-section-title">Tarefas por Cliente</span>
     <div class="tasks-global-stats" id="globalTaskStats"></div>
@@ -1729,7 +1790,7 @@
 </div>
 
 <!-- FICHAS DOS CLIENTES -->
-<div class="ficha-section">
+<div class="ficha-section sec-anchor" id="sec-fichas">
   <div class="ficha-section-header">
     <span class="ficha-section-title">Fichas dos Clientes</span>
   </div>
@@ -1737,7 +1798,7 @@
 </div>
 
 <!-- NOTAS DE ALINHAMENTO -->
-<div class="notas-section">
+<div class="notas-section sec-anchor" id="sec-notas">
   <div class="notas-section-header">
     <span class="notas-section-title">Notas de Alinhamento</span>
   </div>
@@ -1747,7 +1808,7 @@
 </div>
 
 <!-- FINANCEIRO -->
-<div class="fin-section">
+<div class="fin-section sec-anchor" id="sec-financeiro">
   <div class="fin-section-header">
     <span class="fin-section-title">Controle Financeiro</span>
   </div>
@@ -1755,7 +1816,7 @@
 </div>
 
 <!-- RESULTADOS MENSAIS -->
-<div class="result-section">
+<div class="result-section sec-anchor" id="sec-resultados">
   <div class="result-section-header">
     <span class="result-section-title">Resultados Mensais</span>
   </div>
@@ -1763,7 +1824,7 @@
 </div>
 
 <!-- CRONOGRAMAS DE CONTEÚDO -->
-<div class="crono-section">
+<div class="crono-section sec-anchor" id="sec-cronogramas">
   <div class="crono-section-header">
     <span class="crono-section-title">Cronogramas de Conteúdo</span>
   </div>
@@ -1971,6 +2032,8 @@ const USERS = [
   { id: 'priscila', name: 'Priscila', color: '#ec4899' },
   { id: 'paul',     name: 'Paul',     color: '#7c5cfc' },
 ];
+
+const MOVING_CLIENT = { id: 'moving', name: 'Moving Marketing', color: '#7c5cfc', isInternal: true };
 
 const taskFilters   = {}; // clientId → uid ('all'|'priscila'|'paul')
 const taskAssignees = {}; // clientId → uid ('priscila'|'paul'|'')
@@ -2321,7 +2384,7 @@ function refreshTaskPanel(clientId) {
 
 function updateGlobalTaskStats() {
   let totalPending = 0, totalDone = 0;
-  CLIENTS.forEach(c => {
+  [...CLIENTS, MOVING_CLIENT].forEach(c => {
     const tasks = loadTasks(c.id);
     tasks.forEach(t => t.done ? totalDone++ : totalPending++);
   });
@@ -2341,9 +2404,11 @@ function buildTasksGrid() {
   const grid = document.getElementById('tasksGrid');
   grid.innerHTML = '';
 
-  CLIENTS.forEach(client => {
+  const ALL_TASK_CLIENTS = [MOVING_CLIENT, ...CLIENTS];
+
+  ALL_TASK_CLIENTS.forEach(client => {
     const panel = document.createElement('div');
-    panel.className = 'task-panel';
+    panel.className = 'task-panel' + (client.isInternal ? ' is-internal' : '');
     panel.id = `tpanel-${client.id}`;
     panel.style.setProperty('--client-color', client.color);
 
@@ -2453,18 +2518,17 @@ function dueFmt(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
-function twGetMonday(offset) {
+function twGetSunday(offset) {
   const d = new Date();
-  const day = d.getDay() || 7;
-  d.setDate(d.getDate() - day + 1 + offset * 7);
+  d.setDate(d.getDate() - d.getDay() + offset * 7);
   d.setHours(0,0,0,0);
   return d;
 }
 
 function twWeekDates(offset) {
-  const mon = twGetMonday(offset);
-  return Array.from({length: 5}, (_, i) => {
-    const d = new Date(mon);
+  const sun = twGetSunday(offset);
+  return Array.from({length: 7}, (_, i) => {
+    const d = new Date(sun);
     d.setDate(d.getDate() + i);
     return d;
   });
@@ -2501,17 +2565,15 @@ function renderWeeklyManager() {
 
   const dates = twWeekDates(taskWeekOff);
   const todayISO = isoFromDate(new Date());
-  const monISO = isoFromDate(dates[0]);
-  const friISO = isoFromDate(dates[4]);
 
   // label
-  const monFmt = dates[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  const friFmt = dates[4].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  lbl.textContent = `${monFmt} – ${friFmt}`;
+  const startFmt = dates[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  const endFmt   = dates[6].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  lbl.textContent = `${startFmt} – ${endFmt}`;
 
-  // bucket tasks by ISO date
+  // bucket tasks by ISO date (clientes + Moving Marketing)
   const bucket = {};  // iso → [{clientId, task}]
-  CLIENTS.forEach(client => {
+  [...CLIENTS, MOVING_CLIENT].forEach(client => {
     loadTasks(client.id).forEach(task => {
       if (!task.dueDate) return;
       if (!bucket[task.dueDate]) bucket[task.dueDate] = [];
@@ -2519,7 +2581,7 @@ function renderWeeklyManager() {
     });
   });
 
-  const DAYS_FULL = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+  const DAYS_FULL = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   grid.innerHTML = dates.map((d, i) => {
     const iso = isoFromDate(d);
@@ -3715,10 +3777,10 @@ function refreshDashboard() {
   const todayISO    = isoFromDate(now);
   const tomorrowISO = isoFromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()+1));
 
-  // — Tarefas por usuário —
+  // — Tarefas por usuário (clientes + Moving Marketing) —
   const userTaskData = {};
   USERS.forEach(u => { userTaskData[u.id] = { overdue: [], today: [] }; });
-  CLIENTS.forEach(c => {
+  [...CLIENTS, MOVING_CLIENT].forEach(c => {
     loadTasks(c.id).filter(t => !t.done && t.dueDate).forEach(t => {
       const uid = t.assignee && userTaskData[t.assignee] ? t.assignee : null;
       if (!uid) return;
@@ -3916,6 +3978,30 @@ function buildNotasGrid() {
   });
 }
 buildNotasGrid();
+
+// ─── NAV HIGHLIGHT (IntersectionObserver) ────────────────────────────────────
+(function() {
+  const links = document.querySelectorAll('.mm-snav-link');
+  const anchors = document.querySelectorAll('.sec-anchor, #taskWeeklyWrap');
+  const navMap = {};
+  links.forEach(l => {
+    const id = l.getAttribute('href').replace('#','');
+    navMap[id] = l;
+  });
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = navMap[e.target.id];
+        if (link) {
+          link.classList.add('active');
+          link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px', threshold: 0 });
+  anchors.forEach(a => { if (a.id) obs.observe(a); });
+})();
 
 // ─── FIREBASE: carregar nuvem e escutar mudanças em tempo real ────────────────
 _loadFromCloud().then(changed => { if (changed) location.reload(); });
