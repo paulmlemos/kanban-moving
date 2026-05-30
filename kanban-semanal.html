@@ -1534,12 +1534,8 @@
 
     /* ── SECTION NAV ────────────────────────────── */
     .mm-snav {
-      position: sticky;
-      top: 0;
-      z-index: 90;
-      background: rgba(8,8,8,0.97);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
+      background: rgba(8,8,8,0.6);
+      border-top: 1px solid var(--border);
       overflow-x: auto;
       scrollbar-width: none;
       white-space: nowrap;
@@ -1707,23 +1703,21 @@
       <button class="btn btn-danger" id="btnClear">Limpar semana</button>
     </div>
   </div>
+  <nav class="mm-snav" id="mmSnav">
+    <div class="mm-snav-inner">
+      <a class="mm-snav-link" href="#sec-kanban">Kanban</a>
+      <a class="mm-snav-link" href="#sec-dashboard">Dashboard</a>
+      <a class="mm-snav-link" href="#sec-captacoes">Captações</a>
+      <a class="mm-snav-link" href="#taskWeeklyWrap">Ger. Semanal</a>
+      <a class="mm-snav-link" href="#sec-tarefas">Tarefas</a>
+      <a class="mm-snav-link" href="#sec-fichas">Fichas</a>
+      <a class="mm-snav-link" href="#sec-notas">Notas</a>
+      <a class="mm-snav-link" href="#sec-financeiro">Financeiro</a>
+      <a class="mm-snav-link" href="#sec-resultados">Resultados</a>
+      <a class="mm-snav-link" href="#sec-cronogramas">Cronogramas</a>
+    </div>
+  </nav>
 </header>
-
-<!-- NAV DE SEÇÕES -->
-<nav class="mm-snav" id="mmSnav">
-  <div class="mm-snav-inner">
-    <a class="mm-snav-link" href="#sec-kanban">Kanban</a>
-    <a class="mm-snav-link" href="#sec-dashboard">Dashboard</a>
-    <a class="mm-snav-link" href="#sec-captacoes">Captações</a>
-    <a class="mm-snav-link" href="#taskWeeklyWrap">Ger. Semanal</a>
-    <a class="mm-snav-link" href="#sec-tarefas">Tarefas</a>
-    <a class="mm-snav-link" href="#sec-fichas">Fichas</a>
-    <a class="mm-snav-link" href="#sec-notas">Notas</a>
-    <a class="mm-snav-link" href="#sec-financeiro">Financeiro</a>
-    <a class="mm-snav-link" href="#sec-resultados">Resultados</a>
-    <a class="mm-snav-link" href="#sec-cronogramas">Cronogramas</a>
-  </div>
-</nav>
 
 <!-- DASHBOARD -->
 <div class="dash-section sec-anchor" id="sec-dashboard">
