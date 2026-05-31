@@ -2154,6 +2154,85 @@ const CLIENTS = [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
     ]
   },
+  // ── Clientes sem kanban ──────────────────────────────────
+  {
+    id: 'ibiza-select',
+    name: 'Ibiza Select',
+    color: '#14b8a6',
+    platforms: [],
+    noKanban: true
+  },
+  {
+    id: 'ibiza-caminhoes',
+    name: 'Ibiza Caminhões',
+    color: '#2563eb',
+    platforms: [],
+    noKanban: true
+  },
+  {
+    id: 'sc-conecta',
+    name: 'SC Conecta',
+    color: '#d946ef',
+    platforms: [],
+    noKanban: true,
+    noFinanceiro: true
+  },
+  {
+    id: 'capfi',
+    name: 'Capfi',
+    color: '#f97316',
+    platforms: [],
+    noKanban: true,
+    noFinanceiro: true
+  },
+  {
+    id: 'divino-precatorio',
+    name: 'Divino Precatório',
+    color: '#22c55e',
+    platforms: [],
+    noKanban: true,
+    noFinanceiro: true
+  },
+  {
+    id: 'valor-juridico',
+    name: 'Valor Juridico',
+    color: '#eab308',
+    platforms: [],
+    noKanban: true,
+    noFinanceiro: true
+  },
+  {
+    id: 'sublime-capital',
+    name: 'Sublime Capital',
+    color: '#c026d3',
+    platforms: [],
+    noKanban: true,
+    noFinanceiro: true
+  },
+  {
+    id: 'pinheiro-cav',
+    name: 'Pinheiro Cav',
+    color: '#dc2626',
+    platforms: [],
+    noKanban: true,
+    noFinanceiro: true
+  },
+  {
+    id: 'galera-mari',
+    name: 'Galera Mari',
+    color: '#be185d',
+    platforms: [],
+    noKanban: true,
+    noFinanceiro: true
+  },
+  {
+    id: 'dfa-advogados',
+    name: 'DFA Advogados',
+    color: '#94a3b8',
+    platforms: [],
+    noKanban: true,
+    noFinanceiro: true
+  },
 ];
 
 const USERS = [
@@ -2239,7 +2318,7 @@ function clearWeek(wk) {
 
 function computeStats(wk) {
   let total = 0, prog = 0, posted = 0;
-  CLIENTS.forEach(c => {
+  CLIENTS.filter(c => !c.noKanban).forEach(c => {
     c.platforms.forEach(p => {
       const types = ['feed', ...(p.stories ? ['stories'] : [])];
       for (let d = 0; d < 5; d++) {
@@ -2286,7 +2365,7 @@ function render() {
     const body = document.createElement('div');
     body.className = 'col-body';
 
-    CLIENTS.forEach(client => {
+    CLIENTS.filter(c => !c.noKanban).forEach(client => {
       const card = document.createElement('div');
       card.className = 'client-card';
       card.style.setProperty('--client-color', client.color);
@@ -3825,7 +3904,7 @@ function finCardHtml(cid) {
 
 function buildFinGrid() {
   const grid = document.getElementById('finGrid');
-  CLIENTS.forEach(client => {
+  CLIENTS.filter(c => !c.noFinanceiro).forEach(client => {
     const card = document.createElement('div');
     card.className = 'fin-card';
     card.id = `fincard-${client.id}`;
@@ -4006,7 +4085,7 @@ function refreshDashboard() {
   // — Financeiro —
   const curYM = (()=>{ const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; })();
   const atrFin = [], pendFin = [];
-  CLIENTS.forEach(c => {
+  CLIENTS.filter(c => !c.noFinanceiro).forEach(c => {
     const f = loadFin(c.id);
     const st = f.hist?.[curYM] ?? 0;
     if (st === 2) atrFin.push(c);
@@ -4016,7 +4095,7 @@ function refreshDashboard() {
 
   // — Progresso semanal —
   let totalSlots = 0, completedSlots = 0;
-  CLIENTS.forEach(c => c.platforms.forEach(p => {
+  CLIENTS.filter(c => !c.noKanban).forEach(c => c.platforms.forEach(p => {
     for (let di = 0; di < 5; di++) {
       totalSlots++;
       if (getState(currentWk, c.id, di, p.id, 'feed') > 0) completedSlots++;
