@@ -4235,12 +4235,12 @@ function buildClientSections() {
 
     // Abas por cliente
     const tabDefs = [];
-    if (!c.isInternal) tabDefs.push({ id: 'cap',    label: 'Captações' });
+    if (!c.isInternal) tabDefs.push({ id: 'crono',  label: 'Cronograma' });
     tabDefs.push(                    { id: 'tasks',  label: 'Tarefas'   });
+    if (!c.isInternal) tabDefs.push({ id: 'cap',    label: 'Captações' });
     if (!c.isInternal) tabDefs.push({ id: 'ficha',  label: 'Ficha'     });
     tabDefs.push(                    { id: 'notas',  label: 'Notas'     });
     if (!c.isInternal) tabDefs.push({ id: 'result', label: 'Resultados' });
-    if (!c.isInternal) tabDefs.push({ id: 'crono',  label: 'Cronograma' });
 
     const sec = document.createElement('div');
     sec.className = 'client-section sec-anchor';
