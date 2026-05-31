@@ -939,6 +939,40 @@
       padding: 0 2px 6px;
     }
     .tw-out-list { display: flex; flex-direction: column; gap: 3px; }
+    .tw-edit-btn {
+      width:14px; height:14px; border:none; background:transparent; color:var(--text-dim);
+      cursor:pointer; font-size:9px; flex-shrink:0; padding:0; line-height:1;
+      opacity:0; transition:opacity .12s; margin-top:1px;
+    }
+    .tw-item:hover .tw-edit-btn { opacity:.7; }
+    .tw-edit-btn:hover { opacity:1 !important; color:var(--text); }
+    /* Task modal */
+    .tw-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(4px); z-index:600; display:none; align-items:center; justify-content:center; }
+    .tw-modal-overlay.open { display:flex; }
+    .tw-modal {
+      background:#141414; border:1px solid var(--border-2); border-radius:14px;
+      width:420px; max-width:92vw; box-shadow:0 20px 60px rgba(0,0,0,0.8);
+      display:flex; flex-direction:column;
+    }
+    .tw-modal-hdr {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px 12px; border-bottom:1px solid var(--border);
+    }
+    .tw-modal-client { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+    .tw-modal-close { background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer; line-height:1; padding:0 2px; }
+    .tw-modal-close:hover { color:var(--text); }
+    .tw-modal-body { padding:14px 18px; display:flex; flex-direction:column; gap:10px; }
+    .tw-modal-body input[type=text], .tw-modal-body textarea {
+      background:var(--surface-2); border:1px solid var(--border); border-radius:7px;
+      color:var(--text); font-family:inherit; font-size:12px; padding:8px 10px; width:100%; box-sizing:border-box;
+    }
+    .tw-modal-body textarea { resize:vertical; min-height:60px; }
+    .tw-modal-body input[type=text]:focus, .tw-modal-body textarea:focus { outline:none; border-color:var(--border-2); }
+    .tw-modal-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
+    .tw-modal-row { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+    .tw-modal-date { background:var(--surface-2); border:1px solid var(--border); border-radius:7px; color:var(--text); font-family:inherit; font-size:12px; padding:6px 10px; }
+    .tw-modal-foot { display:flex; gap:8px; justify-content:flex-end; padding:12px 18px; border-top:1px solid var(--border); }
+
     .tw-user-filters { display:flex; gap:4px; }
     .tw-filter-btn {
       font-size:9px; font-weight:600; padding:3px 10px; border-radius:20px;
@@ -1999,6 +2033,41 @@
   </div>
 </div>
 
+<div class="tw-modal-overlay" id="twTaskModal">
+  <div class="tw-modal">
+    <div class="tw-modal-hdr">
+      <span class="tw-modal-client" id="twModalClient"></span>
+      <button class="tw-modal-close" id="twModalClose">×</button>
+    </div>
+    <div class="tw-modal-body">
+      <div>
+        <div class="tw-modal-label">Tarefa</div>
+        <input type="text" id="twModalTitle" placeholder="Título da tarefa">
+      </div>
+      <div>
+        <div class="tw-modal-label">Descrição</div>
+        <textarea id="twModalDesc" placeholder="Descrição (opcional)…"></textarea>
+      </div>
+      <div>
+        <div class="tw-modal-label">Prazo</div>
+        <input type="date" class="tw-modal-date" id="twModalDate">
+      </div>
+      <div>
+        <div class="tw-modal-label">Para</div>
+        <div class="tw-modal-row" id="twModalAssignees"></div>
+      </div>
+      <div>
+        <div class="tw-modal-label">↻ Recorrência</div>
+        <div class="tw-modal-row" id="twModalRecurrence"></div>
+      </div>
+    </div>
+    <div class="tw-modal-foot">
+      <button class="btn" id="twModalCancel">Cancelar</button>
+      <button class="btn btn-accent" id="twModalSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── FIREBASE SYNC ──────────────────────────────────────────────────────────
 
@@ -2849,6 +2918,105 @@ function editTask(clientId, id) {
 buildTasksGrid();
 
 // ══════════════════════════════════════════════════════════════════════════════
+// TASK MODAL (usado pelo Gerenciador Semanal)
+// ══════════════════════════════════════════════════════════════════════════════
+
+(function () {
+  const overlay   = document.getElementById('twTaskModal');
+  const closeBtn  = document.getElementById('twModalClose');
+  const cancelBtn = document.getElementById('twModalCancel');
+  const saveBtn   = document.getElementById('twModalSave');
+  let _clientId = null, _taskId = null, _modalAssignee = '', _modalRecurrence = '';
+
+  const REC_OPTS = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal']];
+
+  function buildPills(containerId, pills, activeVal, dataAttr, onSelect, getActive) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = pills.map(([v, l]) =>
+      `<button class="task-recurrence-pill${activeVal===v?' sel':''}" data-${dataAttr}="${v}">${l}</button>`
+    ).join('');
+    el.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        onSelect(b.dataset[dataAttr]);
+        el.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+      });
+    });
+  }
+
+  window.openTwTaskModal = function (clientId, taskId) {
+    const task = loadTasks(clientId).find(t => t.id === taskId);
+    if (!task) return;
+    const client = [...CLIENTS, MOVING_CLIENT].find(c => c.id === clientId);
+    _clientId = clientId; _taskId = taskId;
+    _modalAssignee   = task.assignee   || '';
+    _modalRecurrence = task.recurrence || '';
+
+    document.getElementById('twModalClient').textContent = client ? client.name : clientId;
+    document.getElementById('twModalClient').style.color = client ? client.color : '';
+    document.getElementById('twModalTitle').value = task.text;
+    document.getElementById('twModalDesc').value  = task.desc || '';
+    document.getElementById('twModalDate').value  = task.dueDate || '';
+
+    // Assignee pills
+    const assigneeEl = document.getElementById('twModalAssignees');
+    const assigneePills = [...USERS.map(u => [u.id, u.name]), ['', '—']];
+    assigneeEl.innerHTML = assigneePills.map(([v, l]) =>
+      `<button class="task-assignee-pill${_modalAssignee===v?' sel':''}" data-uid="${v}">${l}</button>`
+    ).join('');
+    assigneeEl.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        _modalAssignee = b.dataset.uid;
+        assigneeEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+      });
+    });
+
+    // Recurrence pills
+    const recEl = document.getElementById('twModalRecurrence');
+    recEl.innerHTML = REC_OPTS.map(([v, l]) =>
+      `<button class="task-recurrence-pill${_modalRecurrence===v?' sel':''}" data-rec="${v}">${l}</button>`
+    ).join('');
+    recEl.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        _modalRecurrence = b.dataset.rec;
+        recEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+      });
+    });
+
+    overlay.classList.add('open');
+    document.getElementById('twModalTitle').focus();
+  };
+
+  function closeModal() { overlay.classList.remove('open'); }
+
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
+
+  saveBtn.addEventListener('click', () => {
+    const newText = document.getElementById('twModalTitle').value.trim();
+    if (!newText || !_clientId || !_taskId) return;
+    const tasks = loadTasks(_clientId);
+    const t = tasks.find(t => t.id === _taskId);
+    if (t) {
+      t.text       = newText;
+      t.desc       = document.getElementById('twModalDesc').value.trim();
+      t.dueDate    = document.getElementById('twModalDate').value;
+      t.assignee   = _modalAssignee;
+      t.recurrence = _modalRecurrence;
+      saveTasks(_clientId, tasks);
+    }
+    closeModal();
+    refreshTaskPanel(_clientId);
+    refreshWeeklyManager();
+    refreshDashboard();
+  });
+})();
+
+// ══════════════════════════════════════════════════════════════════════════════
 // WEEKLY TASK MANAGER
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -2954,6 +3122,8 @@ function renderWeeklyManager() {
       : filtered.map(({ clientId, clientName, clientColor, task }) => {
           const user = USERS.find(u => u.id === task.assignee);
           const userBadge = user ? `<span class="task-user-badge" data-uid="${task.assignee}">${user.name}</span>` : '';
+          const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
+          const recBadge = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
           return `
           <div class="tw-item${task.done ? ' tw-done' : ''}" style="--client-color:${clientColor}">
             <button class="tw-cb" data-action="tw-toggle" data-client="${clientId}" data-id="${task.id}" title="${task.done ? 'Reabrir' : 'Concluir'}">${task.done ? '✓' : ''}</button>
@@ -2961,7 +3131,8 @@ function renderWeeklyManager() {
               <div class="tw-client-tag">${escHtml(clientName)}</div>
               <div class="tw-task-text">${escHtml(task.text)}</div>
             </div>
-            ${userBadge}
+            ${recBadge}${userBadge}
+            <button class="tw-edit-btn" data-action="tw-edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
           </div>`;
         }).join('');
 
@@ -2977,9 +3148,11 @@ function renderWeeklyManager() {
 
   // bind toggle buttons
   grid.querySelectorAll('[data-action="tw-toggle"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      toggleTask(btn.dataset.client, btn.dataset.id);
-    });
+    btn.addEventListener('click', () => toggleTask(btn.dataset.client, btn.dataset.id));
+  });
+  // bind edit buttons
+  grid.querySelectorAll('[data-action="tw-edit"]').forEach(btn => {
+    btn.addEventListener('click', () => openTwTaskModal(btn.dataset.client, btn.dataset.id));
   });
 }
 
