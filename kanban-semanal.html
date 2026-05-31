@@ -754,6 +754,17 @@
     .task-assignee-pill.sel[data-uid="priscila"] { background:#ec4899; border-color:#ec4899; color:#fff; }
     .task-assignee-pill.sel[data-uid="paul"]     { background:#7c5cfc; border-color:#7c5cfc; color:#fff; }
     .task-assignee-pill.sel[data-uid=""]         { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); color:var(--text); }
+    .task-recurrence-row { display:flex; gap:4px; padding:4px 9px 8px; border-bottom:1px solid var(--border); align-items:center; }
+    .task-recurrence-pill {
+      font-size:9px; font-weight:600; padding:2px 9px; border-radius:20px;
+      border:1px solid var(--border); background:transparent; color:var(--text-dim);
+      cursor:pointer; font-family:inherit; transition:all .12s;
+    }
+    .task-recurrence-pill:hover { border-color:var(--border-2); }
+    .task-recurrence-pill.sel[data-rec=""]        { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); color:var(--text); }
+    .task-recurrence-pill.sel[data-rec="daily"]   { background:#34d399; border-color:#34d399; color:#052e16; }
+    .task-recurrence-pill.sel[data-rec="weekly"]  { background:#34d399; border-color:#34d399; color:#052e16; }
+    .task-recurrence-pill.sel[data-rec="monthly"] { background:#34d399; border-color:#34d399; color:#052e16; }
 
     .task-user-badge {
       font-size:8px; font-weight:700; padding:1px 6px; border-radius:20px;
@@ -761,6 +772,11 @@
     }
     .task-user-badge[data-uid="priscila"] { background:rgba(236,72,153,.18); color:#ec4899; }
     .task-user-badge[data-uid="paul"]     { background:rgba(124,92,252,.18); color:#a78bfa; }
+    .task-recurrence-badge {
+      font-size:8px; font-weight:700; padding:1px 6px; border-radius:20px;
+      flex-shrink:0; line-height:1.6; letter-spacing:.03em;
+      background:rgba(52,211,153,.15); color:#34d399;
+    }
 
     /* ══════════════════════════════════════════════
        GERENCIADOR SEMANAL DE TAREFAS
@@ -2242,8 +2258,9 @@ const USERS = [
 
 const MOVING_CLIENT = { id: 'moving', name: 'Moving Marketing', color: '#7c5cfc', isInternal: true };
 
-const taskFilters   = {}; // clientId → uid ('all'|'priscila'|'paul')
-const taskAssignees = {}; // clientId → uid ('priscila'|'paul'|'')
+const taskFilters     = {}; // clientId → uid ('all'|'priscila'|'paul')
+const taskAssignees   = {}; // clientId → uid ('priscila'|'paul'|'')
+const taskRecurrences = {}; // clientId → recurrence (''|'daily'|'weekly'|'monthly')
 
 const DAYS_PT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 
@@ -2480,7 +2497,15 @@ function saveTasks(clientId, tasks) {
   mmSet(taskKey(clientId), JSON.stringify(tasks));
 }
 
-function addTask(clientId, text, desc, dueDate, assignee) {
+function nextRecurrenceDate(iso, recurrence) {
+  const base = iso ? new Date(iso + 'T00:00:00') : new Date();
+  if (recurrence === 'daily')   base.setDate(base.getDate() + 1);
+  if (recurrence === 'weekly')  base.setDate(base.getDate() + 7);
+  if (recurrence === 'monthly') base.setMonth(base.getMonth() + 1);
+  return base.toISOString().slice(0, 10);
+}
+
+function addTask(clientId, text, desc, dueDate, assignee, recurrence) {
   if (!text.trim()) return;
   const tasks = loadTasks(clientId);
   tasks.push({
@@ -2488,8 +2513,9 @@ function addTask(clientId, text, desc, dueDate, assignee) {
     text: text.trim(),
     desc: desc ? desc.trim() : '',
     done: false,
-    dueDate:  dueDate  || '',
-    assignee: assignee || ''
+    dueDate:    dueDate    || '',
+    assignee:   assignee   || '',
+    recurrence: recurrence || ''
   });
   saveTasks(clientId, tasks);
   refreshTaskPanel(clientId);
@@ -2501,7 +2527,22 @@ function addTask(clientId, text, desc, dueDate, assignee) {
 function toggleTask(clientId, id) {
   const tasks = loadTasks(clientId);
   const t = tasks.find(t => t.id === id);
-  if (t) { t.done = !t.done; saveTasks(clientId, tasks); }
+  if (t) {
+    const completing = !t.done;
+    t.done = completing;
+    if (completing && t.recurrence) {
+      tasks.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        text: t.text,
+        desc: t.desc || '',
+        done: false,
+        dueDate:    nextRecurrenceDate(t.dueDate, t.recurrence),
+        assignee:   t.assignee   || '',
+        recurrence: t.recurrence
+      });
+    }
+    saveTasks(clientId, tasks);
+  }
   refreshTaskPanel(clientId);
   updateGlobalTaskStats();
   refreshWeeklyManager();
@@ -2564,6 +2605,8 @@ function refreshTaskPanel(clientId) {
       const dueBadge  = task.dueDate  ? `<span class="task-due ${dueCls(task.dueDate)}">${dueFmt(task.dueDate)}</span>` : '';
       const userBadge = task.assignee ? `<span class="task-user-badge" data-uid="${task.assignee}">${USERS.find(u=>u.id===task.assignee)?.name||''}</span>` : '';
       const descHtml  = task.desc     ? `<div class="task-desc">${escHtml(task.desc)}</div>` : '';
+      const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
+      const recBadge  = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
       return `
       <div class="task-item${task.done ? ' done' : ''}" data-id="${task.id}">
         <button class="task-checkbox" data-action="toggle" data-client="${clientId}" data-id="${task.id}" title="${task.done ? 'Reabrir' : 'Concluir'}">${task.done ? '✓' : ''}</button>
@@ -2571,7 +2614,7 @@ function refreshTaskPanel(clientId) {
           <span class="task-text">${escHtml(task.text)}</span>
           ${descHtml}
         </div>
-        ${dueBadge}${userBadge}
+        ${recBadge}${dueBadge}${userBadge}
         <button class="task-edit-btn" data-action="edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
         <button class="task-del" data-action="delete" data-client="${clientId}" data-id="${task.id}" title="Remover">×</button>
       </div>`;
@@ -2628,8 +2671,9 @@ function buildTasksGrid() {
     panel.id = `tpanel-${client.id}`;
     panel.style.setProperty('--client-color', client.color);
 
-    taskFilters[client.id]   = 'all';
-    taskAssignees[client.id] = '';
+    taskFilters[client.id]     = 'all';
+    taskAssignees[client.id]   = '';
+    taskRecurrences[client.id] = '';
 
     const assigneePillsHtml = USERS.map(u =>
       `<button class="task-assignee-pill" data-uid="${u.id}">${u.name}</button>`
@@ -2659,6 +2703,13 @@ function buildTasksGrid() {
         <span class="task-assignee-lbl">Para</span>
         ${assigneePillsHtml}
       </div>
+      <div class="task-recurrence-row">
+        <span class="task-assignee-lbl">↻</span>
+        <button class="task-recurrence-pill sel" data-rec="">Única</button>
+        <button class="task-recurrence-pill" data-rec="daily">Diária</button>
+        <button class="task-recurrence-pill" data-rec="weekly">Semanal</button>
+        <button class="task-recurrence-pill" data-rec="monthly">Mensal</button>
+      </div>
       <div class="task-list"></div>
       <div class="task-panel-footer" style="display:none">
         <span class="task-done-count"></span>
@@ -2670,6 +2721,15 @@ function buildTasksGrid() {
     const descInput  = panel.querySelector('.task-desc-input');
     const dateInput  = panel.querySelector('.task-date-input');
     const addBtn     = panel.querySelector('.task-add-btn');
+
+    // Recurrence selector
+    panel.querySelectorAll('.task-recurrence-pill').forEach(b => {
+      b.addEventListener('click', () => {
+        taskRecurrences[client.id] = b.dataset.rec;
+        panel.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+      });
+    });
 
     // Filter buttons
     panel.querySelectorAll('.task-filter-btn').forEach(b => {
@@ -2689,10 +2749,13 @@ function buildTasksGrid() {
     });
 
     const doAdd = () => {
-      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id]);
+      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id], taskRecurrences[client.id]);
       input.value = '';
       if (descInput) descInput.value = '';
       dateInput.value = '';
+      // Reset recurrence to "Única"
+      taskRecurrences[client.id] = '';
+      panel.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.toggle('sel', x.dataset.rec === ''));
       input.focus();
     };
 
@@ -2720,9 +2783,11 @@ function editTask(clientId, id) {
   const task  = tasks.find(t => t.id === id);
   if (!task) return;
 
-  let editAssignee = task.assignee || '';
+  let editAssignee   = task.assignee   || '';
+  let editRecurrence = task.recurrence || '';
 
   item.classList.add('editing');
+  const recOpts = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal']];
   item.innerHTML = `
     <input class="task-edit-input" type="text" value="${escHtml(task.text)}" placeholder="Título da tarefa">
     <textarea class="task-edit-desc" rows="2" placeholder="Descrição (opcional)…">${escHtml(task.desc||'')}</textarea>
@@ -2730,6 +2795,9 @@ function editTask(clientId, id) {
       <input class="task-edit-date" type="date" value="${task.dueDate||''}">
       ${USERS.map(u => `<button class="task-assignee-pill${task.assignee===u.id?' sel':''}" data-uid="${u.id}">${u.name}</button>`).join('')}
       <button class="task-assignee-pill${!task.assignee?' sel':''}" data-uid="">—</button>
+    </div>
+    <div class="task-edit-row">
+      ${recOpts.map(([v,l]) => `<button class="task-recurrence-pill${editRecurrence===v?' sel':''}" data-rec="${v}">↻ ${l}</button>`).join('')}
     </div>
     <div class="task-edit-row">
       <button class="task-save-btn">Salvar</button>
@@ -2745,6 +2813,14 @@ function editTask(clientId, id) {
     });
   });
 
+  item.querySelectorAll('.task-recurrence-pill').forEach(b => {
+    b.addEventListener('click', () => {
+      editRecurrence = b.dataset.rec;
+      item.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+  });
+
   item.querySelector('.task-save-btn').addEventListener('click', () => {
     const newText = item.querySelector('.task-edit-input').value.trim();
     const newDesc = item.querySelector('.task-edit-desc').value.trim();
@@ -2753,10 +2829,11 @@ function editTask(clientId, id) {
     const tasks2 = loadTasks(clientId);
     const t2 = tasks2.find(t => t.id === id);
     if (t2) {
-      t2.text     = newText;
-      t2.desc     = newDesc;
-      t2.dueDate  = newDate;
-      t2.assignee = editAssignee;
+      t2.text       = newText;
+      t2.desc       = newDesc;
+      t2.dueDate    = newDate;
+      t2.assignee   = editAssignee;
+      t2.recurrence = editRecurrence;
       saveTasks(clientId, tasks2);
     }
     refreshTaskPanel(clientId);
