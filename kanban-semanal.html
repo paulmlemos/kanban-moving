@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kanban Semanal — Moving Marketing</title>
+  <title>Sistema da Agência — Moving Marketing</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -101,7 +101,7 @@
     }
     .dash-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
       gap: 12px;
     }
     .dash-card {
@@ -1666,6 +1666,184 @@
       .task-list { max-height: none; }
       .tw-body { max-height: none; }
       .nota-list { max-height: none; }
+      .client-tabs { overflow-x: auto; }
+      .client-section-header { padding: 14px 12px 0; }
+      .client-tab-panels { padding: 12px; }
+    }
+
+    /* ── SEÇÕES POR CLIENTE ──────────────────────────── */
+    .client-section {
+      border-top: 2px solid var(--border);
+    }
+    .client-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 20px 0;
+    }
+    .client-section-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--client-color, var(--accent));
+      flex-shrink: 0;
+    }
+    .client-section-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--client-color, var(--text));
+      letter-spacing: -0.01em;
+    }
+    .client-tabs {
+      display: flex;
+      gap: 0;
+      padding: 10px 20px 0;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .client-tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 14px 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-bottom: -1px;
+      letter-spacing: 0.04em;
+      transition: color 0.15s;
+      font-family: inherit;
+    }
+    .client-tab-btn:hover { color: var(--text); }
+    .client-tab-btn.active {
+      color: var(--client-color, var(--accent));
+      border-bottom-color: var(--client-color, var(--accent));
+    }
+    .client-tab-panels {
+      padding: 16px 20px 24px;
+    }
+    .client-tab-panel { display: none; }
+    .client-tab-panel.active { display: block; }
+
+    /* paineis dentro do cliente */
+    .client-tab-panel .cap-card      { max-width: 400px; }
+    .client-tab-panel .task-panel    { max-width: 520px; }
+    .client-tab-panel .ficha-card    { max-width: 520px; }
+    .client-tab-panel .nota-card     { max-width: 520px; }
+    .client-tab-panel .result-card   { max-width: 520px; }
+    .client-tab-panel .crono-accordion { max-width: 100%; }
+
+    /* ── TAREFA: descrição ───────────────────────────── */
+    .task-desc-row {
+      padding: 0 10px 6px;
+    }
+    .task-desc-input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 5px 9px;
+      resize: none;
+    }
+    .task-desc-input:focus { outline: none; border-color: rgba(124,92,252,.4); }
+    .task-desc-input::placeholder { color: rgba(232,227,220,.22); }
+    .task-content { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+    .task-desc {
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* ── TAREFA: editar ──────────────────────────────── */
+    .task-edit-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.18);
+      font-size: 11px;
+      padding: 0 3px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color .15s;
+      font-family: inherit;
+    }
+    .task-edit-btn:hover { color: var(--accent-text); }
+    .task-item.editing {
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px;
+    }
+    .task-edit-input, .task-edit-desc {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 5px 9px;
+    }
+    .task-edit-desc { resize: none; font-size: 11px; }
+    .task-edit-input:focus, .task-edit-desc:focus { outline: none; border-color: rgba(124,92,252,.45); }
+    .task-edit-row {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .task-edit-date {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 4px 7px;
+    }
+    .task-edit-date:focus { outline: none; border-color: rgba(124,92,252,.4); }
+    .task-save-btn {
+      background: var(--accent-dim);
+      border: 1px solid rgba(124,92,252,.35);
+      border-radius: 6px;
+      color: var(--accent-text);
+      font-size: 11px;
+      padding: 4px 11px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .task-save-btn:hover { background: rgba(124,92,252,.25); }
+    .task-cancel-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      font-size: 11px;
+      padding: 4px 11px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .task-cancel-btn:hover { background: rgba(255,255,255,.04); }
+
+    /* ── FINANCEIRO: mini-cal wrapper ────────────────── */
+    .fin-cal-wrap {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .fin-cal-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      padding: 0 4px;
     }
   </style>
 </head>
@@ -1704,17 +1882,11 @@
     </div>
   </div>
   <nav class="mm-snav" id="mmSnav">
-    <div class="mm-snav-inner">
-      <a class="mm-snav-link" href="#sec-kanban">Kanban</a>
+    <div class="mm-snav-inner" id="mmSnavInner">
       <a class="mm-snav-link" href="#sec-dashboard">Dashboard</a>
-      <a class="mm-snav-link" href="#sec-captacoes">Captações</a>
-      <a class="mm-snav-link" href="#taskWeeklyWrap">Ger. Semanal</a>
-      <a class="mm-snav-link" href="#sec-tarefas">Tarefas</a>
-      <a class="mm-snav-link" href="#sec-fichas">Fichas</a>
-      <a class="mm-snav-link" href="#sec-notas">Notas</a>
+      <a class="mm-snav-link" href="#taskWeeklyWrap">Tarefas</a>
+      <a class="mm-snav-link" href="#sec-kanban">Kanban</a>
       <a class="mm-snav-link" href="#sec-financeiro">Financeiro</a>
-      <a class="mm-snav-link" href="#sec-resultados">Resultados</a>
-      <a class="mm-snav-link" href="#sec-cronogramas">Cronogramas</a>
     </div>
   </nav>
 </header>
@@ -1724,36 +1896,7 @@
   <div class="dash-grid" id="dashGrid"></div>
 </div>
 
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <span class="stats-label">Progresso da semana:</span>
-  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-  <span class="stats-value" id="statsText"><span class="n">0</span> / 0</span>
-  <div class="stats-badges">
-    <span class="stats-badge prog" id="badgeProg">0 programados</span>
-    <span class="stats-badge post" id="badgePost">0 postados</span>
-  </div>
-</div>
-
-<!-- BOARD -->
-<div class="board-wrapper sec-anchor" id="sec-kanban">
-  <div class="board" id="board"></div>
-</div>
-
-<!-- CAPTAÇÕES -->
-<div class="cap-section sec-anchor" id="sec-captacoes">
-  <div class="cap-section-header">
-    <span class="cap-section-title">Controle de Captações</span>
-  </div>
-  <div class="cap-body">
-    <div class="cap-grid" id="capGrid"></div>
-    <div class="mini-cal" id="miniCal"></div>
-  </div>
-</div>
-
-<div class="cal-tooltip" id="calTooltip"></div>
-
-<!-- WEEKLY TASK MANAGER -->
+<!-- GERENCIADOR SEMANAL DE TAREFAS -->
 <div class="tw-section sec-anchor" id="taskWeeklyWrap">
   <div class="tw-section-header">
     <span class="tw-section-title">Gerenciador Semanal de Tarefas</span>
@@ -1774,56 +1917,47 @@
   <div class="tw-grid" id="twGrid"></div>
 </div>
 
-<!-- TASK MANAGER -->
-<div class="tasks-section sec-anchor" id="sec-tarefas">
-  <div class="tasks-section-header">
-    <span class="tasks-section-title">Tarefas por Cliente</span>
-    <div class="tasks-global-stats" id="globalTaskStats"></div>
-  </div>
-  <div class="tasks-grid" id="tasksGrid"></div>
-</div>
-
-<!-- FICHAS DOS CLIENTES -->
-<div class="ficha-section sec-anchor" id="sec-fichas">
-  <div class="ficha-section-header">
-    <span class="ficha-section-title">Fichas dos Clientes</span>
-  </div>
-  <div class="ficha-grid" id="fichaGrid"></div>
-</div>
-
-<!-- NOTAS DE ALINHAMENTO -->
-<div class="notas-section sec-anchor" id="sec-notas">
-  <div class="notas-section-header">
-    <span class="notas-section-title">Notas de Alinhamento</span>
-  </div>
-  <div style="overflow-x:auto;">
-    <div class="notas-grid" id="notasGrid"></div>
+<!-- STATS BAR + KANBAN -->
+<div class="stats-bar">
+  <span class="stats-label">Progresso da semana:</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <span class="stats-value" id="statsText"><span class="n">0</span> / 0</span>
+  <div class="stats-badges">
+    <span class="stats-badge prog" id="badgeProg">0 programados</span>
+    <span class="stats-badge post" id="badgePost">0 postados</span>
   </div>
 </div>
+<div class="board-wrapper sec-anchor" id="sec-kanban">
+  <div class="board" id="board"></div>
+</div>
 
-<!-- FINANCEIRO -->
+<!-- GERENCIADOR FINANCEIRO -->
 <div class="fin-section sec-anchor" id="sec-financeiro">
   <div class="fin-section-header">
-    <span class="fin-section-title">Controle Financeiro</span>
+    <span class="fin-section-title">Gerenciador Financeiro</span>
   </div>
   <div class="fin-grid" id="finGrid"></div>
+  <div class="fin-cal-wrap" style="padding:0 16px 20px;">
+    <div class="fin-cal-title">Calendário de Captações</div>
+    <div class="mini-cal" id="miniCal"></div>
+  </div>
 </div>
 
-<!-- RESULTADOS MENSAIS -->
-<div class="result-section sec-anchor" id="sec-resultados">
-  <div class="result-section-header">
-    <span class="result-section-title">Resultados Mensais</span>
-  </div>
-  <div class="result-grid" id="resultGrid"></div>
-</div>
+<div class="cal-tooltip" id="calTooltip"></div>
 
-<!-- CRONOGRAMAS DE CONTEÚDO -->
-<div class="crono-section sec-anchor" id="sec-cronogramas">
-  <div class="crono-section-header">
-    <span class="crono-section-title">Cronogramas de Conteúdo</span>
-  </div>
+<!-- STAGING OCULTO: containers dos builders antigos -->
+<div style="display:none" aria-hidden="true">
+  <div id="capGrid"></div>
+  <div id="tasksGrid"></div>
+  <div id="fichaGrid"></div>
+  <div id="notasGrid"></div>
+  <div id="resultGrid"></div>
   <div id="cronoAccordions"></div>
+  <div class="tasks-global-stats" id="globalTaskStats"></div>
 </div>
+
+<!-- SEÇÕES POR CLIENTE (preenchidas via JS) -->
+<div id="clientSectionsWrap"></div>
 
 <!-- MATERIAL PICKER MODAL -->
 <div class="picker-overlay" id="pickerOverlay">
@@ -2267,12 +2401,13 @@ function saveTasks(clientId, tasks) {
   mmSet(taskKey(clientId), JSON.stringify(tasks));
 }
 
-function addTask(clientId, text, dueDate, assignee) {
+function addTask(clientId, text, desc, dueDate, assignee) {
   if (!text.trim()) return;
   const tasks = loadTasks(clientId);
   tasks.push({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2),
     text: text.trim(),
+    desc: desc ? desc.trim() : '',
     done: false,
     dueDate:  dueDate  || '',
     assignee: assignee || ''
@@ -2349,17 +2484,25 @@ function refreshTaskPanel(clientId) {
     listEl.innerHTML = sorted.map(task => {
       const dueBadge  = task.dueDate  ? `<span class="task-due ${dueCls(task.dueDate)}">${dueFmt(task.dueDate)}</span>` : '';
       const userBadge = task.assignee ? `<span class="task-user-badge" data-uid="${task.assignee}">${USERS.find(u=>u.id===task.assignee)?.name||''}</span>` : '';
+      const descHtml  = task.desc     ? `<div class="task-desc">${escHtml(task.desc)}</div>` : '';
       return `
       <div class="task-item${task.done ? ' done' : ''}" data-id="${task.id}">
         <button class="task-checkbox" data-action="toggle" data-client="${clientId}" data-id="${task.id}" title="${task.done ? 'Reabrir' : 'Concluir'}">${task.done ? '✓' : ''}</button>
-        <span class="task-text">${escHtml(task.text)}</span>
+        <div class="task-content">
+          <span class="task-text">${escHtml(task.text)}</span>
+          ${descHtml}
+        </div>
         ${dueBadge}${userBadge}
+        <button class="task-edit-btn" data-action="edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
         <button class="task-del" data-action="delete" data-client="${clientId}" data-id="${task.id}" title="Remover">×</button>
       </div>`;
     }).join('');
 
     listEl.querySelectorAll('[data-action="toggle"]').forEach(b =>
       b.addEventListener('click', () => toggleTask(b.dataset.client, b.dataset.id))
+    );
+    listEl.querySelectorAll('[data-action="edit"]').forEach(b =>
+      b.addEventListener('click', () => editTask(b.dataset.client, b.dataset.id))
     );
     listEl.querySelectorAll('[data-action="delete"]').forEach(b =>
       b.addEventListener('click', () => deleteTask(b.dataset.client, b.dataset.id))
@@ -2423,8 +2566,11 @@ function buildTasksGrid() {
         ${USERS.map(u => `<button class="task-filter-btn" data-uid="${u.id}">${u.name}</button>`).join('')}
       </div>
       <div class="task-input-row">
-        <input class="task-input" type="text" placeholder="Adicionar tarefa…" maxlength="200" data-client="${client.id}">
+        <input class="task-input" type="text" placeholder="Título da tarefa…" maxlength="200" data-client="${client.id}">
         <button class="task-add-btn" data-client="${client.id}" title="Adicionar">+</button>
+      </div>
+      <div class="task-desc-row">
+        <textarea class="task-desc-input" rows="2" placeholder="Descrição (opcional)…" data-client="${client.id}"></textarea>
       </div>
       <div class="task-date-row">
         <span class="task-date-label">Prazo</span>
@@ -2441,9 +2587,10 @@ function buildTasksGrid() {
       </div>
     `;
 
-    const input     = panel.querySelector('.task-input');
-    const dateInput = panel.querySelector('.task-date-input');
-    const addBtn    = panel.querySelector('.task-add-btn');
+    const input      = panel.querySelector('.task-input');
+    const descInput  = panel.querySelector('.task-desc-input');
+    const dateInput  = panel.querySelector('.task-date-input');
+    const addBtn     = panel.querySelector('.task-add-btn');
 
     // Filter buttons
     panel.querySelectorAll('.task-filter-btn').forEach(b => {
@@ -2463,8 +2610,9 @@ function buildTasksGrid() {
     });
 
     const doAdd = () => {
-      addTask(client.id, input.value, dateInput.value, taskAssignees[client.id]);
+      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id]);
       input.value = '';
+      if (descInput) descInput.value = '';
       dateInput.value = '';
       input.focus();
     };
@@ -2479,6 +2627,67 @@ function buildTasksGrid() {
   });
 
   updateGlobalTaskStats();
+}
+
+// ── Editar tarefa ────────────────────────────────────────────────────────────
+
+function editTask(clientId, id) {
+  const panel = document.getElementById(`tpanel-${clientId}`);
+  if (!panel) return;
+  const item = panel.querySelector(`.task-item[data-id="${id}"]`);
+  if (!item) return;
+
+  const tasks = loadTasks(clientId);
+  const task  = tasks.find(t => t.id === id);
+  if (!task) return;
+
+  let editAssignee = task.assignee || '';
+
+  item.classList.add('editing');
+  item.innerHTML = `
+    <input class="task-edit-input" type="text" value="${escHtml(task.text)}" placeholder="Título da tarefa">
+    <textarea class="task-edit-desc" rows="2" placeholder="Descrição (opcional)…">${escHtml(task.desc||'')}</textarea>
+    <div class="task-edit-row">
+      <input class="task-edit-date" type="date" value="${task.dueDate||''}">
+      ${USERS.map(u => `<button class="task-assignee-pill${task.assignee===u.id?' sel':''}" data-uid="${u.id}">${u.name}</button>`).join('')}
+      <button class="task-assignee-pill${!task.assignee?' sel':''}" data-uid="">—</button>
+    </div>
+    <div class="task-edit-row">
+      <button class="task-save-btn">Salvar</button>
+      <button class="task-cancel-btn">Cancelar</button>
+    </div>
+  `;
+
+  item.querySelectorAll('.task-assignee-pill').forEach(b => {
+    b.addEventListener('click', () => {
+      editAssignee = b.dataset.uid;
+      item.querySelectorAll('.task-assignee-pill').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+  });
+
+  item.querySelector('.task-save-btn').addEventListener('click', () => {
+    const newText = item.querySelector('.task-edit-input').value.trim();
+    const newDesc = item.querySelector('.task-edit-desc').value.trim();
+    const newDate = item.querySelector('.task-edit-date').value;
+    if (!newText) return;
+    const tasks2 = loadTasks(clientId);
+    const t2 = tasks2.find(t => t.id === id);
+    if (t2) {
+      t2.text     = newText;
+      t2.desc     = newDesc;
+      t2.dueDate  = newDate;
+      t2.assignee = editAssignee;
+      saveTasks(clientId, tasks2);
+    }
+    refreshTaskPanel(clientId);
+    refreshWeeklyManager();
+    refreshDashboard();
+  });
+
+  item.querySelector('.task-cancel-btn').addEventListener('click', () => {
+    refreshTaskPanel(clientId);
+  });
 }
 
 buildTasksGrid();
@@ -3846,7 +4055,41 @@ function refreshDashboard() {
   const finTagSrc   = atrFin.length      ? atrFin      : pendFin;
   const finTagCls   = atrFin.length      ? 'alert'     : 'warn';
 
+  // — Totais de tarefas —
+  let allPending = 0, allDone = 0;
+  [...CLIENTS, MOVING_CLIENT].forEach(c => {
+    loadTasks(c.id).forEach(t => t.done ? allDone++ : allPending++);
+  });
+  const clientCount = CLIENTS.length;
+
   grid.innerHTML = `
+    <div class="dash-card ok">
+      <div class="dash-card-hdr">
+        <span class="dash-card-title">Clientes ativos</span>
+        <span class="dash-card-icon">◉</span>
+      </div>
+      <div class="dash-card-val">${clientCount}</div>
+      <div class="dash-card-sub">clientes na agência</div>
+      <div class="dash-tags"><span class="dash-tag ok-tag">ativos</span></div>
+    </div>
+    <div class="dash-card ${allPending > 0 ? 'warn' : 'ok'}">
+      <div class="dash-card-hdr">
+        <span class="dash-card-title">Tarefas a fazer</span>
+        <span class="dash-card-icon">○</span>
+      </div>
+      <div class="dash-card-val">${allPending}</div>
+      <div class="dash-card-sub">tarefas pendentes</div>
+      <div class="dash-tags"><span class="dash-tag ${allPending > 0 ? 'warn' : 'ok-tag'}">${allPending > 0 ? `${allPending} pendente${allPending>1?'s':''}` : 'ok'}</span></div>
+    </div>
+    <div class="dash-card ok">
+      <div class="dash-card-hdr">
+        <span class="dash-card-title">Tarefas cumpridas</span>
+        <span class="dash-card-icon">✓</span>
+      </div>
+      <div class="dash-card-val">${allDone}</div>
+      <div class="dash-card-sub">tarefas concluídas</div>
+      <div class="dash-tags"><span class="dash-tag ok-tag">${allDone} concluída${allDone!==1?'s':''}</span></div>
+    </div>
     ${USERS.map(u => userTaskCard(u)).join('')}
     <div class="dash-card ${capLevel}">
       <div class="dash-card-hdr">
@@ -3973,13 +4216,95 @@ function buildNotasGrid() {
 }
 buildNotasGrid();
 
+// ── Seções por cliente ───────────────────────────────────────────────────────
+
+function buildClientSections() {
+  const wrap    = document.getElementById('clientSectionsWrap');
+  const navInner = document.getElementById('mmSnavInner');
+  wrap.innerHTML = '';
+
+  const ALL_CLI = [...CLIENTS, MOVING_CLIENT];
+
+  ALL_CLI.forEach(c => {
+    // Link no menu
+    const link = document.createElement('a');
+    link.className = 'mm-snav-link';
+    link.href = `#sec-cli-${c.id}`;
+    link.textContent = c.name.split(' ')[0].toUpperCase();
+    navInner.appendChild(link);
+
+    // Abas por cliente
+    const tabDefs = [];
+    if (!c.isInternal) tabDefs.push({ id: 'cap',    label: 'Captações' });
+    tabDefs.push(                    { id: 'tasks',  label: 'Tarefas'   });
+    if (!c.isInternal) tabDefs.push({ id: 'ficha',  label: 'Ficha'     });
+    tabDefs.push(                    { id: 'notas',  label: 'Notas'     });
+    if (!c.isInternal) tabDefs.push({ id: 'result', label: 'Resultados' });
+    if (!c.isInternal) tabDefs.push({ id: 'crono',  label: 'Cronograma' });
+
+    const sec = document.createElement('div');
+    sec.className = 'client-section sec-anchor';
+    sec.id = `sec-cli-${c.id}`;
+    sec.style.setProperty('--client-color', c.color);
+
+    sec.innerHTML = `
+      <div class="client-section-header">
+        <span class="client-section-dot"></span>
+        <span class="client-section-name">${c.name}</span>
+      </div>
+      <div class="client-tabs">
+        ${tabDefs.map((t, i) => `<button class="client-tab-btn${i === 0 ? ' active' : ''}" data-tab="${t.id}">${t.label}</button>`).join('')}
+      </div>
+      <div class="client-tab-panels">
+        ${tabDefs.map((t, i) => `<div class="client-tab-panel${i === 0 ? ' active' : ''}" data-panel="${t.id}" id="cpanel-${t.id}-${c.id}"></div>`).join('')}
+      </div>
+    `;
+
+    wrap.appendChild(sec);
+
+    // Mover elementos já construídos para os painéis
+    const moveEl = (srcId, panelId) => {
+      const el  = document.getElementById(srcId);
+      const pnl = document.getElementById(`cpanel-${panelId}-${c.id}`);
+      if (el && pnl) pnl.appendChild(el);
+    };
+    const moveQuery = (sel, panelId) => {
+      const el  = document.querySelector(sel);
+      const pnl = document.getElementById(`cpanel-${panelId}-${c.id}`);
+      if (el && pnl) pnl.appendChild(el);
+    };
+
+    moveEl(`tpanel-${c.id}`,  'tasks');
+    moveQuery(`.nota-card[data-cid="${c.id}"]`, 'notas');
+    if (!c.isInternal) {
+      moveEl(`capc-${c.id}`,   'cap');
+      moveEl(`ficha-${c.id}`,  'ficha');
+      moveEl(`rescard-${c.id}`, 'result');
+      moveEl(`acc-${c.id}`,    'crono');
+    }
+
+    // Troca de abas
+    sec.querySelectorAll('.client-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sec.querySelectorAll('.client-tab-btn').forEach(b => b.classList.remove('active'));
+        sec.querySelectorAll('.client-tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const pnl = sec.querySelector(`[data-panel="${btn.dataset.tab}"]`);
+        if (pnl) pnl.classList.add('active');
+      });
+    });
+  });
+}
+
+buildClientSections();
+
 // ─── NAV HIGHLIGHT (IntersectionObserver) ────────────────────────────────────
 (function() {
-  const links = document.querySelectorAll('.mm-snav-link');
-  const anchors = document.querySelectorAll('.sec-anchor, #taskWeeklyWrap');
-  const navMap = {};
+  const links   = document.querySelectorAll('.mm-snav-link');
+  const anchors = document.querySelectorAll('.sec-anchor');
+  const navMap  = {};
   links.forEach(l => {
-    const id = l.getAttribute('href').replace('#','');
+    const id = l.getAttribute('href').replace('#', '');
     navMap[id] = l;
   });
   const obs = new IntersectionObserver(entries => {
