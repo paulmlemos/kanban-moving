@@ -1895,6 +1895,75 @@
       margin-bottom: 12px;
       padding: 0 4px;
     }
+    /* ── TASK FILES ────────────────────────────────── */
+    .task-file-badge {
+      font-size: 9px; padding: 1px 5px; border-radius: 8px; flex-shrink: 0;
+      line-height: 1.6; cursor: pointer; background: rgba(96,165,250,0.14);
+      color: #60a5fa; border: none; font-family: inherit; transition: background .12s;
+    }
+    .task-file-badge:hover { background: rgba(96,165,250,0.26); }
+    .task-file-list {
+      display: none; flex-direction: column; gap: 3px;
+      padding: 5px 0 1px; border-top: 1px solid var(--border); width: 100%;
+    }
+    .task-file-list.open { display: flex; }
+    .task-file-item { display: flex; align-items: center; gap: 5px; }
+    .task-file-dl {
+      font-size: 10px; color: #60a5fa; background: none; border: none;
+      cursor: pointer; padding: 0; font-family: inherit; flex: 1;
+      text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .task-file-dl:hover { text-decoration: underline; }
+    .task-file-rm {
+      background: none; border: none; color: rgba(248,113,113,.4);
+      cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px;
+      font-family: inherit; flex-shrink: 0;
+    }
+    .task-file-rm:hover { color: #f87171; }
+    .task-file-add-label {
+      font-size: 10px; color: rgba(96,165,250,.7); cursor: pointer;
+      border: 1px dashed rgba(96,165,250,.3); border-radius: 5px;
+      padding: 3px 9px; display: inline-block; transition: all .12s; margin-top: 4px;
+    }
+    .task-file-add-label:hover { border-color: rgba(96,165,250,.6); color: #60a5fa; }
+
+    /* ── ACESSOS ────────────────────────────────────── */
+    .acessos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+      gap: 10px; padding: 14px 0 4px;
+    }
+    .acesso-card {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 9px; padding: 12px 13px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .acesso-card-header {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; font-weight: 600; color: var(--text);
+    }
+    .acesso-icon { font-size: 16px; line-height: 1; }
+    .acesso-field-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-dim); margin-bottom: 2px;
+    }
+    .acesso-input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-family: inherit;
+      font-size: 11px; padding: 5px 8px; transition: border-color .15s;
+    }
+    .acesso-input:focus { outline: none; border-color: rgba(124,92,252,.45); }
+    .acesso-pass-wrap { display: flex; gap: 4px; align-items: center; }
+    .acesso-pass-wrap .acesso-input { flex: 1; }
+    .acesso-eye {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text-dim); cursor: pointer; font-size: 12px;
+      padding: 4px 7px; line-height: 1; font-family: inherit; flex-shrink: 0;
+      transition: all .12s;
+    }
+    .acesso-eye:hover { border-color: var(--border-2); color: var(--text); }
+    .acesso-saved { font-size: 9px; color: rgba(52,211,153,.7); text-align: right; min-height: 12px; }
+
   </style>
 </head>
 <body>
@@ -2003,6 +2072,7 @@
   <div id="notasGrid"></div>
   <div id="resultGrid"></div>
   <div id="cronoAccordions"></div>
+  <div id="acessosGrid"></div>
   <div class="tasks-global-stats" id="globalTaskStats"></div>
 </div>
 
@@ -2084,7 +2154,7 @@ const _fsdb = firebase.firestore();
 
 let _syncTimer      = null;
 let _lastLocalWrite = 0;
-const _SKIP_SYNC    = ['mmmat__']; // materiais têm base64 grande — só localStorage
+const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__']; // base64 e senhas — só localStorage
 
 function mmGet(key)       { return localStorage.getItem(key); }
 function mmSet(key, val)  {
@@ -2557,6 +2627,31 @@ function taskKey(clientId) {
   return `mmtasks__${clientId}`;
 }
 
+// ── Arquivos de tarefas ──────────────────────────────────────────────────────
+function loadTaskFiles(taskId) {
+  try { return JSON.parse(localStorage.getItem(`mmtaskf__${taskId}`) || '[]'); }
+  catch { return []; }
+}
+function saveTaskFiles(taskId, files) {
+  localStorage.setItem(`mmtaskf__${taskId}`, JSON.stringify(files));
+}
+function deleteTaskFiles(taskId) {
+  localStorage.removeItem(`mmtaskf__${taskId}`);
+}
+function downloadFile(f) {
+  const a = document.createElement('a');
+  a.href = f.data;
+  a.download = f.name;
+  a.click();
+}
+function fileToBase64(file) {
+  return new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = e => resolve(e.target.result);
+    r.readAsDataURL(file);
+  });
+}
+
 function loadTasks(clientId) {
   try { return JSON.parse(mmGet(taskKey(clientId)) || '[]'); }
   catch { return []; }
@@ -2620,6 +2715,7 @@ function toggleTask(clientId, id) {
 
 function deleteTask(clientId, id) {
   saveTasks(clientId, loadTasks(clientId).filter(t => t.id !== id));
+  deleteTaskFiles(id);
   refreshTaskPanel(clientId);
   updateGlobalTaskStats();
   refreshWeeklyManager();
@@ -2676,14 +2772,26 @@ function refreshTaskPanel(clientId) {
       const descHtml  = task.desc     ? `<div class="task-desc">${escHtml(task.desc)}</div>` : '';
       const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
       const recBadge  = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
+      const taskFiles = loadTaskFiles(task.id);
+      const fileBadge = taskFiles.length > 0
+        ? `<button class="task-file-badge" data-action="togglefiles" data-taskid="${task.id}" title="Ver arquivos">📎 ${taskFiles.length}</button>`
+        : '';
+      const fileListHtml = taskFiles.length > 0
+        ? `<div class="task-file-list" id="tfiles-${task.id}">${taskFiles.map(f =>
+            `<div class="task-file-item">
+              <button class="task-file-dl" data-action="dlfile" data-taskid="${task.id}" data-fileid="${f.id}" title="${escHtml(f.name)}">${escHtml(f.name)}</button>
+              <button class="task-file-rm" data-action="rmfile" data-client="${clientId}" data-taskid="${task.id}" data-fileid="${f.id}" title="Remover">×</button>
+            </div>`).join('')}</div>`
+        : '';
       return `
       <div class="task-item${task.done ? ' done' : ''}" data-id="${task.id}">
         <button class="task-checkbox" data-action="toggle" data-client="${clientId}" data-id="${task.id}" title="${task.done ? 'Reabrir' : 'Concluir'}">${task.done ? '✓' : ''}</button>
         <div class="task-content">
           <span class="task-text">${escHtml(task.text)}</span>
           ${descHtml}
+          ${fileListHtml}
         </div>
-        ${recBadge}${dueBadge}${userBadge}
+        ${recBadge}${dueBadge}${userBadge}${fileBadge}
         <button class="task-edit-btn" data-action="edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
         <button class="task-del" data-action="delete" data-client="${clientId}" data-id="${task.id}" title="Remover">×</button>
       </div>`;
@@ -2697,6 +2805,24 @@ function refreshTaskPanel(clientId) {
     );
     listEl.querySelectorAll('[data-action="delete"]').forEach(b =>
       b.addEventListener('click', () => deleteTask(b.dataset.client, b.dataset.id))
+    );
+    listEl.querySelectorAll('[data-action="togglefiles"]').forEach(b =>
+      b.addEventListener('click', () => {
+        const list = document.getElementById(`tfiles-${b.dataset.taskid}`);
+        if (list) list.classList.toggle('open');
+      })
+    );
+    listEl.querySelectorAll('[data-action="dlfile"]').forEach(b =>
+      b.addEventListener('click', () => {
+        const f = loadTaskFiles(b.dataset.taskid).find(f => f.id === b.dataset.fileid);
+        if (f) downloadFile(f);
+      })
+    );
+    listEl.querySelectorAll('[data-action="rmfile"]').forEach(b =>
+      b.addEventListener('click', () => {
+        saveTaskFiles(b.dataset.taskid, loadTaskFiles(b.dataset.taskid).filter(f => f.id !== b.dataset.fileid));
+        refreshTaskPanel(b.dataset.client);
+      })
     );
   }
 
@@ -2872,7 +2998,52 @@ function editTask(clientId, id) {
       <button class="task-save-btn">Salvar</button>
       <button class="task-cancel-btn">Cancelar</button>
     </div>
+    <div class="task-files-edit-list"></div>
+    <label class="task-file-add-label">
+      📎 Adicionar arquivo
+      <input type="file" class="task-file-input" multiple style="display:none">
+    </label>
   `;
+
+  // Render file list in edit mode
+  function renderEditFiles() {
+    const filesEl = item.querySelector('.task-files-edit-list');
+    const files = loadTaskFiles(id);
+    filesEl.innerHTML = files.length
+      ? files.map(f => `<div class="task-file-item">
+          <button class="task-file-dl" data-fileid="${f.id}">${escHtml(f.name)}</button>
+          <button class="task-file-rm" data-fileid="${f.id}">×</button>
+        </div>`).join('')
+      : `<span style="font-size:10px;color:var(--text-dim)">Sem arquivos anexados</span>`;
+    filesEl.querySelectorAll('.task-file-dl').forEach(b =>
+      b.addEventListener('click', () => {
+        const f = loadTaskFiles(id).find(f => f.id === b.dataset.fileid);
+        if (f) downloadFile(f);
+      })
+    );
+    filesEl.querySelectorAll('.task-file-rm').forEach(b =>
+      b.addEventListener('click', () => {
+        saveTaskFiles(id, loadTaskFiles(id).filter(f => f.id !== b.dataset.fileid));
+        renderEditFiles();
+      })
+    );
+  }
+  renderEditFiles();
+
+  item.querySelector('.task-file-input').addEventListener('change', async function() {
+    const files = loadTaskFiles(id);
+    for (const file of this.files) {
+      files.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        name: file.name,
+        type: file.type,
+        data: await fileToBase64(file)
+      });
+    }
+    saveTaskFiles(id, files);
+    renderEditFiles();
+    this.value = '';
+  });
 
   item.querySelectorAll('.task-assignee-pill').forEach(b => {
     b.addEventListener('click', () => {
@@ -4545,6 +4716,84 @@ function buildNotasGrid() {
 }
 buildNotasGrid();
 
+// ── Acessos por cliente ──────────────────────────────────────────────────────
+
+const REDES_SOCIAIS = [
+  { id: 'instagram',  label: 'Instagram',          icon: '📷' },
+  { id: 'facebook',   label: 'Facebook',           icon: '📘' },
+  { id: 'tiktok',     label: 'TikTok',             icon: '🎵' },
+  { id: 'pinterest',  label: 'Pinterest',          icon: '📌' },
+  { id: 'linkedin',   label: 'LinkedIn',           icon: '💼' },
+  { id: 'youtube',    label: 'YouTube',            icon: '▶️' },
+  { id: 'whatsapp',   label: 'WhatsApp Business',  icon: '💬' },
+  { id: 'gmn',        label: 'Google Meu Negócio', icon: '📍' },
+  { id: 'spotify',    label: 'Spotify',            icon: '🎧' },
+  { id: 'twitter',    label: 'X / Twitter',        icon: '✖' },
+];
+
+function loadAcessos(cid)    { try { return JSON.parse(localStorage.getItem(`mmacesso__${cid}`) || '{}'); } catch { return {}; } }
+function saveAcessos(cid, v) { localStorage.setItem(`mmacesso__${cid}`, JSON.stringify(v)); }
+
+function buildAcessosGrid() {
+  const grid = document.getElementById('acessosGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const ALL_CLI = [...CLIENTS, MOVING_CLIENT];
+  ALL_CLI.forEach(c => {
+    const container = document.createElement('div');
+    container.id = `acesso-${c.id}`;
+    container.className = 'acessos-grid';
+    const data = loadAcessos(c.id);
+
+    REDES_SOCIAIS.forEach(rede => {
+      const rd = data[rede.id] || {};
+      const card = document.createElement('div');
+      card.className = 'acesso-card';
+      card.innerHTML = `
+        <div class="acesso-card-header">
+          <span class="acesso-icon">${rede.icon}</span>
+          <span>${rede.label}</span>
+        </div>
+        <div>
+          <div class="acesso-field-label">Login / E-mail</div>
+          <input class="acesso-input" type="text" placeholder="—" value="${escHtml(rd.login||'')}" data-field="login" autocomplete="off" spellcheck="false">
+        </div>
+        <div>
+          <div class="acesso-field-label">Senha</div>
+          <div class="acesso-pass-wrap">
+            <input class="acesso-input acesso-pass" type="password" placeholder="—" value="${escHtml(rd.pass||'')}" data-field="pass" autocomplete="new-password" spellcheck="false">
+            <button class="acesso-eye" title="Mostrar/ocultar">👁</button>
+          </div>
+        </div>
+        <div class="acesso-saved"></div>
+      `;
+
+      card.querySelector('.acesso-eye').addEventListener('click', () => {
+        const inp = card.querySelector('.acesso-pass');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+      });
+
+      card.querySelectorAll('.acesso-input').forEach(inp => {
+        inp.addEventListener('change', () => {
+          const d = loadAcessos(c.id);
+          if (!d[rede.id]) d[rede.id] = {};
+          d[rede.id][inp.dataset.field] = inp.value;
+          saveAcessos(c.id, d);
+          const savedEl = card.querySelector('.acesso-saved');
+          savedEl.textContent = 'salvo ✓';
+          setTimeout(() => { savedEl.textContent = ''; }, 2000);
+        });
+      });
+
+      container.appendChild(card);
+    });
+
+    grid.appendChild(container);
+  });
+}
+buildAcessosGrid();
+
 // ── Seções por cliente ───────────────────────────────────────────────────────
 
 function buildClientSections() {
@@ -4564,12 +4813,13 @@ function buildClientSections() {
 
     // Abas por cliente
     const tabDefs = [];
-    if (!c.isInternal) tabDefs.push({ id: 'crono',  label: 'Cronograma' });
-    tabDefs.push(                    { id: 'tasks',  label: 'Tarefas'   });
-    if (!c.isInternal) tabDefs.push({ id: 'cap',    label: 'Captações' });
-    if (!c.isInternal) tabDefs.push({ id: 'ficha',  label: 'Ficha'     });
-    tabDefs.push(                    { id: 'notas',  label: 'Notas'     });
-    if (!c.isInternal) tabDefs.push({ id: 'result', label: 'Resultados' });
+    if (!c.isInternal) tabDefs.push({ id: 'crono',   label: 'Cronograma' });
+    tabDefs.push(                    { id: 'tasks',   label: 'Tarefas'   });
+    if (!c.isInternal) tabDefs.push({ id: 'cap',     label: 'Captações' });
+    if (!c.isInternal) tabDefs.push({ id: 'ficha',   label: 'Ficha'     });
+    tabDefs.push(                    { id: 'notas',   label: 'Notas'     });
+    if (!c.isInternal) tabDefs.push({ id: 'result',  label: 'Resultados' });
+    tabDefs.push(                    { id: 'acessos', label: 'Acessos'   });
 
     const sec = document.createElement('div');
     sec.className = 'client-section sec-anchor';
@@ -4605,6 +4855,7 @@ function buildClientSections() {
 
     moveEl(`tpanel-${c.id}`,  'tasks');
     moveQuery(`.nota-card[data-cid="${c.id}"]`, 'notas');
+    moveEl(`acesso-${c.id}`, 'acessos');
     if (!c.isInternal) {
       moveEl(`capc-${c.id}`,   'cap');
       moveEl(`ficha-${c.id}`,  'ficha');
