@@ -1902,6 +1902,12 @@
       color: #60a5fa; border: none; font-family: inherit; transition: background .12s;
     }
     .task-file-badge:hover { background: rgba(96,165,250,0.26); }
+    .task-attach-btn {
+      font-size: 11px; cursor: pointer; color: rgba(255,255,255,0.22);
+      opacity: 0; transition: opacity .12s, color .12s; flex-shrink: 0; line-height: 1;
+    }
+    .task-item:hover .task-attach-btn { opacity: 1; }
+    .task-attach-btn:hover { color: #60a5fa; }
     .task-file-list {
       display: none; flex-direction: column; gap: 3px;
       padding: 5px 0 1px; border-top: 1px solid var(--border); width: 100%;
@@ -2792,6 +2798,7 @@ function refreshTaskPanel(clientId) {
           ${fileListHtml}
         </div>
         ${recBadge}${dueBadge}${userBadge}${fileBadge}
+        <label class="task-attach-btn" title="Anexar arquivo">📎<input type="file" class="task-file-picker" data-taskid="${task.id}" data-client="${clientId}" multiple style="display:none"></label>
         <button class="task-edit-btn" data-action="edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
         <button class="task-del" data-action="delete" data-client="${clientId}" data-id="${task.id}" title="Remover">×</button>
       </div>`;
@@ -2822,6 +2829,21 @@ function refreshTaskPanel(clientId) {
       b.addEventListener('click', () => {
         saveTaskFiles(b.dataset.taskid, loadTaskFiles(b.dataset.taskid).filter(f => f.id !== b.dataset.fileid));
         refreshTaskPanel(b.dataset.client);
+      })
+    );
+    listEl.querySelectorAll('.task-file-picker').forEach(inp =>
+      inp.addEventListener('change', async function() {
+        const files = loadTaskFiles(this.dataset.taskid);
+        for (const file of this.files) {
+          files.push({
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            name: file.name, type: file.type,
+            data: await fileToBase64(file)
+          });
+        }
+        saveTaskFiles(this.dataset.taskid, files);
+        refreshTaskPanel(this.dataset.client);
+        this.value = '';
       })
     );
   }
