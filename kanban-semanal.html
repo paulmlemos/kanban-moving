@@ -1322,7 +1322,7 @@
     .crono-acc-stat { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
     .crono-acc-stat.has-items { background: rgba(124,92,252,0.1); color: var(--accent-text); border-color: rgba(124,92,252,0.2); }
 
-    .crono-acc-body { display: none; background: #0c0c0c; padding: 12px; gap: 10px; grid-template-columns: 1fr 1fr 2fr; min-width: 0; }
+    .crono-acc-body { display: none; background: #0c0c0c; padding: 12px; gap: 10px; grid-template-columns: 1fr 1fr 1fr 2fr; min-width: 0; }
     .crono-accordion.open .crono-acc-body { display: grid; }
 
     .crono-col { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
@@ -1348,6 +1348,46 @@
     .idea-del { background: none; border: none; color: rgba(255,255,255,0.1); cursor: pointer; font-size: 14px; padding: 0; opacity: 0; transition: all 0.12s; font-family: inherit; flex-shrink: 0; }
     .idea-item:hover .idea-del { opacity: 1; }
     .idea-del:hover { color: #f87171; }
+    .idea-attach-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; width: 26px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: inherit; transition: all 0.12s; padding: 0; }
+    .idea-attach-btn:hover { background: rgba(124,92,252,0.15); border-color: rgba(124,92,252,.3); color: var(--text); }
+    .idea-pending-wrap { padding: 4px 8px 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .idea-file-chip { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 10px; padding: 2px 7px; font-size: 9px; color: var(--text-dim); }
+    .idea-file-chip a { color: inherit; text-decoration: none; }
+    .idea-file-chip a:hover { color: var(--text); }
+    .idea-file-rm { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 12px; padding: 0; line-height: 1; }
+    .idea-file-rm:hover { color: #f87171; }
+    .idea-item-files { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; padding-left: 18px; }
+    /* ── EDIÇÃO COLUMN ── */
+    .edit-input-row { padding: 8px 8px 4px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }
+    .edit-input-top { display: flex; gap: 5px; align-items: flex-start; }
+    .edit-textarea { flex: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 11px; font-family: inherit; color: var(--text); outline: none; resize: none; min-width: 0; line-height: 1.45; }
+    .edit-textarea::placeholder { color: rgba(232,227,220,0.22); }
+    .edit-textarea:focus { border-color: rgba(124,92,252,0.4); background: #1a1a1a; }
+    .edit-add-btn { background: var(--accent-dim); border: 1px solid rgba(124,92,252,0.3); color: var(--accent-text); border-radius: 6px; width: 28px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: inherit; transition: all 0.12s; padding: 0; }
+    .edit-add-btn:hover { background: rgba(124,92,252,0.25); }
+    .edit-input-bottom { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+    .edit-status-sel { display: flex; gap: 4px; }
+    .edit-status-pill { padding: 3px 9px; border-radius: 10px; font-size: 9px; font-weight: 600; cursor: pointer; border: 1px solid transparent; background: var(--surface-2); color: var(--text-dim); transition: all .12s; letter-spacing: .03em; }
+    .edit-status-pill.active-parado { background: rgba(100,116,139,.2); border-color: rgba(100,116,139,.4); color: #94a3b8; }
+    .edit-status-pill.active-andamento { background: rgba(245,158,11,.2); border-color: rgba(245,158,11,.4); color: #f59e0b; }
+    .edit-status-pill.active-concluido { background: rgba(34,197,94,.2); border-color: rgba(34,197,94,.4); color: #22c55e; }
+    .edit-pending-wrap { display: flex; flex-wrap: wrap; gap: 4px; }
+    .edit-list { padding: 5px 6px; overflow-y: auto; max-height: 290px; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .edit-list::-webkit-scrollbar { width: 3px; }
+    .edit-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .edit-item { display: flex; flex-direction: column; gap: 4px; padding: 7px 7px 5px; border-radius: 5px; border: 1px solid transparent; transition: all 0.1s; }
+    .edit-item:hover { background: rgba(255,255,255,.03); border-color: var(--border); }
+    .edit-item-top { display: flex; align-items: flex-start; gap: 6px; }
+    .edit-item-text { flex: 1; font-size: 11px; line-height: 1.5; color: var(--text); word-break: break-word; }
+    .edit-item-del { background: none; border: none; color: rgba(255,255,255,0.1); cursor: pointer; font-size: 14px; padding: 0; opacity: 0; transition: all 0.12s; font-family: inherit; flex-shrink: 0; }
+    .edit-item:hover .edit-item-del { opacity: 1; }
+    .edit-item-del:hover { color: #f87171; }
+    .edit-item-footer { display: flex; align-items: center; gap: 6px; padding-left: 0; }
+    .edit-badge-st { padding: 2px 7px; border-radius: 8px; font-size: 9px; font-weight: 600; letter-spacing: .03em; cursor: pointer; border: 1px solid transparent; transition: all .12s; }
+    .edit-badge-st.parado { background: rgba(100,116,139,.15); border-color: rgba(100,116,139,.3); color: #94a3b8; }
+    .edit-badge-st.andamento { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.3); color: #f59e0b; }
+    .edit-badge-st.concluido { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.3); color: #22c55e; }
+    .edit-item-files { display: flex; flex-wrap: wrap; gap: 3px; }
 
     /* MATERIALS */
     .mat-upload-row { padding: 7px 8px; border-bottom: 1px solid var(--border); }
@@ -1356,15 +1396,19 @@
     .mat-grid { padding: 7px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; overflow-y: auto; max-height: 280px; }
     .mat-grid::-webkit-scrollbar { width: 3px; }
     .mat-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-    .mat-card { position: relative; aspect-ratio: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; transition: border-color 0.15s; }
+    .mat-card { position: relative; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; transition: border-color 0.15s; display: flex; flex-direction: column; }
     .mat-card:hover { border-color: var(--border-2); }
-    .mat-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .mat-card-icon { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 20px; color: var(--text-dim); }
+    .mat-card-thumb { height: 68px; position: relative; flex-shrink: 0; overflow: hidden; }
+    .mat-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mat-card-icon { width: 100%; height: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 18px; color: var(--text-dim); }
     .mat-card-ext { font-size: 8px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-dim); }
     .mat-type-badge { position: absolute; bottom: 2px; left: 2px; background: rgba(0,0,0,0.7); color: rgba(255,255,255,0.65); font-size: 7px; font-weight: 600; padding: 1px 3px; border-radius: 2px; }
     .mat-card-del { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.75); border: none; color: rgba(255,255,255,0.6); width: 16px; height: 16px; border-radius: 50%; font-size: 10px; cursor: pointer; display: none; align-items: center; justify-content: center; font-family: inherit; line-height: 1; }
     .mat-card:hover .mat-card-del { display: flex; }
     .mat-card-del:hover { color: #f87171; }
+    .mat-desc-in { background: transparent; border: none; border-top: 1px solid rgba(255,255,255,.06); padding: 4px 6px; font-size: 9px; font-family: inherit; color: var(--text-dim); outline: none; resize: none; width: 100%; height: 28px; line-height: 1.4; transition: height .15s,color .15s; }
+    .mat-desc-in:focus { color: var(--text); background: rgba(255,255,255,.02); height: 44px; }
+    .mat-desc-in::placeholder { color: rgba(232,227,220,.16); }
 
     /* SCHEDULE */
     .sched-nav-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border); }
@@ -2159,7 +2203,7 @@ const _fsdb = firebase.firestore();
 
 let _syncTimer      = null;
 let _lastLocalWrite = 0;
-const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__']; // base64 e senhas — só localStorage
+const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__', 'mmideaf__', 'mmeditf__']; // base64 e senhas — só localStorage
 
 function mmGet(key)       { return localStorage.getItem(key); }
 function mmSet(key, val)  {
@@ -3597,6 +3641,15 @@ function lsSave(k, v)  { try { mmSet(k, JSON.stringify(v)); } catch { alert('Arm
 
 function loadIdeas(c)  { return lsGet(`mmidea__${c}`)         || []; }
 function saveIdeas(c,v){ lsSave(`mmidea__${c}`, v); }
+function loadIdeaFiles(id) { try { return JSON.parse(localStorage.getItem(`mmideaf__${id}`)||'[]'); } catch { return []; } }
+function saveIdeaFiles(id,v){ localStorage.setItem(`mmideaf__${id}`, JSON.stringify(v)); }
+function loadEditItems(c)  { return lsGet(`mmedit__${c}`) || []; }
+function saveEditItems(c,v){ lsSave(`mmedit__${c}`, v); }
+function loadEditFiles(id) { try { return JSON.parse(localStorage.getItem(`mmeditf__${id}`)||'[]'); } catch { return []; } }
+function saveEditFiles(id,v){ localStorage.setItem(`mmeditf__${id}`, JSON.stringify(v)); }
+
+const pendingIdeaFiles = {};  // {[cid]: [{name,type,data}]}
+const pendingEditFiles = {};  // {[cid]: [{name,type,data}]}
 function loadMats(c)   { return lsGet(`mmmat__${c}`)          || []; }
 function saveMats(c,v) { lsSave(`mmmat__${c}`, v); }
 function loadSched(c)   { return lsGet(`mmsched_items__${c}`)  || {}; }
@@ -3742,21 +3795,35 @@ function rebuildAccBody(cid) {
   body.innerHTML = `
     <div class="crono-col" id="col-ideas-${cid}">${ideasColHtml(cid)}</div>
     <div class="crono-col" id="col-mats-${cid}">${matsColHtml(cid)}</div>
+    <div class="crono-col" id="col-edit-${cid}">${editColHtml(cid)}</div>
     <div class="crono-col" id="col-sched-${cid}">${schedColHtml(cid)}</div>`;
-  bindIdeas(cid); bindMats(cid); bindSched(cid);
+  bindIdeas(cid); bindMats(cid); bindEdit(cid); bindSched(cid);
 }
 
 // ── IDEAS COLUMN ──────────────────────────────────────────────────────────────
 
+function ideaFileChipsHtml(files, prefix, id) {
+  return files.map((f,i) => `
+    <span class="idea-file-chip">
+      ${f.data ? `<a href="${f.data}" download="${escHtml(f.name)}" title="${escHtml(f.name)}">📎 ${escHtml(f.name)}</a>` : `📎 ${escHtml(f.name)}`}
+      ${prefix === 'pending' ? `<button class="idea-file-rm" data-pfi="${i}" data-pc="${id}">×</button>` : ''}
+    </span>`).join('');
+}
+
 function ideasColHtml(cid) {
   const list = loadIdeas(cid);
+  const pending = pendingIdeaFiles[cid] || [];
   const items = list.length
-    ? list.map(i => `
+    ? list.map(i => {
+        const files = loadIdeaFiles(i.id);
+        return `
         <div class="idea-item">
           <span class="idea-icon">💡</span>
           <span class="idea-text">${escHtml(i.text)}</span>
           <button class="idea-del" data-id="${i.id}" data-c="${cid}">×</button>
-        </div>`).join('')
+          ${files.length ? `<div class="idea-item-files">${ideaFileChipsHtml(files,'item',i.id)}</div>` : ''}
+        </div>`;
+      }).join('')
     : '<div class="crono-empty">Nenhuma ideia ainda</div>';
   return `
     <div class="crono-col-header">
@@ -3765,26 +3832,65 @@ function ideasColHtml(cid) {
     </div>
     <div class="idea-input-row">
       <textarea class="idea-textarea" rows="2" placeholder="Nova ideia ou referência…" id="iinput-${cid}"></textarea>
+      <label class="idea-attach-btn" title="Anexar arquivo"><input type="file" id="ifile-${cid}" style="display:none" multiple>📎</label>
       <button class="idea-add-btn" id="iadd-${cid}">+</button>
     </div>
+    ${pending.length ? `<div class="idea-pending-wrap" id="ipending-${cid}">${ideaFileChipsHtml(pending,'pending',cid)}</div>` : `<div id="ipending-${cid}"></div>`}
     <div class="idea-list" id="ilist-${cid}">${items}</div>`;
+}
+
+function refreshIdeaPending(cid) {
+  const wrap = document.getElementById(`ipending-${cid}`); if (!wrap) return;
+  const pending = pendingIdeaFiles[cid] || [];
+  wrap.innerHTML = pending.length ? ideaFileChipsHtml(pending,'pending',cid) : '';
+  wrap.querySelectorAll('[data-pfi]').forEach(b => b.addEventListener('click', () => {
+    pendingIdeaFiles[cid].splice(parseInt(b.dataset.pfi), 1);
+    refreshIdeaPending(cid);
+  }));
 }
 
 function bindIdeas(cid) {
   const input = document.getElementById(`iinput-${cid}`);
   const btn   = document.getElementById(`iadd-${cid}`);
   if (!input || !btn) return;
+  if (!pendingIdeaFiles[cid]) pendingIdeaFiles[cid] = [];
+
   const doAdd = () => {
     const t = input.value.trim(); if (!t) return;
+    const id = Date.now().toString(36);
     const list = loadIdeas(cid);
-    list.unshift({ id: Date.now().toString(36), text: t });
-    saveIdeas(cid, list); input.value = '';
+    const files = pendingIdeaFiles[cid] || [];
+    list.unshift({ id, text: t, hasFiles: files.length > 0 });
+    saveIdeas(cid, list);
+    if (files.length) saveIdeaFiles(id, files);
+    pendingIdeaFiles[cid] = [];
+    input.value = '';
     refreshIdeas(cid);
   };
   btn.addEventListener('click', doAdd);
   input.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); doAdd(); } });
+
+  const fileInp = document.getElementById(`ifile-${cid}`);
+  if (fileInp) {
+    fileInp.addEventListener('change', () => {
+      if (!pendingIdeaFiles[cid]) pendingIdeaFiles[cid] = [];
+      Array.from(fileInp.files).forEach(f => {
+        const r = new FileReader();
+        r.onload = ev => { pendingIdeaFiles[cid].push({name:f.name,type:f.type,data:ev.target.result}); refreshIdeaPending(cid); };
+        r.readAsDataURL(f);
+      });
+      fileInp.value = '';
+    });
+  }
+  refreshIdeaPending(cid);
+
   document.getElementById(`ilist-${cid}`)?.querySelectorAll('.idea-del').forEach(b =>
-    b.addEventListener('click', () => { saveIdeas(cid, loadIdeas(cid).filter(x => x.id!==b.dataset.id)); refreshIdeas(cid); })
+    b.addEventListener('click', () => {
+      const old = loadIdeas(cid).find(x => x.id === b.dataset.id);
+      if (old?.hasFiles) localStorage.removeItem(`mmideaf__${old.id}`);
+      saveIdeas(cid, loadIdeas(cid).filter(x => x.id!==b.dataset.id));
+      refreshIdeas(cid);
+    })
   );
 }
 
@@ -3800,11 +3906,14 @@ function matsColHtml(cid) {
   const items = mats.length
     ? mats.map(m => `
         <div class="mat-card">
-          ${m.thumbnail
-            ? `<img src="${m.thumbnail}" title="${escHtml(m.name)}">`
-            : `<div class="mat-card-icon">${isVidFile(m.mimeType||m.name)?'🎬':'📄'}<span class="mat-card-ext">${fileExt(m.name)}</span></div>`}
-          <span class="mat-type-badge">${fileExt(m.name)}</span>
-          <button class="mat-card-del" data-id="${m.id}" data-c="${cid}">×</button>
+          <div class="mat-card-thumb">
+            ${m.thumbnail
+              ? `<img src="${m.thumbnail}" title="${escHtml(m.name)}">`
+              : `<div class="mat-card-icon">${isVidFile(m.mimeType||m.name)?'🎬':'📄'}<span class="mat-card-ext">${fileExt(m.name)}</span></div>`}
+            <span class="mat-type-badge">${fileExt(m.name)}</span>
+            <button class="mat-card-del" data-id="${m.id}" data-c="${cid}">×</button>
+          </div>
+          <textarea class="mat-desc-in" data-mid="${m.id}" placeholder="Descrição…" rows="1">${escHtml(m.desc||'')}</textarea>
         </div>`).join('')
     : '<div class="crono-empty" style="grid-column:1/-1">Nenhum material</div>';
   return `
@@ -3841,11 +3950,170 @@ function bindMats(cid) {
       refreshMats(cid);
     })
   );
+  document.getElementById(`mgrid-${cid}`)?.querySelectorAll('.mat-desc-in').forEach(ta =>
+    ta.addEventListener('input', () => {
+      const mats = loadMats(cid);
+      const mat = mats.find(m => m.id === ta.dataset.mid);
+      if (mat) { mat.desc = ta.value; saveMats(cid, mats); }
+    })
+  );
 }
 
 function refreshMats(cid) {
   const col = document.getElementById(`col-mats-${cid}`); if (!col) return;
   col.innerHTML = matsColHtml(cid); bindMats(cid); updateAccStats(cid);
+}
+
+// ── EDIT COLUMN ───────────────────────────────────────────────────────────────
+
+const EDIT_STATUS = [
+  {id:'parado',    label:'Parado',       cls:'parado'},
+  {id:'andamento', label:'Em andamento', cls:'andamento'},
+  {id:'concluido', label:'Concluído',    cls:'concluido'},
+];
+
+function editFileChipsHtml(files) {
+  return files.map((f,i) => `
+    <span class="idea-file-chip">
+      ${f.data ? `<a href="${f.data}" download="${escHtml(f.name)}" title="${escHtml(f.name)}">📎 ${escHtml(f.name)}</a>` : `📎 ${escHtml(f.name)}`}
+    </span>`).join('');
+}
+
+function editPendingChipsHtml(files, cid) {
+  return files.map((f,i) => `
+    <span class="idea-file-chip">
+      📎 ${escHtml(f.name)}
+      <button class="idea-file-rm" data-efi="${i}" data-ec="${cid}">×</button>
+    </span>`).join('');
+}
+
+function editColHtml(cid) {
+  const list = loadEditItems(cid);
+  const pending = pendingEditFiles[cid] || [];
+  const items = list.length
+    ? list.map(it => {
+        const files = loadEditFiles(it.id);
+        const st = EDIT_STATUS.find(s => s.id === (it.status||'parado')) || EDIT_STATUS[0];
+        return `
+        <div class="edit-item">
+          <div class="edit-item-top">
+            <span class="edit-item-text">${escHtml(it.text)}</span>
+            <button class="edit-item-del" data-id="${it.id}" data-c="${cid}">×</button>
+          </div>
+          <div class="edit-item-footer">
+            <button class="edit-badge-st ${st.cls}" data-eid="${it.id}" data-ec="${cid}" title="Clique para mudar status">${st.label}</button>
+            ${files.length ? `<div class="edit-item-files">${editFileChipsHtml(files)}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="crono-empty">Nenhuma edição pendente</div>';
+  return `
+    <div class="crono-col-header">
+      <span class="crono-col-title">Edição</span>
+      <span class="crono-col-count" id="cnt-edit-${cid}">${list.length}</span>
+    </div>
+    <div class="edit-input-row">
+      <div class="edit-input-top">
+        <textarea class="edit-textarea" rows="2" placeholder="Descrever o que precisa ser editado…" id="einput-${cid}"></textarea>
+        <label class="idea-attach-btn" title="Anexar arquivo"><input type="file" id="efile-${cid}" style="display:none" multiple>📎</label>
+        <button class="edit-add-btn" id="eadd-${cid}">+</button>
+      </div>
+      <div class="edit-input-bottom">
+        <div class="edit-status-sel" id="esel-${cid}">
+          ${EDIT_STATUS.map(s => `<button class="edit-status-pill" data-est="${s.id}">${s.label}</button>`).join('')}
+        </div>
+        <div class="edit-pending-wrap" id="epending-${cid}">${editPendingChipsHtml(pending, cid)}</div>
+      </div>
+    </div>
+    <div class="edit-list" id="elist-${cid}">${items}</div>`;
+}
+
+function refreshEditPending(cid) {
+  const wrap = document.getElementById(`epending-${cid}`); if (!wrap) return;
+  const pending = pendingEditFiles[cid] || [];
+  wrap.innerHTML = editPendingChipsHtml(pending, cid);
+  wrap.querySelectorAll('[data-efi]').forEach(b => b.addEventListener('click', () => {
+    pendingEditFiles[cid].splice(parseInt(b.dataset.efi), 1);
+    refreshEditPending(cid);
+  }));
+}
+
+function bindEdit(cid) {
+  const input = document.getElementById(`einput-${cid}`);
+  const btn   = document.getElementById(`eadd-${cid}`);
+  if (!input || !btn) return;
+  if (!pendingEditFiles[cid]) pendingEditFiles[cid] = [];
+
+  // status selector state
+  let selectedStatus = 'parado';
+  const pills = document.getElementById(`esel-${cid}`)?.querySelectorAll('[data-est]');
+  if (pills) {
+    const updatePills = () => {
+      pills.forEach(p => {
+        const s = EDIT_STATUS.find(x => x.id === p.dataset.est);
+        p.className = 'edit-status-pill' + (p.dataset.est === selectedStatus ? ` active-${s.cls}` : '');
+      });
+    };
+    updatePills();
+    pills.forEach(p => p.addEventListener('click', () => { selectedStatus = p.dataset.est; updatePills(); }));
+  }
+
+  const doAdd = () => {
+    const t = input.value.trim(); if (!t) return;
+    const id = Date.now().toString(36);
+    const list = loadEditItems(cid);
+    const files = pendingEditFiles[cid] || [];
+    list.unshift({ id, text: t, status: selectedStatus, hasFiles: files.length > 0 });
+    saveEditItems(cid, list);
+    if (files.length) saveEditFiles(id, files);
+    pendingEditFiles[cid] = [];
+    input.value = ''; selectedStatus = 'parado';
+    refreshEdit(cid);
+  };
+  btn.addEventListener('click', doAdd);
+  input.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); doAdd(); } });
+
+  const fileInp = document.getElementById(`efile-${cid}`);
+  if (fileInp) {
+    fileInp.addEventListener('change', () => {
+      if (!pendingEditFiles[cid]) pendingEditFiles[cid] = [];
+      Array.from(fileInp.files).forEach(f => {
+        const r = new FileReader();
+        r.onload = ev => { pendingEditFiles[cid].push({name:f.name,type:f.type,data:ev.target.result}); refreshEditPending(cid); };
+        r.readAsDataURL(f);
+      });
+      fileInp.value = '';
+    });
+  }
+  refreshEditPending(cid);
+
+  // delete items
+  document.getElementById(`elist-${cid}`)?.querySelectorAll('.edit-item-del').forEach(b =>
+    b.addEventListener('click', () => {
+      const old = loadEditItems(cid).find(x => x.id === b.dataset.id);
+      if (old?.hasFiles) localStorage.removeItem(`mmeditf__${old.id}`);
+      saveEditItems(cid, loadEditItems(cid).filter(x => x.id !== b.dataset.id));
+      refreshEdit(cid);
+    })
+  );
+
+  // cycle status on badge click
+  document.getElementById(`elist-${cid}`)?.querySelectorAll('.edit-badge-st').forEach(b =>
+    b.addEventListener('click', () => {
+      const list = loadEditItems(cid);
+      const it = list.find(x => x.id === b.dataset.eid);
+      if (!it) return;
+      const idx = EDIT_STATUS.findIndex(s => s.id === it.status);
+      it.status = EDIT_STATUS[(idx + 1) % EDIT_STATUS.length].id;
+      saveEditItems(cid, list);
+      refreshEdit(cid);
+    })
+  );
+}
+
+function refreshEdit(cid) {
+  const col = document.getElementById(`col-edit-${cid}`); if (!col) return;
+  col.innerHTML = editColHtml(cid); bindEdit(cid);
 }
 
 // ── SCHEDULE COLUMN ───────────────────────────────────────────────────────────
@@ -4250,6 +4518,10 @@ function buildFichaGrid() {
         <div class="ficha-field">
           <span class="ficha-lbl">Frequência</span>
           <input class="ficha-input" type="text" placeholder="3 posts/sem + stories" data-key="frequencia" value="${escHtml(f.frequencia||'')}">
+        </div>
+        <div class="ficha-field">
+          <span class="ficha-lbl">Investimento em Mídia</span>
+          <input class="ficha-input" type="text" placeholder="R$ 0,00/mês" data-key="investMidia" value="${escHtml(f.investMidia||'')}">
         </div>
         <div class="ficha-field">
           <span class="ficha-lbl">Tom de voz</span>
