@@ -66,7 +66,20 @@
       gap: 24px;
     }
     .mm-logo-wrap { display: flex; align-items: center; }
-    .mm-logo { height: 30px; width: auto; object-fit: contain; }
+    .mm-logo { height: 52px; width: auto; object-fit: contain; }
+    /* ── MARCA D'ÁGUA ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url('logo-moving.png');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: 55%;
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 0;
+    }
     .mm-brand-center { flex: 1; text-align: center; }
     .mm-tagline {
       font-size: 11px;
@@ -1670,7 +1683,7 @@
         padding: 10px 14px 9px;
         gap: 10px;
       }
-      .mm-logo { height: 24px; }
+      .mm-logo { height: 38px; }
       .mm-tagline { display: none; }
       .mm-date-badge { font-size: 9px; padding: 4px 9px; }
       .mm-nav-row {
@@ -2022,8 +2035,8 @@
   <div class="mm-brand-row">
     <div class="mm-logo-wrap">
       <img class="mm-logo"
-           src="../../comercial/proposta-geral/logo-horizontal-bege%20.png"
-           onerror="this.src='../../comercial/proposta-geral/logo-horizontal-verde.png'"
+           src="logo-moving.png"
+           onerror="this.style.display='none'"
            alt="Moving Marketing">
     </div>
     <div class="mm-brand-center">
