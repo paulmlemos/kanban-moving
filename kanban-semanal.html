@@ -5784,6 +5784,242 @@ function initApprovalMode(){
 }
 initApprovalMode();
 
+// ── Calendário de Eventos — Igreja Encontros de Fé ──────────────────────────
+
+(function injectIgrejaEventosStyles() {
+  const s = document.createElement('style');
+  s.textContent = `
+  #igreja-eventos-wrap { padding: 16px; }
+  .iev-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .iev-toolbar h3 { margin:0; font-size:1rem; color:#e2e8f0; flex:1; }
+  .iev-nav-btn { background:#1e293b; border:1px solid #334155; color:#94a3b8; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:13px; }
+  .iev-nav-btn:hover { background:#334155; color:#e2e8f0; }
+  .iev-add-btn { background:#fb923c; border:none; color:#fff; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:13px; font-weight:600; }
+  .iev-add-btn:hover { background:#f97316; }
+  .iev-legend { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .iev-legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:#94a3b8; }
+  .iev-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .iev-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .iev-dow { text-align:center; font-size:11px; color:#64748b; padding:4px 0; font-weight:600; }
+  .iev-cell { min-height:72px; background:#1e293b; border-radius:6px; padding:4px; border:1px solid #1e293b; transition:border-color .15s; cursor:pointer; }
+  .iev-cell:hover { border-color:#334155; }
+  .iev-cell.iev-today { border-color:#fb923c; }
+  .iev-cell.iev-other-month .iev-day-num { color:#475569; }
+  .iev-day-num { font-size:12px; color:#94a3b8; margin-bottom:3px; font-weight:600; }
+  .iev-cell.iev-today .iev-day-num { color:#fb923c; }
+  .iev-ev-pill { font-size:10px; padding:2px 5px; border-radius:4px; margin-bottom:2px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+  .iev-ev-pill:hover { opacity:.85; }
+  /* Modal */
+  .iev-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9000; display:flex; align-items:center; justify-content:center; }
+  .iev-modal { background:#0f172a; border:1px solid #334155; border-radius:12px; padding:24px; width:380px; max-width:95vw; }
+  .iev-modal h4 { margin:0 0 16px; font-size:1rem; color:#e2e8f0; }
+  .iev-modal label { font-size:12px; color:#94a3b8; display:block; margin-bottom:4px; }
+  .iev-modal input, .iev-modal textarea, .iev-modal select {
+    width:100%; background:#1e293b; border:1px solid #334155; color:#e2e8f0;
+    border-radius:6px; padding:7px 10px; font-size:13px; margin-bottom:12px; box-sizing:border-box;
+  }
+  .iev-modal textarea { resize:vertical; min-height:60px; }
+  .iev-modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:4px; }
+  .iev-modal-actions button { border:none; border-radius:6px; padding:7px 16px; font-size:13px; cursor:pointer; font-weight:600; }
+  .iev-btn-cancel { background:#334155; color:#94a3b8; }
+  .iev-btn-cancel:hover { background:#475569; }
+  .iev-btn-save { background:#fb923c; color:#fff; }
+  .iev-btn-save:hover { background:#f97316; }
+  .iev-btn-delete { background:#ef4444; color:#fff; margin-right:auto; }
+  .iev-btn-delete:hover { background:#dc2626; }
+  `;
+  document.head.appendChild(s);
+})();
+
+const IEV_CATS = [
+  { id:'culto',    label:'Culto',          color:'#fb923c' },
+  { id:'especial', label:'Evento Especial', color:'#a78bfa' },
+  { id:'reuniao',  label:'Reunião',        color:'#34d399' },
+  { id:'ensaio',   label:'Ensaio/Treino',  color:'#60a5fa' },
+  { id:'outro',    label:'Outro',          color:'#94a3b8' },
+];
+const IEV_KEY = 'mmievents__encontros-fe';
+
+function ievLoad() { try { return JSON.parse(localStorage.getItem(IEV_KEY)||'[]'); } catch(e){ return []; } }
+function ievSave(arr) { localStorage.setItem(IEV_KEY, JSON.stringify(arr)); }
+
+let _ievYear, _ievMonth;
+
+function renderIgrejaEventos() {
+  const wrap = document.getElementById('igreja-eventos-wrap');
+  if (!wrap) return;
+  const today = new Date();
+  if (_ievYear == null) { _ievYear = today.getFullYear(); _ievMonth = today.getMonth(); }
+  wrap.innerHTML = '';
+
+  // Toolbar
+  const toolbar = document.createElement('div');
+  toolbar.className = 'iev-toolbar';
+  const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  toolbar.innerHTML = `
+    <button class="iev-nav-btn" id="iev-prev">&#8592;</button>
+    <h3>${monthNames[_ievMonth]} ${_ievYear}</h3>
+    <button class="iev-nav-btn" id="iev-next">&#8594;</button>
+    <button class="iev-add-btn" id="iev-add-btn">+ Novo Evento</button>
+  `;
+  wrap.appendChild(toolbar);
+
+  // Legenda
+  const legend = document.createElement('div');
+  legend.className = 'iev-legend';
+  legend.innerHTML = IEV_CATS.map(c => `
+    <div class="iev-legend-item">
+      <div class="iev-legend-dot" style="background:${c.color}"></div>${c.label}
+    </div>`).join('');
+  wrap.appendChild(legend);
+
+  // Calendário
+  const grid = document.createElement('div');
+  grid.className = 'iev-grid';
+  ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'iev-dow'; el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDay = new Date(_ievYear, _ievMonth, 1).getDay();
+  const daysInMonth = new Date(_ievYear, _ievMonth+1, 0).getDate();
+  const daysInPrev  = new Date(_ievYear, _ievMonth, 0).getDate();
+
+  const events = ievLoad();
+  const evByDate = {};
+  events.forEach(ev => {
+    const k = ev.date;
+    if (!evByDate[k]) evByDate[k] = [];
+    evByDate[k].push(ev);
+  });
+
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  for (let i = 0; i < totalCells; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'iev-cell';
+    let day, month, year, isOther = false;
+    if (i < firstDay) {
+      day = daysInPrev - firstDay + i + 1; month = _ievMonth - 1; year = _ievYear;
+      if (month < 0) { month = 11; year--; }
+      isOther = true;
+    } else if (i - firstDay < daysInMonth) {
+      day = i - firstDay + 1; month = _ievMonth; year = _ievYear;
+    } else {
+      day = i - firstDay - daysInMonth + 1; month = _ievMonth + 1; year = _ievYear;
+      if (month > 11) { month = 0; year++; }
+      isOther = true;
+    }
+    const isoDate = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    if (isOther) cell.classList.add('iev-other-month');
+    if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) cell.classList.add('iev-today');
+
+    const num = document.createElement('div');
+    num.className = 'iev-day-num'; num.textContent = day;
+    cell.appendChild(num);
+
+    (evByDate[isoDate]||[]).forEach(ev => {
+      const cat = IEV_CATS.find(c=>c.id===ev.cat)||IEV_CATS[4];
+      const pill = document.createElement('div');
+      pill.className = 'iev-ev-pill';
+      pill.style.background = cat.color;
+      pill.textContent = (ev.time ? ev.time+' ' : '') + ev.title;
+      pill.title = ev.title + (ev.desc ? '\n'+ev.desc : '');
+      pill.addEventListener('click', e => { e.stopPropagation(); ievOpenModal(ev, isoDate); });
+      cell.appendChild(pill);
+    });
+
+    cell.addEventListener('click', () => ievOpenModal(null, isoDate));
+    grid.appendChild(cell);
+  }
+  wrap.appendChild(grid);
+
+  // Navegação
+  document.getElementById('iev-prev').addEventListener('click', e => {
+    e.stopPropagation();
+    _ievMonth--; if (_ievMonth < 0) { _ievMonth = 11; _ievYear--; }
+    renderIgrejaEventos();
+  });
+  document.getElementById('iev-next').addEventListener('click', e => {
+    e.stopPropagation();
+    _ievMonth++; if (_ievMonth > 11) { _ievMonth = 0; _ievYear++; }
+    renderIgrejaEventos();
+  });
+  document.getElementById('iev-add-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    const today2 = new Date();
+    const iso = `${today2.getFullYear()}-${String(today2.getMonth()+1).padStart(2,'0')}-${String(today2.getDate()).padStart(2,'0')}`;
+    ievOpenModal(null, iso);
+  });
+}
+
+function ievOpenModal(ev, isoDate) {
+  const isEdit = !!ev;
+  const overlay = document.createElement('div');
+  overlay.className = 'iev-modal-overlay';
+
+  const catOptions = IEV_CATS.map(c =>
+    `<option value="${c.id}" ${(ev?.cat||'culto')===c.id?'selected':''}>${c.label}</option>`
+  ).join('');
+
+  overlay.innerHTML = `
+    <div class="iev-modal">
+      <h4>${isEdit ? 'Editar Evento' : 'Novo Evento'}</h4>
+      <label>Título</label>
+      <input id="iev-f-title" type="text" placeholder="Ex: Culto de Domingo" value="${ev?.title||''}">
+      <label>Data</label>
+      <input id="iev-f-date" type="date" value="${ev?.date||isoDate}">
+      <label>Horário (opcional)</label>
+      <input id="iev-f-time" type="time" value="${ev?.time||''}">
+      <label>Categoria</label>
+      <select id="iev-f-cat">${catOptions}</select>
+      <label>Descrição (opcional)</label>
+      <textarea id="iev-f-desc" placeholder="Detalhes do evento...">${ev?.desc||''}</textarea>
+      <div class="iev-modal-actions">
+        ${isEdit ? '<button class="iev-btn-delete" id="iev-del-btn">Excluir</button>' : ''}
+        <button class="iev-btn-cancel" id="iev-cancel-btn">Cancelar</button>
+        <button class="iev-btn-save" id="iev-save-btn">${isEdit ? 'Salvar' : 'Adicionar'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#iev-cancel-btn').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+  overlay.querySelector('#iev-save-btn').addEventListener('click', () => {
+    const title = overlay.querySelector('#iev-f-title').value.trim();
+    if (!title) { overlay.querySelector('#iev-f-title').style.border='1px solid #ef4444'; return; }
+    const payload = {
+      id: ev?.id || Date.now().toString(36),
+      title,
+      date: overlay.querySelector('#iev-f-date').value,
+      time: overlay.querySelector('#iev-f-time').value,
+      cat:  overlay.querySelector('#iev-f-cat').value,
+      desc: overlay.querySelector('#iev-f-desc').value.trim(),
+    };
+    const arr = ievLoad();
+    if (isEdit) {
+      const idx = arr.findIndex(x=>x.id===ev.id);
+      if (idx>=0) arr[idx]=payload; else arr.push(payload);
+    } else {
+      arr.push(payload);
+    }
+    ievSave(arr);
+    overlay.remove();
+    renderIgrejaEventos();
+  });
+
+  if (isEdit) {
+    overlay.querySelector('#iev-del-btn').addEventListener('click', () => {
+      if (!confirm(`Excluir "${ev.title}"?`)) return;
+      const arr = ievLoad().filter(x=>x.id!==ev.id);
+      ievSave(arr);
+      overlay.remove();
+      renderIgrejaEventos();
+    });
+  }
+}
+
 // ── Seções por cliente ───────────────────────────────────────────────────────
 
 function buildClientSections() {
@@ -5825,6 +6061,7 @@ function buildClientSections() {
     if (!c.isInternal) tabDefs.push({ id: 'onboard',  label: 'Onboarding' });
     if (!c.isInternal) tabDefs.push({ id: 'aprov',    label: 'Aprovação'  });
     tabDefs.push(                    { id: 'acessos',  label: 'Acessos'   });
+    if (c.id === 'encontros-fe') tabDefs.push({ id: 'eventos', label: 'Eventos' });
 
     const sec = document.createElement('div');
     sec.className = 'client-section sec-anchor';
@@ -5872,6 +6109,11 @@ function buildClientSections() {
       // Aprovação
       const apPanel = document.getElementById(`cpanel-aprov-${c.id}`);
       if (apPanel) { apPanel.innerHTML=`<div class="aprov-wrap" id="aprovwrap-${c.id}"></div>`; renderAprov(c.id); }
+    }
+    // Calendário de Eventos — exclusivo Igreja Encontros de Fé
+    if (c.id === 'encontros-fe') {
+      const evPanel = document.getElementById(`cpanel-eventos-${c.id}`);
+      if (evPanel) { evPanel.innerHTML=`<div id="igreja-eventos-wrap"></div>`; renderIgrejaEventos(); }
     }
 
     // Troca de abas
