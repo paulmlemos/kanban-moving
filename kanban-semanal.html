@@ -1113,6 +1113,28 @@
     .cap-date-input:focus { border-color: rgba(124,92,252,0.4); background: #1a1a1a; }
     .cap-date-input::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
 
+    /* ── HISTÓRICO DE CAPTAÇÕES ─────────────────── */
+    .cap-hist-section { margin-top: 12px; }
+    .cap-hist-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .cap-hist-add-btn { background: var(--client-color, #7c5cfc); border: none; color: #fff; border-radius: 5px; padding: 3px 9px; font-size: 11px; cursor: pointer; font-weight: 600; opacity: .85; }
+    .cap-hist-add-btn:hover { opacity: 1; }
+    .cap-hist-add-form { display: flex; flex-direction: column; gap: 5px; background: #1a1a2e; border: 1px solid #334155; border-radius: 6px; padding: 8px; margin-bottom: 6px; }
+    .cap-hist-date-inp, .cap-hist-obs-inp {
+      background: #0f172a; border: 1px solid #334155; color: #e2e8f0;
+      border-radius: 5px; padding: 5px 8px; font-size: 12px; width: 100%; box-sizing: border-box;
+    }
+    .cap-hist-date-inp::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+    .cap-hist-form-btns { display: flex; gap: 6px; justify-content: flex-end; }
+    .cap-hist-save-btn { background: var(--client-color, #7c5cfc); border: none; color: #fff; border-radius: 5px; padding: 4px 12px; font-size: 12px; cursor: pointer; font-weight: 600; }
+    .cap-hist-cancel-btn { background: #334155; border: none; color: #94a3b8; border-radius: 5px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+    .cap-hist-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; max-height: 180px; overflow-y: auto; }
+    .cap-hist-empty { font-size: 11px; color: #475569; text-align: center; padding: 8px 0; }
+    .cap-hist-item { display: flex; align-items: center; gap: 6px; background: #1e293b; border-radius: 5px; padding: 5px 8px; font-size: 12px; }
+    .cap-hist-date { color: #e2e8f0; font-weight: 600; white-space: nowrap; }
+    .cap-hist-obs { color: #94a3b8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cap-hist-del-btn { background: none; border: none; color: #475569; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; margin-left: auto; flex-shrink: 0; }
+    .cap-hist-del-btn:hover { color: #ef4444; }
+
     /* ── MINI CALENDAR ──────────────────────────── */
     .mini-cal {
       width: 258px;
@@ -3663,6 +3685,7 @@ buildWeeklyManager();
 // ══════════════════════════════════════════════════════════════════════════════
 
 function capKey(clientId)  { return `mmcap__${clientId}`; }
+function capHistKey(clientId) { return `mmcaphist__${clientId}`; }
 
 function loadCap(clientId) {
   try { return JSON.parse(mmGet(capKey(clientId)) || '{}'); }
@@ -3671,6 +3694,15 @@ function loadCap(clientId) {
 
 function saveCap(clientId, data) {
   mmSet(capKey(clientId), JSON.stringify(data));
+}
+
+function loadCapHist(clientId) {
+  try { return JSON.parse(localStorage.getItem(capHistKey(clientId)) || '[]'); }
+  catch { return []; }
+}
+
+function saveCapHist(clientId, arr) {
+  localStorage.setItem(capHistKey(clientId), JSON.stringify(arr));
 }
 
 function daysDiff(dateStr) {
@@ -3718,32 +3750,70 @@ function buildCapGrid() {
       </div>
       <div class="cap-card-body">
         <div class="cap-field">
-          <span class="cap-label">Última captação</span>
-          <input class="cap-date-input" type="date"
-            data-client="${client.id}" data-field="lastDate"
-            value="${cap.lastDate || ''}"
-            title="Data da última captação realizada">
-        </div>
-        <div class="cap-field">
           <span class="cap-label">Próxima captação</span>
           <input class="cap-date-input" type="date"
             data-client="${client.id}" data-field="nextDate"
             value="${cap.nextDate || ''}"
             title="Prazo para realizar a próxima captação">
         </div>
+        <div class="cap-hist-section">
+          <div class="cap-hist-header">
+            <span class="cap-label">Histórico de captações</span>
+            <button class="cap-hist-add-btn" data-client="${client.id}">+ Registrar</button>
+          </div>
+          <div class="cap-hist-add-form" id="cap-hist-form-${client.id}" style="display:none;">
+            <input class="cap-hist-date-inp" type="date" id="cap-hist-date-${client.id}">
+            <input class="cap-hist-obs-inp" type="text" placeholder="Observação (opcional)" id="cap-hist-obs-${client.id}">
+            <div class="cap-hist-form-btns">
+              <button class="cap-hist-save-btn" data-client="${client.id}">Salvar</button>
+              <button class="cap-hist-cancel-btn" data-client="${client.id}">Cancelar</button>
+            </div>
+          </div>
+          <ul class="cap-hist-list" id="cap-hist-list-${client.id}"></ul>
+        </div>
       </div>
     `;
 
-    card.querySelectorAll('.cap-date-input').forEach(inp => {
-      inp.addEventListener('change', () => {
-        const data = loadCap(inp.dataset.client);
-        data[inp.dataset.field] = inp.value;
-        saveCap(inp.dataset.client, data);
-        refreshCapCard(inp.dataset.client);
-        renderMiniCal();
-      });
+    card.querySelector('.cap-date-input').addEventListener('change', inp => {
+      const cid = inp.target.dataset.client;
+      const data = loadCap(cid);
+      data['nextDate'] = inp.target.value;
+      saveCap(cid, data);
+      refreshCapCard(cid);
+      renderMiniCal();
     });
 
+    // Histórico — toggle form
+    card.querySelector('.cap-hist-add-btn').addEventListener('click', () => {
+      const form = document.getElementById(`cap-hist-form-${client.id}`);
+      const isOpen = form.style.display !== 'none';
+      form.style.display = isOpen ? 'none' : 'flex';
+      if (!isOpen) {
+        const today = new Date();
+        document.getElementById(`cap-hist-date-${client.id}`).value =
+          `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        document.getElementById(`cap-hist-obs-${client.id}`).value = '';
+      }
+    });
+
+    // Histórico — salvar
+    card.querySelector('.cap-hist-save-btn').addEventListener('click', () => {
+      const dateVal = document.getElementById(`cap-hist-date-${client.id}`).value;
+      if (!dateVal) return;
+      const obs = document.getElementById(`cap-hist-obs-${client.id}`).value.trim();
+      const arr = loadCapHist(client.id);
+      arr.unshift({ id: Date.now().toString(36), date: dateVal, obs });
+      saveCapHist(client.id, arr);
+      document.getElementById(`cap-hist-form-${client.id}`).style.display = 'none';
+      renderCapHist(client.id);
+    });
+
+    // Histórico — cancelar
+    card.querySelector('.cap-hist-cancel-btn').addEventListener('click', () => {
+      document.getElementById(`cap-hist-form-${client.id}`).style.display = 'none';
+    });
+
+    renderCapHist(client.id);
     grid.appendChild(card);
   });
 }
@@ -3756,6 +3826,34 @@ function refreshCapCard(clientId) {
   const badge = card.querySelector('.cap-status');
   badge.className = `cap-status ${st.cls}`;
   badge.textContent = st.label;
+}
+
+function renderCapHist(clientId) {
+  const list = document.getElementById(`cap-hist-list-${clientId}`);
+  if (!list) return;
+  const arr = loadCapHist(clientId);
+  if (arr.length === 0) {
+    list.innerHTML = '<li class="cap-hist-empty">Nenhum registro ainda</li>';
+    return;
+  }
+  const fmt = iso => {
+    const [y,m,d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+  list.innerHTML = arr.map(entry => `
+    <li class="cap-hist-item" data-id="${entry.id}" data-client="${clientId}">
+      <span class="cap-hist-date">${fmt(entry.date)}</span>
+      ${entry.obs ? `<span class="cap-hist-obs">${entry.obs}</span>` : ''}
+      <button class="cap-hist-del-btn" title="Remover">×</button>
+    </li>`).join('');
+  list.querySelectorAll('.cap-hist-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const li = btn.closest('li');
+      const arr2 = loadCapHist(li.dataset.client).filter(x => x.id !== li.dataset.id);
+      saveCapHist(li.dataset.client, arr2);
+      renderCapHist(li.dataset.client);
+    });
+  });
 }
 
 // ── Mini Calendar ────────────────────────────────────────────────────────────
