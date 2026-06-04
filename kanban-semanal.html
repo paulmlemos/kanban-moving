@@ -1669,12 +1669,104 @@
       outline: none;
       padding: 0;
       overflow: hidden;
+      max-height: 28px;
       min-height: 14px;
       transition: color 0.12s;
     }
     .sched-legend::placeholder { color: rgba(232,227,220,0.18); font-style: italic; }
     .sched-legend:focus { color: var(--text); }
     .sched-legend:not(:placeholder-shown) { color: rgba(232,227,220,0.7); }
+    .sched-legend-more-btn {
+      display: block;
+      font-size: 8px;
+      color: var(--accent-text);
+      background: none;
+      border: none;
+      padding: 1px 0 0;
+      cursor: pointer;
+      font-family: inherit;
+      opacity: 0.6;
+      transition: opacity 0.12s;
+      line-height: 1;
+    }
+    .sched-legend-more-btn:hover { opacity: 1; }
+
+    /* MODAL DE DETALHE DO DIA */
+    .sched-day-num { cursor: pointer; }
+    .sched-day-num:hover { color: var(--accent-text); }
+    .sday-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(6px);
+      z-index: 8000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .sday-modal-overlay.open { display: flex; }
+    .sday-modal {
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      width: 520px;
+      max-width: 95vw;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sday-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .sday-modal-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .sday-modal-title { font-size: 14px; font-weight: 600; flex: 1; }
+    .sday-modal-date { font-size: 11px; color: var(--text-dim); }
+    .sday-modal-close {
+      background: none; border: none; color: var(--text-dim);
+      font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1;
+      transition: color 0.12s;
+    }
+    .sday-modal-close:hover { color: var(--text); }
+    .sday-modal-body { padding: 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+    .sday-modal-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sday-modal-section-lbl {
+      font-size: 9px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;
+    }
+    .sday-modal-previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+    }
+    .sday-preview-item {
+      border-radius: 8px; overflow: hidden;
+      background: #1a1a1a; border: 1px solid rgba(255,255,255,0.07);
+      aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; cursor: pointer; transition: transform 0.15s;
+    }
+    .sday-preview-item:hover { transform: scale(1.03); }
+    .sday-preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sday-preview-name { font-size: 9px; color: var(--text-dim); text-align: center; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sday-modal-text {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .sday-modal-text.brief { color: var(--accent-text); }
+    .sday-empty-text { font-size: 11px; color: rgba(255,255,255,0.2); font-style: italic; }
 
     /* FORMATO DO POST */
     .sched-fmt-btn {
@@ -2431,6 +2523,18 @@
         <button class="btn btn-accent" id="pickerConfirm">Adicionar ao dia</button>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="sday-modal-overlay" id="sdayModal">
+  <div class="sday-modal">
+    <div class="sday-modal-header">
+      <div class="sday-modal-dot" id="sdayModalDot"></div>
+      <div class="sday-modal-title" id="sdayModalTitle"></div>
+      <div class="sday-modal-date" id="sdayModalDate"></div>
+      <button class="sday-modal-close" id="sdayModalClose">×</button>
+    </div>
+    <div class="sday-modal-body" id="sdayModalBody"></div>
   </div>
 </div>
 
@@ -4699,7 +4803,7 @@ function schedColHtml(cid) {
       return `
         <div class="${cls}" data-iso="${iso}" data-c="${cid}">
           <div class="sched-day-top">
-            <span class="sched-day-num">${d.getDate()}</span>
+            <span class="sched-day-num" data-c="${cid}" data-iso="${iso}" title="Ver detalhe do dia">${d.getDate()}</span>
             <button class="sched-nopost-btn${isNoPost?' active':''}" data-np="${cid}" data-npiso="${iso}" title="${isNoPost?'Retomar postagem':'Marcar sem postagem'}">${isNoPost?'Sem post':'—'}</button>
             <button class="sched-fmt-btn" data-c="${cid}" data-iso="${iso}" data-idx="${fmtIdx}"
               style="background:${FMT_BG[fmtIdx]};border-color:${FMT_BORDER[fmtIdx]};color:${FMT_COLOR[fmtIdx]}"
@@ -4716,6 +4820,7 @@ function schedColHtml(cid) {
           </div>
           <div class="sched-legend-wrap">
             <textarea class="sched-legend" data-c="${cid}" data-iso="${iso}" placeholder="Legenda…" rows="1">${legVal}</textarea>
+            <button class="sched-legend-more-btn" data-c="${cid}" data-iso="${iso}">ver completa ↗</button>
           </div>
         </div>`;
     }).join('')}</div>`
@@ -4772,14 +4877,23 @@ function bindSched(cid) {
     })
   );
   col.querySelectorAll('.sched-legend').forEach(ta => {
-    const autoResize = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
-    autoResize();
     ta.addEventListener('input', () => {
-      autoResize();
       const all = loadLegend(ta.dataset.c);
       if (ta.value.trim()) all[ta.dataset.iso] = ta.value;
       else delete all[ta.dataset.iso];
       saveLegend(ta.dataset.c, all);
+    });
+  });
+  col.querySelectorAll('.sched-legend-more-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      openDayDetailModal(btn.dataset.c, btn.dataset.iso);
+    });
+  });
+  col.querySelectorAll('.sched-day-num').forEach(span => {
+    span.addEventListener('click', e => {
+      e.stopPropagation();
+      openDayDetailModal(span.dataset.c, span.dataset.iso);
     });
   });
   col.querySelectorAll('.sched-brief').forEach(ta => {
@@ -4813,6 +4927,91 @@ function refreshSched(cid) {
   const col = document.getElementById(`col-sched-${cid}`); if (!col) return;
   col.innerHTML = schedColHtml(cid); bindSched(cid);
 }
+
+function openDayDetailModal(cid, iso) {
+  const client  = CLIENTS.find(c => c.id === cid) || { name: cid, color: '#7c5cfc' };
+  const items   = (loadSched(cid))[iso]   || [];
+  const legend  = (loadLegend(cid))[iso]  || '';
+  const brief   = (loadBrief(cid))[iso]   || '';
+  const fmtIdx  = (loadFormat(cid))[iso]  || 0;
+  const state   = getSchedSt(cid, iso);
+
+  const d = new Date(iso + 'T12:00:00');
+  const DAYS_PT  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const MONTHS_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const dateStr  = `${DAYS_PT[d.getDay()]}, ${d.getDate()} de ${MONTHS_PT[d.getMonth()]}`;
+
+  const stColors = ['rgba(255,255,255,0.15)','rgba(251,191,36,0.25)','rgba(34,197,94,0.25)'];
+  const stText   = ['Pendente','Programado','Postado'];
+
+  document.getElementById('sdayModalDot').style.background = client.color;
+  document.getElementById('sdayModalTitle').textContent    = client.name;
+  document.getElementById('sdayModalDate').textContent     = dateStr;
+
+  const body = document.getElementById('sdayModalBody');
+  let html = '';
+
+  // Badges
+  html += `<div class="sday-modal-badges">`;
+  if (FORMATS[fmtIdx]) {
+    html += `<span class="sched-fmt-btn" style="font-size:11px;padding:3px 10px;background:${FMT_BG[fmtIdx]};border-color:${FMT_BORDER[fmtIdx]};color:${FMT_COLOR[fmtIdx]}">${FORMATS[fmtIdx]}</span>`;
+  }
+  html += `<span style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);background:${stColors[state]};color:var(--text)">${stText[state]}</span>`;
+  html += `</div>`;
+
+  // Prévia de imagens/arquivos
+  if (items.length) {
+    html += `<div>
+      <div class="sday-modal-section-lbl">Conteúdo (${items.length})</div>
+      <div class="sday-modal-previews">`;
+    items.forEach(it => {
+      if (it.thumbnail) {
+        html += `<div>
+          <div class="sday-preview-item" onclick="window.open(this.querySelector('img').src,'_blank')">
+            <img src="${it.thumbnail}">
+          </div>
+          <div class="sday-preview-name">${escHtml(it.name)}</div>
+        </div>`;
+      } else {
+        const icon = isVidFile(it.name) ? '🎬' : '📄';
+        html += `<div>
+          <div class="sday-preview-item">${icon}</div>
+          <div class="sday-preview-name">${escHtml(it.name)}</div>
+        </div>`;
+      }
+    });
+    html += `</div></div>`;
+  }
+
+  // Pauta
+  html += `<div>
+    <div class="sday-modal-section-lbl">Pauta</div>
+    ${brief ? `<div class="sday-modal-text brief">${escHtml(brief)}</div>`
+            : `<span class="sday-empty-text">Sem pauta registrada</span>`}
+  </div>`;
+
+  // Legenda
+  html += `<div>
+    <div class="sday-modal-section-lbl">Legenda</div>
+    ${legend ? `<div class="sday-modal-text">${escHtml(legend)}</div>`
+             : `<span class="sday-empty-text">Sem legenda registrada</span>`}
+  </div>`;
+
+  body.innerHTML = html;
+  document.getElementById('sdayModal').classList.add('open');
+}
+
+(function initDayDetailModal() {
+  document.getElementById('sdayModalClose').addEventListener('click', () => {
+    document.getElementById('sdayModal').classList.remove('open');
+  });
+  document.getElementById('sdayModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('sdayModal').classList.remove('open');
+  });
+}());
 
 function refreshSchedDay(cid, iso) {
   const btn = document.getElementById(`ssb-${cid}-${iso}`); if (!btn) return;
