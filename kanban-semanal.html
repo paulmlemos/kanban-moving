@@ -2725,7 +2725,8 @@ const CLIENTS = [
     color: '#f472b6',
     platforms: [],
     noKanban: true,
-    noFinanceiro: true
+    noFinanceiro: true,
+    isPersonal: true
   },
 ];
 
@@ -5261,7 +5262,7 @@ function refreshDashboard() {
   [...CLIENTS, MOVING_CLIENT].forEach(c => {
     loadTasks(c.id).forEach(t => t.done ? allDone++ : allPending++);
   });
-  const clientCount = CLIENTS.length;
+  const clientCount = CLIENTS.filter(c => !c.isPersonal).length;
 
   grid.innerHTML = `
     <div class="dash-card ok">
