@@ -1411,6 +1411,14 @@
     .idea-file-rm { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 12px; padding: 0; line-height: 1; }
     .idea-file-rm:hover { color: #f87171; }
     .idea-item-files { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; padding-left: 18px; }
+    .idea-item-main { display: flex; align-items: flex-start; gap: 6px; width: 100%; }
+    .idea-item { flex-direction: column; }
+    .idea-desc-text { font-size:10px; color:var(--text-dim); margin:3px 0 2px 18px; line-height:1.45; white-space:pre-wrap; word-break:break-word; }
+    .idea-desc-area { width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:4px 6px; font-size:10px; color:var(--text); font-family:inherit; resize:vertical; outline:none; margin:4px 0 2px; line-height:1.45; min-height:42px; box-sizing:border-box; }
+    .idea-desc-area:focus { border-color:rgba(124,92,252,.4); background:#1a1a1a; }
+    .idea-desc-btn { background:none; border:none; color:rgba(255,255,255,.15); cursor:pointer; font-size:11px; padding:0; flex-shrink:0; transition:color .12s; }
+    .idea-item:hover .idea-desc-btn { color:var(--text-dim); }
+    .idea-desc-btn:hover { color:#a78bfa !important; }
     /* ── EDIÇÃO COLUMN ── */
     .edit-input-row { padding: 8px 8px 4px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }
     .edit-input-top { display: flex; gap: 5px; align-items: flex-start; }
@@ -4378,11 +4386,16 @@ function ideasColHtml(cid) {
   const items = list.length
     ? list.map(i => {
         const files = loadIdeaFiles(i.id);
+        const descHtml = i.desc ? `<div class="idea-desc-text" data-id="${i.id}">${escHtml(i.desc)}</div>` : '';
         return `
-        <div class="idea-item">
-          <span class="idea-icon">💡</span>
-          <span class="idea-text">${escHtml(i.text)}</span>
-          <button class="idea-del" data-id="${i.id}" data-c="${cid}">×</button>
+        <div class="idea-item" data-id="${i.id}">
+          <div class="idea-item-main">
+            <span class="idea-icon">💡</span>
+            <span class="idea-text">${escHtml(i.text)}</span>
+            <button class="idea-desc-btn" data-action="toggle-desc" data-id="${i.id}" data-c="${cid}" title="Adicionar descrição">📝</button>
+            <button class="idea-del" data-id="${i.id}" data-c="${cid}">×</button>
+          </div>
+          ${descHtml}
           ${files.length ? `<div class="idea-item-files">${ideaFileChipsHtml(files,'item',i.id)}</div>` : ''}
         </div>`;
       }).join('')
@@ -4422,7 +4435,7 @@ function bindIdeas(cid) {
     const id = Date.now().toString(36);
     const list = loadIdeas(cid);
     const files = pendingIdeaFiles[cid] || [];
-    list.unshift({ id, text: t, hasFiles: files.length > 0 });
+    list.unshift({ id, text: t, desc: '', hasFiles: files.length > 0 });
     saveIdeas(cid, list);
     if (files.length) saveIdeaFiles(id, files);
     pendingIdeaFiles[cid] = [];
@@ -4446,7 +4459,9 @@ function bindIdeas(cid) {
   }
   refreshIdeaPending(cid);
 
-  document.getElementById(`ilist-${cid}`)?.querySelectorAll('.idea-del').forEach(b =>
+  const ilist = document.getElementById(`ilist-${cid}`);
+
+  ilist?.querySelectorAll('.idea-del').forEach(b =>
     b.addEventListener('click', () => {
       const old = loadIdeas(cid).find(x => x.id === b.dataset.id);
       if (old?.hasFiles) localStorage.removeItem(`mmideaf__${old.id}`);
@@ -4454,6 +4469,63 @@ function bindIdeas(cid) {
       refreshIdeas(cid);
     })
   );
+
+  ilist?.querySelectorAll('[data-action="toggle-desc"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id   = btn.dataset.id;
+      const item = ilist.querySelector(`.idea-item[data-id="${id}"]`);
+      if (!item) return;
+
+      const existing = item.querySelector('.idea-desc-area');
+      if (existing) {
+        // save and collapse
+        const val = existing.value.trim();
+        const ideas = loadIdeas(cid);
+        const idea  = ideas.find(x => x.id === id);
+        if (idea) { idea.desc = val; saveIdeas(cid, ideas); }
+        existing.remove();
+        const descEl = item.querySelector('.idea-desc-text');
+        if (descEl) { descEl.textContent = val; if (!val) descEl.remove(); }
+        else if (val) {
+          const d = document.createElement('div');
+          d.className = 'idea-desc-text'; d.dataset.id = id; d.textContent = val;
+          item.querySelector('.idea-item-main').after(d);
+        }
+      } else {
+        // expand
+        const ideas  = loadIdeas(cid);
+        const idea   = ideas.find(x => x.id === id);
+        const ta     = document.createElement('textarea');
+        ta.className = 'idea-desc-area';
+        ta.rows      = 2;
+        ta.placeholder = 'Descrição ou observação sobre esta ideia…';
+        ta.value     = idea?.desc || '';
+
+        const saveDesc = () => {
+          const val = ta.value.trim();
+          const ideas2 = loadIdeas(cid);
+          const idea2  = ideas2.find(x => x.id === id);
+          if (idea2) { idea2.desc = val; saveIdeas(cid, ideas2); }
+          let descEl = item.querySelector('.idea-desc-text');
+          if (val) {
+            if (!descEl) {
+              descEl = document.createElement('div');
+              descEl.className = 'idea-desc-text'; descEl.dataset.id = id;
+              ta.after(descEl);
+            }
+            descEl.textContent = val;
+          } else if (descEl) { descEl.remove(); }
+        };
+
+        ta.addEventListener('blur', saveDesc);
+        ta.addEventListener('keydown', e => { if (e.key === 'Escape') { saveDesc(); ta.remove(); } });
+
+        const descEl = item.querySelector('.idea-desc-text');
+        if (descEl) { descEl.replaceWith(ta); } else { item.querySelector('.idea-item-main').after(ta); }
+        ta.focus();
+      }
+    });
+  });
 }
 
 function refreshIdeas(cid) {
