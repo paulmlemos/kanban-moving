@@ -790,6 +790,25 @@
       flex-shrink:0; line-height:1.6; letter-spacing:.03em;
       background:rgba(52,211,153,.15); color:#34d399;
     }
+    .task-urgency-row { display:flex; gap:4px; padding:4px 9px 8px; border-bottom:1px solid var(--border); align-items:center; flex-wrap:wrap; }
+    .task-urgency-pill {
+      font-size:10px; padding:2px 8px; border-radius:20px;
+      border:1px solid var(--border-2); background:transparent; color:var(--text-dim);
+      cursor:pointer; transition:background .15s,border-color .15s,color .15s;
+    }
+    .task-urgency-pill.sel[data-urg=""]        { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); color:var(--text); }
+    .task-urgency-pill.sel[data-urg="baixa"]   { background:#22c55e; border-color:#22c55e; color:#fff; }
+    .task-urgency-pill.sel[data-urg="media"]   { background:#f59e0b; border-color:#f59e0b; color:#fff; }
+    .task-urgency-pill.sel[data-urg="alta"]    { background:#f97316; border-color:#f97316; color:#fff; }
+    .task-urgency-pill.sel[data-urg="critica"] { background:#ef4444; border-color:#ef4444; color:#fff; }
+    .task-urgency-badge {
+      font-size:9px; padding:1px 6px; border-radius:10px; font-weight:700;
+      text-transform:uppercase; letter-spacing:.05em; flex-shrink:0;
+    }
+    .task-urgency-badge[data-urg="baixa"]   { background:rgba(34,197,94,.15);  color:#22c55e; }
+    .task-urgency-badge[data-urg="media"]   { background:rgba(245,158,11,.15); color:#f59e0b; }
+    .task-urgency-badge[data-urg="alta"]    { background:rgba(249,115,22,.15); color:#f97316; }
+    .task-urgency-badge[data-urg="critica"] { background:rgba(239,68,68,.15);  color:#ef4444; }
 
     /* ══════════════════════════════════════════════
        GERENCIADOR SEMANAL DE TAREFAS
@@ -2565,6 +2584,10 @@
         <div class="tw-modal-label">↻ Recorrência</div>
         <div class="tw-modal-row" id="twModalRecurrence"></div>
       </div>
+      <div>
+        <div class="tw-modal-label">⚡ Urgência</div>
+        <div class="tw-modal-row" id="twModalUrgency"></div>
+      </div>
     </div>
     <div class="tw-modal-foot">
       <button class="btn" id="twModalCancel">Cancelar</button>
@@ -2844,6 +2867,11 @@ const MOVING_CLIENT = { id: 'moving', name: 'Moving Marketing', color: '#7c5cfc'
 const taskFilters     = {}; // clientId → uid ('all'|'priscila'|'paul')
 const taskAssignees   = {}; // clientId → uid ('priscila'|'paul'|'')
 const taskRecurrences = {}; // clientId → recurrence (''|'daily'|'weekly'|'monthly')
+const taskUrgencies   = {}; // clientId → urgency (''|'baixa'|'media'|'alta'|'critica')
+
+const URGENCY_ORDER = { critica: 4, alta: 3, media: 2, baixa: 1, '': 0 };
+const URGENCY_LABELS = { '': '—', baixa: 'Baixa', media: 'Média', alta: 'Alta', critica: 'Crítica' };
+const URGENCY_OPTS = [['', '—'], ['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta'], ['critica', 'Crítica']];
 
 const DAYS_PT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 
@@ -3113,7 +3141,7 @@ function nextRecurrenceDate(iso, recurrence) {
   return base.toISOString().slice(0, 10);
 }
 
-function addTask(clientId, text, desc, dueDate, assignee, recurrence) {
+function addTask(clientId, text, desc, dueDate, assignee, recurrence, urgency) {
   if (!text.trim()) return;
   const tasks = loadTasks(clientId);
   tasks.push({
@@ -3123,7 +3151,8 @@ function addTask(clientId, text, desc, dueDate, assignee, recurrence) {
     done: false,
     dueDate:    dueDate    || '',
     assignee:   assignee   || '',
-    recurrence: recurrence || ''
+    recurrence: recurrence || '',
+    urgency:    urgency    || ''
   });
   saveTasks(clientId, tasks);
   refreshTaskPanel(clientId);
@@ -3146,7 +3175,8 @@ function toggleTask(clientId, id) {
         done: false,
         dueDate:    nextRecurrenceDate(t.dueDate, t.recurrence),
         assignee:   t.assignee   || '',
-        recurrence: t.recurrence
+        recurrence: t.recurrence,
+        urgency:    t.urgency    || ''
       });
     }
     saveTasks(clientId, tasks);
@@ -3209,13 +3239,18 @@ function refreshTaskPanel(clientId) {
   if (visible.length === 0) {
     listEl.innerHTML = `<div class="task-empty">${filter !== 'all' ? 'Nenhuma tarefa para este usuário' : 'Nenhuma tarefa'}</div>`;
   } else {
-    const sorted = [...visible.filter(t => !t.done), ...visible.filter(t => t.done)];
+    const byUrgency = (a, b) => (URGENCY_ORDER[b.urgency||''] || 0) - (URGENCY_ORDER[a.urgency||''] || 0);
+    const sorted = [
+      ...visible.filter(t => !t.done).sort(byUrgency),
+      ...visible.filter(t => t.done)
+    ];
     listEl.innerHTML = sorted.map(task => {
       const dueBadge  = task.dueDate  ? `<span class="task-due ${dueCls(task.dueDate)}">${dueFmt(task.dueDate)}</span>` : '';
       const userBadge = task.assignee ? `<span class="task-user-badge" data-uid="${task.assignee}">${USERS.find(u=>u.id===task.assignee)?.name||''}</span>` : '';
       const descHtml  = task.desc     ? `<div class="task-desc">${escHtml(task.desc)}</div>` : '';
       const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
       const recBadge  = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
+      const urgBadge  = task.urgency  ? `<span class="task-urgency-badge" data-urg="${task.urgency}">${URGENCY_LABELS[task.urgency]||task.urgency}</span>` : '';
       const taskFiles = loadTaskFiles(task.id);
       const fileBadge = taskFiles.length > 0
         ? `<button class="task-file-badge" data-action="togglefiles" data-taskid="${task.id}" title="Ver arquivos">📎 ${taskFiles.length}</button>`
@@ -3235,7 +3270,7 @@ function refreshTaskPanel(clientId) {
           ${descHtml}
           ${fileListHtml}
         </div>
-        ${recBadge}${dueBadge}${userBadge}${fileBadge}
+        ${urgBadge}${recBadge}${dueBadge}${userBadge}${fileBadge}
         <label class="task-attach-btn" title="Anexar arquivo">📎<input type="file" class="task-file-picker" data-taskid="${task.id}" data-client="${clientId}" multiple style="display:none"></label>
         <button class="task-edit-btn" data-action="edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
         <button class="task-del" data-action="delete" data-client="${clientId}" data-id="${task.id}" title="Remover">×</button>
@@ -3329,6 +3364,7 @@ function buildTasksGrid() {
     taskFilters[client.id]     = 'all';
     taskAssignees[client.id]   = '';
     taskRecurrences[client.id] = '';
+    taskUrgencies[client.id]   = '';
 
     const assigneePillsHtml = USERS.map(u =>
       `<button class="task-assignee-pill" data-uid="${u.id}">${u.name}</button>`
@@ -3365,6 +3401,14 @@ function buildTasksGrid() {
         <button class="task-recurrence-pill" data-rec="weekly">Semanal</button>
         <button class="task-recurrence-pill" data-rec="monthly">Mensal</button>
       </div>
+      <div class="task-urgency-row">
+        <span class="task-assignee-lbl">⚡</span>
+        <button class="task-urgency-pill sel" data-urg="">—</button>
+        <button class="task-urgency-pill" data-urg="baixa">Baixa</button>
+        <button class="task-urgency-pill" data-urg="media">Média</button>
+        <button class="task-urgency-pill" data-urg="alta">Alta</button>
+        <button class="task-urgency-pill" data-urg="critica">Crítica</button>
+      </div>
       <div class="task-list"></div>
       <div class="task-panel-footer" style="display:none">
         <span class="task-done-count"></span>
@@ -3382,6 +3426,15 @@ function buildTasksGrid() {
       b.addEventListener('click', () => {
         taskRecurrences[client.id] = b.dataset.rec;
         panel.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+      });
+    });
+
+    // Urgency selector
+    panel.querySelectorAll('.task-urgency-pill').forEach(b => {
+      b.addEventListener('click', () => {
+        taskUrgencies[client.id] = b.dataset.urg;
+        panel.querySelectorAll('.task-urgency-pill').forEach(x => x.classList.remove('sel'));
         b.classList.add('sel');
       });
     });
@@ -3404,13 +3457,16 @@ function buildTasksGrid() {
     });
 
     const doAdd = () => {
-      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id], taskRecurrences[client.id]);
+      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id], taskRecurrences[client.id], taskUrgencies[client.id]);
       input.value = '';
       if (descInput) descInput.value = '';
       dateInput.value = '';
       // Reset recurrence to "Única"
       taskRecurrences[client.id] = '';
       panel.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.toggle('sel', x.dataset.rec === ''));
+      // Reset urgency to "—"
+      taskUrgencies[client.id] = '';
+      panel.querySelectorAll('.task-urgency-pill').forEach(x => x.classList.toggle('sel', x.dataset.urg === ''));
       input.focus();
     };
 
@@ -3440,6 +3496,7 @@ function editTask(clientId, id) {
 
   let editAssignee   = task.assignee   || '';
   let editRecurrence = task.recurrence || '';
+  let editUrgency    = task.urgency    || '';
 
   item.classList.add('editing');
   const recOpts = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal']];
@@ -3453,6 +3510,9 @@ function editTask(clientId, id) {
     </div>
     <div class="task-edit-row">
       ${recOpts.map(([v,l]) => `<button class="task-recurrence-pill${editRecurrence===v?' sel':''}" data-rec="${v}">↻ ${l}</button>`).join('')}
+    </div>
+    <div class="task-edit-row">
+      ${URGENCY_OPTS.map(([v,l]) => `<button class="task-urgency-pill${editUrgency===v?' sel':''}" data-urg="${v}">⚡ ${l}</button>`).join('')}
     </div>
     <div class="task-edit-row">
       <button class="task-save-btn">Salvar</button>
@@ -3521,6 +3581,14 @@ function editTask(clientId, id) {
     });
   });
 
+  item.querySelectorAll('.task-urgency-pill').forEach(b => {
+    b.addEventListener('click', () => {
+      editUrgency = b.dataset.urg;
+      item.querySelectorAll('.task-urgency-pill').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+  });
+
   item.querySelector('.task-save-btn').addEventListener('click', () => {
     const newText = item.querySelector('.task-edit-input').value.trim();
     const newDesc = item.querySelector('.task-edit-desc').value.trim();
@@ -3534,6 +3602,7 @@ function editTask(clientId, id) {
       t2.dueDate    = newDate;
       t2.assignee   = editAssignee;
       t2.recurrence = editRecurrence;
+      t2.urgency    = editUrgency;
       saveTasks(clientId, tasks2);
     }
     refreshTaskPanel(clientId);
@@ -3557,7 +3626,7 @@ buildTasksGrid();
   const closeBtn  = document.getElementById('twModalClose');
   const cancelBtn = document.getElementById('twModalCancel');
   const saveBtn   = document.getElementById('twModalSave');
-  let _clientId = null, _taskId = null, _modalAssignee = '', _modalRecurrence = '';
+  let _clientId = null, _taskId = null, _modalAssignee = '', _modalRecurrence = '', _modalUrgency = '';
 
   const REC_OPTS = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal']];
 
@@ -3582,6 +3651,7 @@ buildTasksGrid();
     _clientId = clientId; _taskId = taskId;
     _modalAssignee   = task.assignee   || '';
     _modalRecurrence = task.recurrence || '';
+    _modalUrgency    = task.urgency    || '';
 
     document.getElementById('twModalClient').textContent = client ? client.name : clientId;
     document.getElementById('twModalClient').style.color = client ? client.color : '';
@@ -3616,6 +3686,19 @@ buildTasksGrid();
       });
     });
 
+    // Urgency pills
+    const urgEl = document.getElementById('twModalUrgency');
+    urgEl.innerHTML = URGENCY_OPTS.map(([v, l]) =>
+      `<button class="task-urgency-pill${_modalUrgency===v?' sel':''}" data-urg="${v}">${l}</button>`
+    ).join('');
+    urgEl.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        _modalUrgency = b.dataset.urg;
+        urgEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+      });
+    });
+
     overlay.classList.add('open');
     document.getElementById('twModalTitle').focus();
   };
@@ -3638,6 +3721,7 @@ buildTasksGrid();
       t.dueDate    = document.getElementById('twModalDate').value;
       t.assignee   = _modalAssignee;
       t.recurrence = _modalRecurrence;
+      t.urgency    = _modalUrgency;
       saveTasks(_clientId, tasks);
     }
     closeModal();
@@ -3748,13 +3832,18 @@ function renderWeeklyManager() {
     const dayNum = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
     const filtered = twUserFilter === 'all' ? items : items.filter(e => e.task.assignee === twUserFilter);
-    const itemsHtml = filtered.length === 0
+    const filteredSorted = [...filtered].sort((a, b) => {
+      if (a.task.done !== b.task.done) return a.task.done ? 1 : -1;
+      return (URGENCY_ORDER[b.task.urgency||''] || 0) - (URGENCY_ORDER[a.task.urgency||''] || 0);
+    });
+    const itemsHtml = filteredSorted.length === 0
       ? '<div class="tw-empty">—</div>'
-      : filtered.map(({ clientId, clientName, clientColor, task }) => {
+      : filteredSorted.map(({ clientId, clientName, clientColor, task }) => {
           const user = USERS.find(u => u.id === task.assignee);
           const userBadge = user ? `<span class="task-user-badge" data-uid="${task.assignee}">${user.name}</span>` : '';
           const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
           const recBadge = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
+          const urgBadge = task.urgency ? `<span class="task-urgency-badge" data-urg="${task.urgency}">${URGENCY_LABELS[task.urgency]||task.urgency}</span>` : '';
           return `
           <div class="tw-item${task.done ? ' tw-done' : ''}" style="--client-color:${clientColor}">
             <button class="tw-cb" data-action="tw-toggle" data-client="${clientId}" data-id="${task.id}" title="${task.done ? 'Reabrir' : 'Concluir'}">${task.done ? '✓' : ''}</button>
@@ -3762,7 +3851,7 @@ function renderWeeklyManager() {
               <div class="tw-client-tag">${escHtml(clientName)}</div>
               <div class="tw-task-text">${escHtml(task.text)}</div>
             </div>
-            ${recBadge}${userBadge}
+            ${urgBadge}${recBadge}${userBadge}
             <button class="tw-edit-btn" data-action="tw-edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
           </div>`;
         }).join('');
