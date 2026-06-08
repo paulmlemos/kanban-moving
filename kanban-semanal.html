@@ -4552,12 +4552,17 @@ function editPendingChipsHtml(files, cid) {
 function editColHtml(cid) {
   const list = loadEditItems(cid);
   const pending = pendingEditFiles[cid] || [];
-  const items = list.length
-    ? list.map(it => {
+  const sorted = [
+    ...list.filter(it => it.status !== 'concluido').sort((a,b) => (URGENCY_ORDER[b.urgency||'']||0) - (URGENCY_ORDER[a.urgency||'']||0)),
+    ...list.filter(it => it.status === 'concluido')
+  ];
+  const items = sorted.length
+    ? sorted.map(it => {
         const files = loadEditFiles(it.id);
         const st = EDIT_STATUS.find(s => s.id === (it.status||'parado')) || EDIT_STATUS[0];
         const fmtIdx = FORMATS.indexOf(it.format||'');
         const fmtColor = fmtIdx > 0 ? FMT_COLOR[fmtIdx] : null;
+        const urgBadge = it.urgency ? `<span class="task-urgency-badge" data-urg="${it.urgency}">${URGENCY_LABELS[it.urgency]||it.urgency}</span>` : '';
         return `
         <div class="edit-item">
           <div class="edit-item-top">
@@ -4565,6 +4570,7 @@ function editColHtml(cid) {
             <button class="edit-item-del" data-id="${it.id}" data-c="${cid}">×</button>
           </div>
           <div class="edit-item-footer">
+            ${urgBadge}
             <button class="edit-badge-st ${st.cls}" data-eid="${it.id}" data-ec="${cid}" title="Clique para mudar status">${st.label}</button>
             ${fmtColor ? `<span class="edit-badge-fmt" style="background:${fmtColor}20;color:${fmtColor};border-color:${fmtColor}40">${escHtml(it.format)}</span>` : ''}
             ${files.length ? `<div class="edit-item-files">${editFileChipsHtml(files)}</div>` : ''}
@@ -4589,6 +4595,10 @@ function editColHtml(cid) {
         </div>
         <div class="edit-fmt-sel" id="efmt-${cid}">
           ${FORMATS.slice(1).map(f => `<button class="edit-status-pill" data-efmt="${f}">${f}</button>`).join('')}
+        </div>
+        <div class="task-urgency-row" id="eurg-${cid}" style="padding:4px 0 4px;border:none">
+          <span class="task-assignee-lbl">⚡</span>
+          ${URGENCY_OPTS.map(([v,l]) => `<button class="task-urgency-pill${v===''?' sel':''}" data-urg="${v}">${l}</button>`).join('')}
         </div>
         <div class="edit-pending-wrap" id="epending-${cid}">${editPendingChipsHtml(pending, cid)}</div>
       </div>
@@ -4646,16 +4656,27 @@ function bindEdit(cid) {
     }));
   }
 
+  // urgency selector
+  let selectedUrgency = '';
+  const urgPills = document.getElementById(`eurg-${cid}`)?.querySelectorAll('[data-urg]');
+  if (urgPills) {
+    urgPills.forEach(p => p.addEventListener('click', () => {
+      selectedUrgency = p.dataset.urg;
+      urgPills.forEach(x => x.classList.remove('sel'));
+      p.classList.add('sel');
+    }));
+  }
+
   const doAdd = () => {
     const t = input.value.trim(); if (!t) return;
     const id = Date.now().toString(36);
     const list = loadEditItems(cid);
     const files = pendingEditFiles[cid] || [];
-    list.unshift({ id, text: t, status: selectedStatus, format: selectedFormat, hasFiles: files.length > 0 });
+    list.unshift({ id, text: t, status: selectedStatus, format: selectedFormat, urgency: selectedUrgency, hasFiles: files.length > 0 });
     saveEditItems(cid, list);
     if (files.length) saveEditFiles(id, files);
     pendingEditFiles[cid] = [];
-    input.value = ''; selectedStatus = 'parado'; selectedFormat = '';
+    input.value = ''; selectedStatus = 'parado'; selectedFormat = ''; selectedUrgency = '';
     refreshEdit(cid);
   };
   btn.addEventListener('click', doAdd);
@@ -5552,6 +5573,28 @@ function refreshDashboard() {
   });
   const clientCount = CLIENTS.filter(c => !c.isPersonal).length;
 
+  // — Edições —
+  let editParado = 0, editAndamento = 0, editConcluido = 0;
+  const editCriticaClients = [], editAltaClients = [];
+  CLIENTS.forEach(c => {
+    loadEditItems(c.id).forEach(it => {
+      if (it.status === 'concluido') { editConcluido++; return; }
+      if (it.status === 'andamento') editAndamento++;
+      else editParado++;
+      if (it.urgency === 'critica') editCriticaClients.push(c);
+      else if (it.urgency === 'alta') editAltaClients.push(c);
+    });
+  });
+  const editPending = editParado + editAndamento;
+  const editLevel = editCriticaClients.length > 0 ? 'alert' : editAltaClients.length > 0 ? 'warn' : editPending > 0 ? 'warn' : 'ok';
+  const editTagSrc = editCriticaClients.length ? editCriticaClients : editAltaClients;
+  const editTagCls = editCriticaClients.length ? 'alert' : 'warn';
+  const editSub = editCriticaClients.length
+    ? `${editCriticaClients.length} Crítica${editCriticaClients.length>1?'s':''}`
+    : editAltaClients.length
+      ? `${editAltaClients.length} Alta${editAltaClients.length>1?'s':''}`
+      : editAndamento > 0 ? `${editAndamento} em andamento` : editPending > 0 ? 'aguardando' : 'Nada pendente';
+
   grid.innerHTML = `
     <div class="dash-card ok">
       <div class="dash-card-hdr">
@@ -5607,6 +5650,15 @@ function refreshDashboard() {
       <div class="dash-card-val">${weekPct}<span style="font-size:14px;font-weight:400">%</span></div>
       <div class="dash-card-sub">${completedSlots} de ${totalSlots} slots publicados/prog.</div>
       <div class="dash-progress"><div class="dash-progress-fill" style="width:${weekPct}%"></div></div>
+    </div>
+    <div class="dash-card ${editLevel}">
+      <div class="dash-card-hdr">
+        <span class="dash-card-title">Edições</span>
+        <span class="dash-card-icon">✂</span>
+      </div>
+      <div class="dash-card-val">${editPending}</div>
+      <div class="dash-card-sub">${editSub} · ${editAndamento} em andamento · ${editConcluido} concluída${editConcluido!==1?'s':''}</div>
+      <div class="dash-tags">${editTagSrc.length > 0 ? tagHtml(editTagSrc, editTagCls) : `<span class="dash-tag ok-tag">${editPending > 0 ? `${editParado} parada${editParado!==1?'s':''}` : 'ok'}</span>`}</div>
     </div>
   `;
 }
