@@ -2382,6 +2382,9 @@
         <div class="legend-item"><div class="legend-dot s1"></div><span>Programado</span></div>
         <div class="legend-item"><div class="legend-dot s2"></div><span>Postado</span></div>
       </div>
+      <button class="btn" id="btnBackup" title="Baixa um arquivo com TODOS os dados deste navegador, incluindo acessos e arquivos">⬇ Backup</button>
+      <button class="btn" id="btnImport" title="Restaura um arquivo de backup neste navegador">⬆ Importar</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
       <button class="btn btn-danger" id="btnClear">Limpar semana</button>
     </div>
   </div>
@@ -2674,6 +2677,33 @@ function _subscribeToChanges() {
     setTimeout(() => location.reload(), 1500);
   });
 }
+
+// ─── BACKUP / IMPORTAÇÃO LOCAL (inclui acessos e arquivos que não vão pro Firebase) ───
+document.getElementById('btnBackup').onclick = () => {
+  const dump = {};
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); dump[k] = localStorage.getItem(k); }
+  const blob = new Blob([JSON.stringify(dump)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `kanban-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+};
+document.getElementById('btnImport').onclick = () => document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const dump = JSON.parse(r.result);
+      Object.entries(dump).forEach(([k, v]) => localStorage.setItem(k, v));
+      alert('Backup importado! A página vai recarregar.');
+      location.reload();
+    } catch (err) { alert('Arquivo inválido — selecione um backup gerado pelo botão ⬇ Backup.'); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+};
 
 function _showSyncBanner() {
   let b = document.getElementById('_syncBanner');
