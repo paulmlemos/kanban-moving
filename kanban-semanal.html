@@ -2652,9 +2652,14 @@ async function _loadFromCloud() {
     const doc = await _fsdb.collection('kanban').doc('state').get();
     if (doc.exists) {
       const { data } = doc.data();
-      Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v));
+      let changed = false;
+      Object.entries(data).forEach(([k, v]) => {
+        if (localStorage.getItem(k) !== v) { localStorage.setItem(k, v); changed = true; }
+      });
+      return changed;
     }
   } catch(e) { console.warn('[Firebase] load error', e); }
+  return false;
 }
 
 function _subscribeToChanges() {
