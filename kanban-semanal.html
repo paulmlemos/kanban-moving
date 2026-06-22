@@ -964,6 +964,7 @@
       word-break: break-word;
       color: var(--text);
     }
+    .tw-task-badges { display:flex; gap:3px; flex-wrap:wrap; margin-top:3px; }
     .tw-item.tw-done .tw-task-text { text-decoration: line-through; color: var(--text-dim); }
     .tw-empty {
       font-size: 10px;
@@ -4334,14 +4335,15 @@ function renderWeeklyManager() {
           const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
           const recBadge = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
           const urgBadge = task.urgency ? `<span class="task-urgency-badge" data-urg="${task.urgency}">${URGENCY_LABELS[task.urgency]||task.urgency}</span>` : '';
+          const badgesHtml = (urgBadge || recBadge || userBadge) ? `<div class="tw-task-badges">${urgBadge}${recBadge}${userBadge}</div>` : '';
           return `
           <div class="tw-item${task.done ? ' tw-done' : ''}" style="--client-color:${clientColor}">
             <button class="tw-cb" data-action="tw-toggle" data-client="${clientId}" data-id="${task.id}" title="${task.done ? 'Reabrir' : 'Concluir'}">${task.done ? '✓' : ''}</button>
             <div class="tw-task-body">
               <div class="tw-client-tag">${escHtml(clientName)}</div>
               <div class="tw-task-text">${escHtml(task.text)}</div>
+              ${badgesHtml}
             </div>
-            ${urgBadge}${recBadge}${userBadge}
             <button class="tw-edit-btn" data-action="tw-edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
           </div>`;
         }).join('');
