@@ -2349,6 +2349,275 @@
     .acesso-eye:hover { border-color: var(--border-2); color: var(--text); }
     .acesso-saved { font-size: 9px; color: rgba(52,211,153,.7); text-align: right; min-height: 12px; }
 
+    /* ── PROJETOS ─────────────────────────────────────────────── */
+    .proj-section { padding: 20px; }
+    .proj-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .proj-hdr-title { font-size: 15px; font-weight: 700; }
+    .proj-new-btn {
+      background: var(--accent-dim); border: 1px solid rgba(124,92,252,.35);
+      color: var(--accent-text); font-size: 11px; font-family: inherit;
+      padding: 7px 14px; border-radius: 7px; cursor: pointer; transition: all .15s;
+    }
+    .proj-new-btn:hover { background: rgba(124,92,252,.25); }
+    .proj-filters { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+    .proj-filter-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-dim);
+      font-size: 10px; font-family: inherit; padding: 4px 11px; border-radius: 20px;
+      cursor: pointer; transition: all .12s;
+    }
+    .proj-filter-btn:hover { border-color: var(--border-2); color: var(--text); }
+    .proj-filter-btn.active { background: var(--accent-dim); border-color: rgba(124,92,252,.4); color: var(--accent-text); }
+    .proj-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;
+    }
+    .proj-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; display: flex; flex-direction: column; gap: 10px;
+      cursor: pointer; transition: all .15s; border-top: 3px solid var(--proj-color, var(--accent));
+    }
+    .proj-card:hover { background: var(--surface-2); border-color: var(--border-2); }
+    .proj-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .proj-card-title { font-size: 13px; font-weight: 600; line-height: 1.35; }
+    .proj-status-badge {
+      font-size: 8px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+      flex-shrink: 0; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .proj-status-badge.ideia    { background: rgba(139,92,246,.15); color: #a78bfa; border: 1px solid rgba(139,92,246,.3); }
+    .proj-status-badge.andamento{ background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+    .proj-status-badge.concluido{ background: rgba(34,197,94,.12); color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+    .proj-status-badge.pausado  { background: rgba(245,158,11,.12); color: #fbbf24; border: 1px solid rgba(245,158,11,.25); }
+    .proj-card-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .proj-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+    .proj-card-prazo { font-size: 10px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+    .proj-card-prazo.overdue { color: #f87171; }
+    .proj-chk-row { display: flex; align-items: center; gap: 6px; }
+    .proj-chk-bar { width: 60px; height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; }
+    .proj-chk-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+    .proj-chk-label { font-size: 9px; color: var(--text-dim); }
+    .proj-anex-count { font-size: 9px; color: var(--text-dim); }
+    .proj-empty { text-align: center; padding: 60px 20px; color: var(--text-dim); font-size: 12px; font-style: italic; }
+
+    /* ── PROJETO MODAL ─────────────────────────────────────────── */
+    .proj-modal-ov { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 500; display: none; align-items: flex-start; justify-content: center; backdrop-filter: blur(4px); padding: 24px 16px; overflow-y: auto; }
+    .proj-modal-ov.open { display: flex; }
+    .proj-modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px; width: 640px; max-width: 96vw;
+      box-shadow: 0 24px 64px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 18px;
+      margin: auto;
+    }
+    .proj-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .proj-modal-title-input {
+      flex: 1; background: none; border: none; font-size: 17px; font-weight: 700;
+      color: var(--text); font-family: inherit; outline: none; padding: 0;
+    }
+    .proj-modal-title-input::placeholder { color: rgba(232,227,220,.3); }
+    .proj-modal-close {
+      background: none; border: none; color: var(--text-dim); font-size: 20px;
+      cursor: pointer; padding: 0 4px; line-height: 1; transition: color .12s; font-family: inherit;
+    }
+    .proj-modal-close:hover { color: var(--text); }
+    .proj-modal-meta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .proj-meta-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); margin-bottom: 4px; }
+    .proj-meta-group { display: flex; flex-direction: column; }
+    .proj-status-sel {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      font-size: 11px; font-family: inherit; padding: 5px 10px; border-radius: 7px; outline: none; cursor: pointer;
+    }
+    .proj-date-in {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      font-size: 11px; font-family: inherit; padding: 5px 10px; border-radius: 7px; outline: none;
+    }
+    .proj-date-in:focus, .proj-status-sel:focus { border-color: rgba(124,92,252,.45); }
+    .proj-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); margin-bottom: 8px; }
+    .proj-desc-area {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; font-size: 12px; font-family: inherit;
+      color: var(--text); outline: none; resize: vertical; min-height: 90px; line-height: 1.55;
+    }
+    .proj-desc-area:focus { border-color: rgba(124,92,252,.4); }
+    .proj-desc-area::placeholder { color: rgba(232,227,220,.22); }
+    /* checklist */
+    .proj-chk-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+    .proj-chk-item { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; transition: background .1s; }
+    .proj-chk-item:hover { background: rgba(255,255,255,.03); }
+    .proj-chk-cb { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+    .proj-chk-text { flex: 1; font-size: 11px; color: var(--text); line-height: 1.4; background: none; border: none; font-family: inherit; outline: none; }
+    .proj-chk-text.done { text-decoration: line-through; color: var(--text-dim); }
+    .proj-chk-del { background: none; border: none; color: rgba(255,255,255,.1); cursor: pointer; font-size: 15px; padding: 0; opacity: 0; transition: all .12s; font-family: inherit; }
+    .proj-chk-item:hover .proj-chk-del { opacity: 1; }
+    .proj-chk-del:hover { color: #f87171; }
+    .proj-chk-add-row { display: flex; gap: 6px; }
+    .proj-chk-add-in {
+      flex: 1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      font-size: 11px; font-family: inherit; padding: 6px 10px; border-radius: 7px; outline: none;
+    }
+    .proj-chk-add-in:focus { border-color: rgba(124,92,252,.4); }
+    .proj-chk-add-in::placeholder { color: rgba(232,227,220,.22); }
+    .proj-chk-add-btn {
+      background: var(--accent-dim); border: 1px solid rgba(124,92,252,.3); color: var(--accent-text);
+      font-size: 16px; width: 30px; border-radius: 7px; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .12s;
+    }
+    .proj-chk-add-btn:hover { background: rgba(124,92,252,.25); }
+    /* anexos */
+    .proj-anex-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .proj-anex-chip {
+      display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.05);
+      border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px 3px 8px;
+      font-size: 10px; color: var(--text-dim);
+    }
+    .proj-anex-chip a { color: inherit; text-decoration: none; }
+    .proj-anex-chip a:hover { color: var(--text); }
+    .proj-anex-rm { background: none; border: none; color: rgba(255,255,255,.2); cursor: pointer; font-size: 13px; padding: 0; line-height: 1; }
+    .proj-anex-rm:hover { color: #f87171; }
+    .proj-anex-upload-btn {
+      background: none; border: 1px dashed rgba(255,255,255,.15); color: var(--text-dim);
+      font-size: 10px; font-family: inherit; padding: 6px 14px; border-radius: 7px;
+      cursor: pointer; transition: all .12s;
+    }
+    .proj-anex-upload-btn:hover { border-color: rgba(124,92,252,.4); color: var(--text); }
+    /* modal footer */
+    .proj-modal-footer { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px solid var(--border); }
+    .proj-modal-del { background: none; border: 1px solid rgba(248,113,113,.2); color: rgba(248,113,113,.6); font-size: 11px; font-family: inherit; padding: 7px 14px; border-radius: 7px; cursor: pointer; transition: all .12s; }
+    .proj-modal-del:hover { background: rgba(248,113,113,.08); color: #f87171; border-color: rgba(248,113,113,.4); }
+    .proj-modal-save { background: var(--accent-dim); border: 1px solid rgba(124,92,252,.4); color: var(--accent-text); font-size: 11px; font-family: inherit; padding: 7px 20px; border-radius: 7px; cursor: pointer; transition: all .15s; font-weight: 600; }
+    .proj-modal-save:hover { background: rgba(124,92,252,.25); }
+    .proj-modal-cancel { background: none; border: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-family: inherit; padding: 7px 14px; border-radius: 7px; cursor: pointer; transition: all .12s; }
+    .proj-modal-cancel:hover { background: rgba(255,255,255,.04); color: var(--text); }
+
+    /* ── SIDEBAR DIREITA ─────────────────────────────────────── */
+    .sidebar-right {
+      position: fixed; left: 0; top: 0; width: 220px; height: 100vh;
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 200; overflow-y: auto;
+    }
+    .sidebar-right::-webkit-scrollbar { width: 3px; }
+    .sidebar-right::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+    .sb-logo-wrap {
+      padding: 22px 16px 10px; display: flex; flex-direction: column;
+      align-items: center; gap: 5px; border-bottom: 1px solid var(--border);
+    }
+    .sb-logo { height: 54px; width: auto; object-fit: contain; mix-blend-mode: screen; }
+    .sb-tagline { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; font-style: italic; text-align: center; }
+    .sb-date {
+      font-size: 9px; color: rgba(232,227,220,0.32); letter-spacing: 0.04em;
+      text-align: center; padding: 7px 12px 10px; border-bottom: 1px solid var(--border);
+    }
+    .sb-nav { display: flex; flex-direction: column; padding: 8px; gap: 1px; flex: 1; }
+    .sb-tab {
+      background: none; border: none; color: var(--text-dim); font-size: 12px;
+      font-family: inherit; text-align: left; padding: 9px 12px; border-radius: 7px;
+      cursor: pointer; transition: all 0.15s; width: 100%;
+      border-left: 2px solid transparent;
+    }
+    .sb-tab:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .sb-tab.active { background: var(--accent-dim); color: var(--accent-text); border-left-color: var(--accent); }
+    .sb-cli-list { display: none; flex-direction: column; gap: 1px; padding: 2px 0 4px 8px; }
+    .sb-cli-list.visible { display: flex; }
+    .sb-cli-item {
+      background: none; border: none; color: var(--text-dim); font-size: 10px;
+      font-family: inherit; text-align: left; padding: 5px 10px; border-radius: 5px;
+      cursor: pointer; transition: all 0.12s; width: 100%;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sb-cli-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .sb-cli-item.active { color: var(--text); background: rgba(255,255,255,0.03); }
+    .sb-cli-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── MAIN TABS ───────────────────────────────────────────── */
+    .main-tab { display: none; min-height: calc(100vh - 60px); }
+    .main-tab.active { display: block; }
+    .mm-brand-row { display: none !important; }
+    .mm-snav      { display: none !important; }
+    body { padding-left: 220px; }
+    body::before { left: 220px; }
+
+    /* ── CLIENTE — LISTING (tab Clientes) ──────────────────── */
+    .cli-cards-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px; padding: 20px;
+    }
+    .cli-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; cursor: pointer; transition: all 0.15s;
+      border-left: 3px solid var(--client-color, rgba(255,255,255,.1));
+      display: flex; align-items: center; gap: 10px;
+    }
+    .cli-card:hover { background: var(--surface-2); border-color: var(--border-2); }
+    .cli-card-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .cli-card-name { font-size: 12px; font-weight: 500; }
+    .cli-back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: 1px solid var(--border); color: var(--text-dim);
+      font-size: 11px; font-family: inherit; padding: 5px 12px; border-radius: 6px;
+      cursor: pointer; transition: all .12s; margin: 12px 16px 0;
+    }
+    .cli-back-btn:hover { background: rgba(255,255,255,.04); color: var(--text); border-color: var(--border-2); }
+
+    /* ── VISÃO GERAL DE CLIENTES (tab Início) ───────────────── */
+    .visao-geral-section { padding: 0 20px 32px; border-top: 1px solid var(--border); }
+    .visao-geral-hdr { display: flex; align-items: center; padding: 20px 0 14px; }
+    .visao-geral-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+    .visao-geral-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+    .visao-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 13px 15px; display: flex; flex-direction: column; gap: 8px;
+      border-left: 3px solid var(--client-color, rgba(255,255,255,.1));
+      cursor: pointer; transition: all 0.15s;
+    }
+    .visao-card:hover { background: var(--surface-2); border-color: var(--border-2); }
+    .visao-card-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .visao-tasks-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .visao-badge {
+      font-size: 9px; padding: 2px 8px; border-radius: 4px; font-weight: 600;
+    }
+    .visao-badge.pending { background: rgba(245,158,11,.12); color: #f59e0b; border: 1px solid rgba(245,158,11,.25); }
+    .visao-badge.overdue { background: rgba(248,113,113,.12); color: #f87171; border: 1px solid rgba(248,113,113,.25); }
+    .visao-badge.ok { background: rgba(34,197,94,.1); color: #22c55e; border: 1px solid rgba(34,197,94,.22); }
+    .visao-sat-row { display: flex; flex-direction: column; gap: 4px; }
+    .visao-sat-item { display: flex; align-items: center; gap: 6px; }
+    .visao-sat-label { font-size: 9px; color: var(--text-dim); width: 82px; flex-shrink: 0; }
+    .visao-sat-bar { flex: 1; height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; }
+    .visao-sat-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+    .visao-sat-val { font-size: 9px; color: var(--text-dim); width: 18px; text-align: right; flex-shrink: 0; }
+
+    /* ── SATISFAÇÃO (aba do cliente) ────────────────────────── */
+    .sat-section { padding: 16px 14px; }
+    .sat-title { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); padding-bottom: 16px; }
+    .sat-grid { display: flex; flex-direction: column; gap: 18px; }
+    .sat-item-label { font-size: 11px; font-weight: 500; margin-bottom: 6px; color: var(--text); }
+    .sat-stars { display: flex; gap: 6px; }
+    .sat-star {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text-dim); font-size: 12px; width: 36px; height: 32px;
+      cursor: pointer; font-family: inherit; transition: all .12s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sat-star:hover { background: rgba(250,204,21,.1); border-color: rgba(250,204,21,.25); color: #fde68a; }
+    .sat-star.active { background: rgba(250,204,21,.15); border-color: rgba(250,204,21,.35); color: #facc15; }
+    .sat-saved { font-size: 9px; color: rgba(52,211,153,.7); min-height: 12px; margin-top: 6px; }
+
+    /* ── URGÊNCIAS (aba do cliente) ─────────────────────────── */
+    .urg-section { padding: 12px 14px; }
+    .urg-empty { font-size: 11px; color: var(--text-dim); text-align: center; padding: 32px 0; font-style: italic; }
+    .urg-group-title { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); padding: 10px 0 6px; }
+    .urg-list { display: flex; flex-direction: column; gap: 5px; }
+    .urg-item {
+      display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      border-left: 3px solid var(--urg-color, rgba(255,255,255,.1));
+    }
+    .urg-item-badge { font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+    .urg-item-text { flex: 1; font-size: 11px; line-height: 1.4; }
+    .urg-item-source { font-size: 9px; color: var(--text-dim); flex-shrink: 0; }
+
+    /* ── GESTOR DE TAREFAS — tamanho maior ──────────────────── */
+    #main-tarefas .tw-section { padding: 0 20px 48px; }
+    #main-tarefas .tw-grid { grid-template-columns: repeat(7, minmax(190px, 1fr)); gap: 14px; min-width: 0; }
+    #main-tarefas .tw-col { min-height: 400px; }
+
   </style>
 </head>
 <body>
@@ -2356,17 +2625,8 @@
 <!-- HEADER -->
 <header class="header">
   <div class="mm-brand-row">
-    <div class="mm-logo-wrap">
-      <img class="mm-logo"
-           src="logo-moving.png"
-           onerror="this.style.display='none'"
-           alt="Moving Marketing">
-    </div>
-    <div class="mm-brand-center">
-      <span class="mm-tagline">Conteúdo que move marcas.</span>
-    </div>
     <div class="mm-brand-right">
-      <span class="mm-date-badge" id="mmDateBadge">—</span>
+      <span class="mm-date-badge" id="mmDateBadge" style="display:none">—</span>
     </div>
   </div>
   <div class="mm-nav-row">
@@ -2400,72 +2660,175 @@
   </nav>
 </header>
 
-<!-- DASHBOARD -->
-<div class="dash-section sec-anchor" id="sec-dashboard">
-  <div class="dash-grid" id="dashGrid"></div>
+<!-- SIDEBAR DIREITA -->
+<aside class="sidebar-right" id="sidebarRight">
+  <div class="sb-logo-wrap">
+    <img src="logo-moving.png" class="sb-logo" alt="Moving Marketing" onerror="this.style.display='none'">
+    <span class="sb-tagline">Conteúdo que move marcas.</span>
+  </div>
+  <div class="sb-date" id="sbDateBadge">—</div>
+  <nav class="sb-nav">
+    <button class="sb-tab active" data-main-tab="inicio">Início</button>
+    <button class="sb-tab" data-main-tab="tarefas">Gestão de Tarefas</button>
+    <button class="sb-tab" data-main-tab="postagens">Gestão de Postagens</button>
+    <button class="sb-tab" data-main-tab="clientes">Clientes</button>
+    <div class="sb-cli-list" id="sbCliList"></div>
+    <button class="sb-tab" data-main-tab="projetos">Projetos</button>
+    <button class="sb-tab" data-main-tab="admin">Administrativo</button>
+  </nav>
+</aside>
+
+<!-- TAB: INÍCIO -->
+<div class="main-tab active" id="main-inicio">
+  <div class="dash-section sec-anchor" id="sec-dashboard">
+    <div class="dash-grid" id="dashGrid"></div>
+  </div>
+  <div class="visao-geral-section" id="sec-visao-clientes">
+    <div class="visao-geral-hdr">
+      <span class="visao-geral-title">Visão Geral — Clientes</span>
+    </div>
+    <div class="visao-geral-grid" id="visaoGeralGrid"></div>
+  </div>
 </div>
 
-<!-- GERENCIADOR SEMANAL DE TAREFAS -->
-<div class="tw-section sec-anchor" id="taskWeeklyWrap">
-  <div class="tw-section-header">
-    <span class="tw-section-title">Gerenciador Semanal de Tarefas</span>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div class="tw-user-filters" id="twUserFilters">
-        <button class="tw-filter-btn active" data-uid="all">Todas</button>
-        <button class="tw-filter-btn" data-uid="priscila">Priscila</button>
-        <button class="tw-filter-btn" data-uid="paul">Paul</button>
+<!-- TAB: GESTÃO DE TAREFAS -->
+<div class="main-tab" id="main-tarefas">
+  <div class="tw-section sec-anchor" id="taskWeeklyWrap">
+    <div class="tw-section-header">
+      <span class="tw-section-title">Gerenciador Semanal de Tarefas</span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="tw-user-filters" id="twUserFilters">
+          <button class="tw-filter-btn active" data-uid="all">Todas</button>
+          <button class="tw-filter-btn" data-uid="priscila">Priscila</button>
+          <button class="tw-filter-btn" data-uid="paul">Paul</button>
+        </div>
+        <div class="tw-nav">
+          <button class="tw-nav-btn" id="twPrev">‹</button>
+          <span class="tw-week-label" id="twWeekLabel"></span>
+          <button class="tw-nav-btn" id="twNext">›</button>
+          <button class="btn" id="twToday" style="font-size:10px;padding:4px 10px;height:auto;">Hoje</button>
+        </div>
       </div>
-      <div class="tw-nav">
-        <button class="tw-nav-btn" id="twPrev">‹</button>
-        <span class="tw-week-label" id="twWeekLabel"></span>
-        <button class="tw-nav-btn" id="twNext">›</button>
-        <button class="btn" id="twToday" style="font-size:10px;padding:4px 10px;height:auto;">Hoje</button>
+    </div>
+    <div class="tw-grid" id="twGrid"></div>
+  </div>
+</div>
+
+<!-- TAB: GESTÃO DE POSTAGENS -->
+<div class="main-tab" id="main-postagens">
+  <div class="stats-bar">
+    <span class="stats-label">Progresso da semana:</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <span class="stats-value" id="statsText"><span class="n">0</span> / 0</span>
+    <div class="stats-badges">
+      <span class="stats-badge prog" id="badgeProg">0 programados</span>
+      <span class="stats-badge post" id="badgePost">0 postados</span>
+    </div>
+  </div>
+  <div class="board-wrapper sec-anchor" id="sec-kanban">
+    <div class="board" id="board"></div>
+  </div>
+</div>
+
+<!-- TAB: CLIENTES -->
+<div class="main-tab" id="main-clientes">
+  <div class="cli-cards-grid" id="cliCardsGrid"></div>
+  <div id="clientSectionsWrap"></div>
+</div>
+
+<!-- TAB: PROJETOS -->
+<div class="main-tab" id="main-projetos">
+  <div class="proj-section">
+    <div class="proj-hdr">
+      <span class="proj-hdr-title">Projetos</span>
+      <button class="proj-new-btn" id="projNewBtn">+ Novo Projeto</button>
+    </div>
+    <div class="proj-filters" id="projFilters">
+      <button class="proj-filter-btn active" data-status="todos">Todos</button>
+      <button class="proj-filter-btn" data-status="ideia">Ideia</button>
+      <button class="proj-filter-btn" data-status="andamento">Em andamento</button>
+      <button class="proj-filter-btn" data-status="pausado">Pausado</button>
+      <button class="proj-filter-btn" data-status="concluido">Concluído</button>
+    </div>
+    <div class="proj-grid" id="projGrid"></div>
+  </div>
+</div>
+
+<!-- MODAL: PROJETO -->
+<div class="proj-modal-ov" id="projModalOv">
+  <div class="proj-modal">
+    <div class="proj-modal-header">
+      <input class="proj-modal-title-input" id="projModalTitle" placeholder="Nome do projeto…" maxlength="120">
+      <button class="proj-modal-close" id="projModalClose">✕</button>
+    </div>
+    <div class="proj-modal-meta">
+      <div class="proj-meta-group">
+        <div class="proj-meta-label">Status</div>
+        <select class="proj-status-sel" id="projModalStatus">
+          <option value="ideia">💡 Ideia</option>
+          <option value="andamento">🔵 Em andamento</option>
+          <option value="pausado">⏸ Pausado</option>
+          <option value="concluido">✅ Concluído</option>
+        </select>
+      </div>
+      <div class="proj-meta-group">
+        <div class="proj-meta-label">Prazo</div>
+        <input type="date" class="proj-date-in" id="projModalPrazo">
+      </div>
+    </div>
+    <div>
+      <div class="proj-section-label">Descrição / Ideia</div>
+      <textarea class="proj-desc-area" id="projModalDesc" placeholder="Descreva o projeto, objetivo, contexto…" rows="4"></textarea>
+    </div>
+    <div>
+      <div class="proj-section-label">Checklist</div>
+      <div class="proj-chk-list" id="projChkList"></div>
+      <div class="proj-chk-add-row">
+        <input class="proj-chk-add-in" id="projChkInput" placeholder="Adicionar item…">
+        <button class="proj-chk-add-btn" id="projChkAddBtn">+</button>
+      </div>
+    </div>
+    <div>
+      <div class="proj-section-label">Anexos</div>
+      <div class="proj-anex-list" id="projAnexList"></div>
+      <input type="file" id="projAnexFile" style="display:none" multiple>
+      <button class="proj-anex-upload-btn" id="projAnexUploadBtn">📎 Adicionar arquivo</button>
+    </div>
+    <div class="proj-modal-footer">
+      <button class="proj-modal-del" id="projModalDel">Excluir projeto</button>
+      <div style="display:flex;gap:8px;">
+        <button class="proj-modal-cancel" id="projModalCancel">Cancelar</button>
+        <button class="proj-modal-save" id="projModalSave">Salvar</button>
       </div>
     </div>
   </div>
-  <div class="tw-grid" id="twGrid"></div>
 </div>
 
-<!-- STATS BAR + KANBAN -->
-<div class="stats-bar">
-  <span class="stats-label">Progresso da semana:</span>
-  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-  <span class="stats-value" id="statsText"><span class="n">0</span> / 0</span>
-  <div class="stats-badges">
-    <span class="stats-badge prog" id="badgeProg">0 programados</span>
-    <span class="stats-badge post" id="badgePost">0 postados</span>
+<!-- TAB: ADMINISTRATIVO -->
+<div class="main-tab" id="main-admin">
+  <div class="fin-section sec-anchor" id="sec-financeiro">
+    <div class="fin-section-header">
+      <span class="fin-section-title">Gerenciador Financeiro</span>
+    </div>
+    <div class="fin-grid" id="finGrid"></div>
+    <div class="fin-cal-wrap" style="padding:0 16px 20px;">
+      <div class="fin-cal-title">Calendário de Captações</div>
+      <div class="mini-cal" id="miniCal"></div>
+    </div>
   </div>
-</div>
-<div class="board-wrapper sec-anchor" id="sec-kanban">
-  <div class="board" id="board"></div>
-</div>
-
-<!-- GERENCIADOR FINANCEIRO -->
-<div class="fin-section sec-anchor" id="sec-financeiro">
-  <div class="fin-section-header">
-    <span class="fin-section-title">Gerenciador Financeiro</span>
-  </div>
-  <div class="fin-grid" id="finGrid"></div>
-  <div class="fin-cal-wrap" style="padding:0 16px 20px;">
-    <div class="fin-cal-title">Calendário de Captações</div>
-    <div class="mini-cal" id="miniCal"></div>
+  <div class="cal-tooltip" id="calTooltip"></div>
+  <div class="pipe-section sec-anchor" id="sec-pipeline">
+    <div class="pipe-hdr">
+      <span class="pipe-title">Pipeline Comercial</span>
+      <button class="pipe-new-btn" id="pipeNewBtn">+ Novo Lead</button>
+    </div>
+    <div class="pipe-summary" id="pipeSummary"></div>
+    <div class="pipe-board" id="pipeBoard"></div>
   </div>
 </div>
 
-<div class="cal-tooltip" id="calTooltip"></div>
-
-<!-- PIPELINE -->
-<div class="pipe-section sec-anchor" id="sec-pipeline">
-  <div class="pipe-hdr">
-    <span class="pipe-title">Pipeline Comercial</span>
-    <button class="pipe-new-btn" id="pipeNewBtn">+ Novo Lead</button>
-  </div>
-  <div class="pipe-summary" id="pipeSummary"></div>
-  <div class="pipe-board" id="pipeBoard"></div>
-</div>
-
-<!-- BANCO DE PAUTAS -->
-<div class="pautas-section sec-anchor" id="sec-pautas">
+<!-- PAUTAS (oculto — mantido para compatibilidade) -->
+<div class="pautas-section sec-anchor" id="sec-pautas" style="display:none">
   <div class="pautas-hdr">
     <span class="pautas-title">Banco de Pautas</span>
     <div class="pautas-top">
@@ -2476,7 +2839,7 @@
   <div class="pautas-grid" id="pautasGrid"></div>
 </div>
 
-<!-- APPROVAL VIEW (cliente) -->
+<!-- APPROVAL VIEW (global) -->
 <div class="approval-view" id="approvalView"></div>
 
 <!-- STAGING OCULTO: containers dos builders antigos -->
@@ -2490,9 +2853,6 @@
   <div id="acessosGrid"></div>
   <div class="tasks-global-stats" id="globalTaskStats"></div>
 </div>
-
-<!-- SEÇÕES POR CLIENTE (preenchidas via JS) -->
-<div id="clientSectionsWrap"></div>
 
 <!-- PIPELINE MODAL -->
 <div class="pipe-modal-ov" id="pipeModalOv">
@@ -5577,12 +5937,14 @@ buildCrono();
 // ══════════════════════════════════════════════════════════════════════════════
 
 function updateDateBadge() {
-  const el = document.getElementById('mmDateBadge');
-  if (!el) return;
   const d = new Date();
   const days   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  el.textContent = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  const txt = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  const sb = document.getElementById('sbDateBadge');
+  if (sb) sb.textContent = txt;
+  const old = document.getElementById('mmDateBadge');
+  if (old) old.textContent = txt;
 }
 updateDateBadge();
 
@@ -6574,38 +6936,418 @@ function ievOpenModal(ev, isoDate) {
   }
 }
 
+// ── PROJETOS ─────────────────────────────────────────────────────────────────
+
+const PROJ_STATUS_LABEL = { ideia: 'Ideia', andamento: 'Em andamento', concluido: 'Concluído', pausado: 'Pausado' };
+const PROJ_STATUS_COLOR = { ideia: '#8b5cf6', andamento: '#3b82f6', concluido: '#22c55e', pausado: '#f59e0b' };
+
+function loadProjects() {
+  try { return JSON.parse(localStorage.getItem('mmprojects') || '[]'); } catch { return []; }
+}
+function saveProjects(arr) { localStorage.setItem('mmprojects', JSON.stringify(arr)); }
+function projId() { return 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+let projFilter = 'todos';
+let projEditId = null; // id do projeto em edição (null = novo)
+let projChkDraft = [];
+let projAnexDraft = [];
+
+function renderProjGrid() {
+  const grid = document.getElementById('projGrid');
+  if (!grid) return;
+  const projects = loadProjects();
+  const filtered = projFilter === 'todos' ? projects : projects.filter(p => p.status === projFilter);
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="proj-empty" style="grid-column:1/-1">${projFilter === 'todos' ? 'Nenhum projeto ainda. Crie o primeiro!' : 'Nenhum projeto com este status.'}</div>`;
+    return;
+  }
+  grid.innerHTML = '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  filtered.forEach(p => {
+    const done = (p.checklist||[]).filter(i=>i.done).length;
+    const total = (p.checklist||[]).length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    const overdue = p.prazo && new Date(p.prazo) < today && p.status !== 'concluido';
+    const prazoStr = p.prazo ? new Date(p.prazo+'T00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}) : '';
+    const col = PROJ_STATUS_COLOR[p.status] || '#7c5cfc';
+    const card = document.createElement('div');
+    card.className = 'proj-card';
+    card.style.setProperty('--proj-color', col);
+    card.innerHTML = `
+      <div class="proj-card-top">
+        <span class="proj-card-title">${escHtml(p.title||'Sem título')}</span>
+        <span class="proj-status-badge ${p.status}">${PROJ_STATUS_LABEL[p.status]||p.status}</span>
+      </div>
+      ${p.descricao ? `<div class="proj-card-desc">${escHtml(p.descricao)}</div>` : ''}
+      <div class="proj-card-footer">
+        <span class="proj-card-prazo${overdue?' overdue':''}">${prazoStr ? (overdue?'⚠ ':'')+prazoStr : ''}${!prazoStr?'<span style="opacity:.4">sem prazo</span>':''}</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${(p.anexos||[]).length ? `<span class="proj-anex-count">📎 ${p.anexos.length}</span>` : ''}
+          ${total ? `<div class="proj-chk-row"><div class="proj-chk-bar"><div class="proj-chk-fill" style="width:${pct}%"></div></div><span class="proj-chk-label">${done}/${total}</span></div>` : ''}
+        </div>
+      </div>`;
+    card.addEventListener('click', () => openProjModal(p.id));
+    grid.appendChild(card);
+  });
+}
+
+function openProjModal(id) {
+  const projects = loadProjects();
+  const p = id ? projects.find(x=>x.id===id) : null;
+  projEditId = id || null;
+  projChkDraft = p ? JSON.parse(JSON.stringify(p.checklist||[])) : [];
+  projAnexDraft = p ? JSON.parse(JSON.stringify(p.anexos||[])) : [];
+
+  document.getElementById('projModalTitle').value = p ? (p.title||'') : '';
+  document.getElementById('projModalStatus').value = p ? (p.status||'ideia') : 'ideia';
+  document.getElementById('projModalPrazo').value = p ? (p.prazo||'') : '';
+  document.getElementById('projModalDesc').value = p ? (p.descricao||'') : '';
+  document.getElementById('projModalDel').style.display = p ? '' : 'none';
+
+  renderProjChkList();
+  renderProjAnexList();
+  document.getElementById('projModalOv').classList.add('open');
+  document.getElementById('projModalTitle').focus();
+}
+
+function closeProjModal() {
+  document.getElementById('projModalOv').classList.remove('open');
+  projEditId = null; projChkDraft = []; projAnexDraft = [];
+}
+
+function saveProjModal() {
+  const title = document.getElementById('projModalTitle').value.trim();
+  if (!title) { document.getElementById('projModalTitle').focus(); return; }
+  const projects = loadProjects();
+  const data = {
+    id: projEditId || projId(),
+    title,
+    status: document.getElementById('projModalStatus').value,
+    prazo: document.getElementById('projModalPrazo').value,
+    descricao: document.getElementById('projModalDesc').value.trim(),
+    checklist: projChkDraft,
+    anexos: projAnexDraft,
+    createdAt: projEditId ? (projects.find(p=>p.id===projEditId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  if (projEditId) {
+    const idx = projects.findIndex(p=>p.id===projEditId);
+    if (idx >= 0) projects[idx] = data; else projects.push(data);
+  } else {
+    projects.unshift(data);
+  }
+  saveProjects(projects);
+  closeProjModal();
+  renderProjGrid();
+}
+
+function deleteProjModal() {
+  if (!projEditId) return;
+  if (!confirm('Excluir este projeto?')) return;
+  const projects = loadProjects().filter(p=>p.id!==projEditId);
+  saveProjects(projects);
+  closeProjModal();
+  renderProjGrid();
+}
+
+function renderProjChkList() {
+  const list = document.getElementById('projChkList');
+  if (!list) return;
+  list.innerHTML = '';
+  projChkDraft.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'proj-chk-item';
+    row.innerHTML = `
+      <input type="checkbox" class="proj-chk-cb" ${item.done?'checked':''}>
+      <input class="proj-chk-text${item.done?' done':''}" value="${escHtml(item.text)}" placeholder="Item…">
+      <button class="proj-chk-del" title="Remover">×</button>`;
+    row.querySelector('.proj-chk-cb').addEventListener('change', e => { projChkDraft[idx].done = e.target.checked; renderProjChkList(); });
+    row.querySelector('.proj-chk-text').addEventListener('input', e => { projChkDraft[idx].text = e.target.value; });
+    row.querySelector('.proj-chk-del').addEventListener('click', () => { projChkDraft.splice(idx,1); renderProjChkList(); });
+    list.appendChild(row);
+  });
+}
+
+function addProjChkItem() {
+  const inp = document.getElementById('projChkInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  projChkDraft.push({ id: projId(), text, done: false });
+  inp.value = '';
+  renderProjChkList();
+  inp.focus();
+}
+
+function renderProjAnexList() {
+  const list = document.getElementById('projAnexList');
+  if (!list) return;
+  list.innerHTML = '';
+  projAnexDraft.forEach((anex, idx) => {
+    const chip = document.createElement('div');
+    chip.className = 'proj-anex-chip';
+    chip.innerHTML = `📄 <a href="${anex.data}" download="${escHtml(anex.name)}">${escHtml(anex.name)}</a><button class="proj-anex-rm" title="Remover">×</button>`;
+    chip.querySelector('.proj-anex-rm').addEventListener('click', () => { projAnexDraft.splice(idx,1); renderProjAnexList(); });
+    list.appendChild(chip);
+  });
+}
+
+// Wire-up projetos
+(function() {
+  const newBtn = document.getElementById('projNewBtn');
+  if (newBtn) newBtn.addEventListener('click', () => openProjModal(null));
+
+  const saveBtn = document.getElementById('projModalSave');
+  if (saveBtn) saveBtn.addEventListener('click', saveProjModal);
+
+  const cancelBtn = document.getElementById('projModalCancel');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeProjModal);
+
+  const closeBtn = document.getElementById('projModalClose');
+  if (closeBtn) closeBtn.addEventListener('click', closeProjModal);
+
+  const delBtn = document.getElementById('projModalDel');
+  if (delBtn) delBtn.addEventListener('click', deleteProjModal);
+
+  const ov = document.getElementById('projModalOv');
+  if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeProjModal(); });
+
+  const chkAddBtn = document.getElementById('projChkAddBtn');
+  if (chkAddBtn) chkAddBtn.addEventListener('click', addProjChkItem);
+
+  const chkIn = document.getElementById('projChkInput');
+  if (chkIn) chkIn.addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); addProjChkItem(); }});
+
+  const uploadBtn = document.getElementById('projAnexUploadBtn');
+  const fileIn = document.getElementById('projAnexFile');
+  if (uploadBtn && fileIn) {
+    uploadBtn.addEventListener('click', () => fileIn.click());
+    fileIn.addEventListener('change', () => {
+      Array.from(fileIn.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          projAnexDraft.push({ id: projId(), name: file.name, data: e.target.result, type: file.type });
+          renderProjAnexList();
+        };
+        reader.readAsDataURL(file);
+      });
+      fileIn.value = '';
+    });
+  }
+
+  document.getElementById('projFilters')?.querySelectorAll('.proj-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      projFilter = btn.dataset.status;
+      document.querySelectorAll('.proj-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderProjGrid();
+    });
+  });
+
+  renderProjGrid();
+})();
+
+// ── NAVEGAÇÃO PRINCIPAL (tabs da sidebar) ────────────────────────────────────
+
+function switchMainTab(tab) {
+  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('active'));
+  const mainTab = document.getElementById('main-' + tab);
+  if (mainTab) mainTab.classList.add('active');
+  const sidebarTab = document.querySelector(`.sb-tab[data-main-tab="${tab}"]`);
+  if (sidebarTab) sidebarTab.classList.add('active');
+  const cliList = document.getElementById('sbCliList');
+  if (cliList) cliList.classList.toggle('visible', tab === 'clientes');
+  if (tab === 'inicio') refreshVisaoClientes();
+  if (tab === 'clientes') {
+    // mostra cards, esconde seções individuais
+    const grid = document.getElementById('cliCardsGrid');
+    if (grid) grid.style.display = '';
+    document.querySelectorAll('#clientSectionsWrap .client-section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.sb-cli-item').forEach(i => i.classList.remove('active'));
+  }
+}
+
+function selectClient(cid) {
+  switchMainTab('clientes');
+  const grid = document.getElementById('cliCardsGrid');
+  if (grid) grid.style.display = 'none';
+  document.querySelectorAll('#clientSectionsWrap .client-section').forEach(s => s.style.display = 'none');
+  const sec = document.getElementById('sec-cli-' + cid);
+  if (sec) sec.style.display = 'block';
+  document.querySelectorAll('.sb-cli-item').forEach(i => i.classList.remove('active'));
+  const sbItem = document.querySelector(`.sb-cli-item[data-cid="${cid}"]`);
+  if (sbItem) sbItem.classList.add('active');
+}
+
+// ── SIDEBAR TABS ─────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.sb-tab').forEach(btn => {
+  btn.addEventListener('click', () => switchMainTab(btn.dataset.mainTab));
+});
+
+// ── VISÃO GERAL DE CLIENTES ──────────────────────────────────────────────────
+
+const SAT_LABELS = { rel: 'Relacionamento', sm: 'Social Media', tr: 'Tráfego' };
+const SAT_COLORS = [null, '#ef4444','#f97316','#f59e0b','#84cc16','#22c55e'];
+
+function getSat(cid) {
+  try { return JSON.parse(localStorage.getItem('mmsat__' + cid) || '{}'); } catch { return {}; }
+}
+function saveSat(cid, data) {
+  localStorage.setItem('mmsat__' + cid, JSON.stringify(data));
+}
+
+function refreshVisaoClientes() {
+  const grid = document.getElementById('visaoGeralGrid');
+  if (!grid) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const ALL_CLI = [...CLIENTS, MOVING_CLIENT];
+  grid.innerHTML = '';
+  ALL_CLI.filter(c => !c.isPersonal).forEach(c => {
+    const tasks = (() => { try { return JSON.parse(localStorage.getItem('mmtasks__' + c.id) || '[]'); } catch { return []; } })();
+    const pending = tasks.filter(t => !t.done).length;
+    const overdue = tasks.filter(t => !t.done && t.dueDate && new Date(t.dueDate) < today).length;
+    const sat = getSat(c.id);
+    const satItems = ['rel','sm','tr'].map(k => {
+      const v = sat[k] || 0;
+      const pct = v * 20;
+      const col = SAT_COLORS[v] || '#444';
+      return `<div class="visao-sat-item">
+        <span class="visao-sat-label">${SAT_LABELS[k]}</span>
+        <div class="visao-sat-bar"><div class="visao-sat-fill" style="width:${pct}%;background:${col}"></div></div>
+        <span class="visao-sat-val">${v || '—'}</span>
+      </div>`;
+    }).join('');
+    const card = document.createElement('div');
+    card.className = 'visao-card';
+    card.style.setProperty('--client-color', c.color);
+    card.innerHTML = `
+      <div class="visao-card-name">${c.name}</div>
+      <div class="visao-tasks-row">
+        ${pending > 0 ? `<span class="visao-badge pending">${pending} pendente${pending !== 1 ? 's' : ''}</span>` : '<span class="visao-badge ok">Sem pendências</span>'}
+        ${overdue > 0 ? `<span class="visao-badge overdue">${overdue} em atraso</span>` : ''}
+      </div>
+      <div class="visao-sat-row">${satItems}</div>`;
+    card.addEventListener('click', () => selectClient(c.id));
+    grid.appendChild(card);
+  });
+}
+
+// ── SATISFAÇÃO DO CLIENTE ─────────────────────────────────────────────────────
+
+function renderSatisfaction(cid, panelEl) {
+  panelEl.innerHTML = '';
+  const sec = document.createElement('div');
+  sec.className = 'sat-section';
+  const saved = getSat(cid);
+  const fields = [
+    { key: 'rel', label: 'Relacionamento' },
+    { key: 'sm',  label: 'Social Media'   },
+    { key: 'tr',  label: 'Gestão de Tráfego' },
+  ];
+  sec.innerHTML = `<div class="sat-title">Satisfação do Cliente</div><div class="sat-grid" id="satGrid-${cid}"></div>`;
+  panelEl.appendChild(sec);
+  const grid = sec.querySelector(`#satGrid-${cid}`);
+  fields.forEach(f => {
+    const val = saved[f.key] || 0;
+    const item = document.createElement('div');
+    item.innerHTML = `
+      <div class="sat-item-label">${f.label}</div>
+      <div class="sat-stars" data-key="${f.key}">
+        ${[1,2,3,4,5].map(n =>
+          `<button class="sat-star${val >= n ? ' active' : ''}" data-val="${n}">${n}</button>`
+        ).join('')}
+      </div>
+      <div class="sat-saved" id="satMsg-${cid}-${f.key}"></div>`;
+    item.querySelectorAll('.sat-star').forEach(star => {
+      star.addEventListener('click', () => {
+        const newVal = parseInt(star.dataset.val);
+        const data = getSat(cid);
+        data[f.key] = newVal;
+        saveSat(cid, data);
+        item.querySelectorAll('.sat-star').forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= newVal));
+        const msg = document.getElementById(`satMsg-${cid}-${f.key}`);
+        if (msg) { msg.textContent = 'Salvo'; setTimeout(() => { msg.textContent = ''; }, 1500); }
+      });
+    });
+    grid.appendChild(item);
+  });
+}
+
+// ── URGÊNCIAS DO CLIENTE ──────────────────────────────────────────────────────
+
+const URG_COLORS = { critica: '#ef4444', alta: '#f97316', media: '#f59e0b', baixa: '#22c55e' };
+
+function renderUrgencias(cid, panelEl) {
+  panelEl.innerHTML = '';
+  const sec = document.createElement('div');
+  sec.className = 'urg-section';
+  const tasks = (() => { try { return JSON.parse(localStorage.getItem('mmtasks__' + cid) || '[]'); } catch { return []; } })();
+  const edits = (() => { try { return JSON.parse(localStorage.getItem('mmedit__' + cid) || '[]'); } catch { return []; } })();
+  const urgTasks = tasks.filter(t => t.urgency && !t.done).sort((a,b) => (URGENCY_ORDER[b.urgency]||0) - (URGENCY_ORDER[a.urgency]||0));
+  const urgEdits = edits.filter(e => e.urgency && !e.done).sort((a,b) => (URGENCY_ORDER[b.urgency]||0) - (URGENCY_ORDER[a.urgency]||0));
+  if (!urgTasks.length && !urgEdits.length) {
+    sec.innerHTML = '<div class="urg-empty">Nenhuma urgência registrada.</div>';
+    panelEl.appendChild(sec);
+    return;
+  }
+  const renderList = (items, sourceLabel) => items.map(item => {
+    const col = URG_COLORS[item.urgency] || '#888';
+    const lbl = URGENCY_LABELS[item.urgency] || item.urgency;
+    return `<div class="urg-item" style="--urg-color:${col}">
+      <span class="urg-item-badge" style="background:${col}22;color:${col};border:1px solid ${col}44">${lbl}</span>
+      <span class="urg-item-text">${escHtml(item.text || item.title || '')}</span>
+      <span class="urg-item-source">${sourceLabel}</span>
+    </div>`;
+  }).join('');
+  let html = '';
+  if (urgTasks.length) html += `<div class="urg-group-title">Tarefas</div><div class="urg-list">${renderList(urgTasks,'Tarefa')}</div>`;
+  if (urgEdits.length) html += `<div class="urg-group-title">Edições</div><div class="urg-list">${renderList(urgEdits,'Edição')}</div>`;
+  sec.innerHTML = html;
+  panelEl.appendChild(sec);
+}
+
+// ── CARDS DE CLIENTES (grid da aba Clientes) ─────────────────────────────────
+
+function buildCliCards() {
+  const grid = document.getElementById('cliCardsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const ALL_CLI = [...CLIENTS, MOVING_CLIENT];
+  ALL_CLI.filter(c => !c.isPersonal).forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'cli-card';
+    card.style.setProperty('--client-color', c.color);
+    card.innerHTML = `<span class="cli-card-dot" style="background:${c.color}"></span><span class="cli-card-name">${c.name}</span>`;
+    card.addEventListener('click', () => selectClient(c.id));
+    grid.appendChild(card);
+  });
+}
+
 // ── Seções por cliente ───────────────────────────────────────────────────────
 
 function buildClientSections() {
-  const wrap    = document.getElementById('clientSectionsWrap');
-  const navInner = document.getElementById('mmSnavInner');
+  const wrap     = document.getElementById('clientSectionsWrap');
+  const sbCliList = document.getElementById('sbCliList');
   wrap.innerHTML = '';
+  if (sbCliList) sbCliList.innerHTML = '';
 
   const ALL_CLI = [...CLIENTS, MOVING_CLIENT];
 
-  // Dropdown único "Clientes" no nav
-  const cliDropdown = document.createElement('div');
-  cliDropdown.className = 'mm-snav-dropdown';
-  cliDropdown.innerHTML = `
-    <button class="mm-snav-dropdown-btn">
-      Clientes <span class="mm-snav-dropdown-arrow">▾</span>
-    </button>
-    <div class="mm-snav-dropdown-list" id="cliDropdownList"></div>`;
-  navInner.appendChild(cliDropdown);
-
   ALL_CLI.forEach(c => {
-    // Item no dropdown
-    const item = document.createElement('a');
-    item.className = 'mm-snav-dropdown-item';
-    item.href = `#sec-cli-${c.id}`;
-    item.innerHTML = `<span class="mm-snav-dropdown-dot" style="background:${c.color}"></span>${c.name}`;
-    item.style.setProperty('--client-color', c.color);
-    item.addEventListener('mouseenter', () => item.style.borderLeftColor = c.color);
-    item.addEventListener('mouseleave', () => item.style.borderLeftColor = 'transparent');
-    document.getElementById('cliDropdownList').appendChild(item);
+    // Item na sidebar
+    if (sbCliList && !c.isPersonal) {
+      const sbItem = document.createElement('button');
+      sbItem.className = 'sb-cli-item';
+      sbItem.dataset.cid = c.id;
+      sbItem.innerHTML = `<span class="sb-cli-dot" style="background:${c.color}"></span>${c.name}`;
+      sbItem.addEventListener('click', () => selectClient(c.id));
+      sbCliList.appendChild(sbItem);
+    }
 
     // Abas por cliente
     const tabDefs = [];
+    tabDefs.push({ id: 'urgencias', label: 'Urgências' });
     if (!c.isInternal) tabDefs.push({ id: 'crono',   label: 'Cronograma' });
     tabDefs.push(                    { id: 'tasks',   label: 'Tarefas'   });
     if (!c.isInternal) tabDefs.push({ id: 'cap',     label: 'Captações' });
@@ -6615,14 +7357,17 @@ function buildClientSections() {
     if (!c.isInternal) tabDefs.push({ id: 'onboard',  label: 'Onboarding' });
     if (!c.isInternal) tabDefs.push({ id: 'aprov',    label: 'Aprovação'  });
     tabDefs.push(                    { id: 'acessos',  label: 'Acessos'   });
+    tabDefs.push(                    { id: 'sat',      label: 'Satisfação' });
     if (c.id === 'encontros-fe') tabDefs.push({ id: 'eventos', label: 'Eventos' });
 
     const sec = document.createElement('div');
     sec.className = 'client-section sec-anchor';
     sec.id = `sec-cli-${c.id}`;
     sec.style.setProperty('--client-color', c.color);
+    sec.style.display = 'none'; // oculto até ser selecionado
 
     sec.innerHTML = `
+      <button class="cli-back-btn" id="back-${c.id}">← Voltar</button>
       <div class="client-section-header">
         <span class="client-section-dot"></span>
         <span class="client-section-name">${c.name}</span>
@@ -6636,6 +7381,14 @@ function buildClientSections() {
     `;
 
     wrap.appendChild(sec);
+
+    // Botão Voltar
+    const backBtn = sec.querySelector(`#back-${c.id}`);
+    if (backBtn) backBtn.addEventListener('click', () => {
+      sec.style.display = 'none';
+      document.getElementById('cliCardsGrid').style.display = '';
+      document.querySelectorAll('.sb-cli-item').forEach(i => i.classList.remove('active'));
+    });
 
     // Mover elementos já construídos para os painéis
     const moveEl = (srcId, panelId) => {
@@ -6657,18 +7410,23 @@ function buildClientSections() {
       moveEl(`ficha-${c.id}`,  'ficha');
       moveEl(`rescard-${c.id}`, 'result');
       moveEl(`acc-${c.id}`,    'crono');
-      // Onboarding
       const onPanel = document.getElementById(`cpanel-onboard-${c.id}`);
       if (onPanel) { onPanel.innerHTML=`<div class="onboard-wrap" id="onwrap-${c.id}"></div>`; renderOnboard(c.id); }
-      // Aprovação
       const apPanel = document.getElementById(`cpanel-aprov-${c.id}`);
       if (apPanel) { apPanel.innerHTML=`<div class="aprov-wrap" id="aprovwrap-${c.id}"></div>`; renderAprov(c.id); }
     }
-    // Calendário de Eventos — exclusivo Igreja Encontros de Fé
     if (c.id === 'encontros-fe') {
       const evPanel = document.getElementById(`cpanel-eventos-${c.id}`);
       if (evPanel) { evPanel.innerHTML=`<div id="igreja-eventos-wrap"></div>`; renderIgrejaEventos(); }
     }
+
+    // Urgências
+    const urgPanel = document.getElementById(`cpanel-urgencias-${c.id}`);
+    if (urgPanel) renderUrgencias(c.id, urgPanel);
+
+    // Satisfação
+    const satPanel = document.getElementById(`cpanel-sat-${c.id}`);
+    if (satPanel) renderSatisfaction(c.id, satPanel);
 
     // Troca de abas
     sec.querySelectorAll('.client-tab-btn').forEach(btn => {
@@ -6678,70 +7436,18 @@ function buildClientSections() {
         btn.classList.add('active');
         const pnl = sec.querySelector(`[data-panel="${btn.dataset.tab}"]`);
         if (pnl) pnl.classList.add('active');
+        // Re-renderiza urgências ao abrir (dados podem ter mudado)
+        if (btn.dataset.tab === 'urgencias' && pnl) renderUrgencias(c.id, pnl);
       });
     });
   });
 }
 
 buildClientSections();
+buildCliCards();
+refreshVisaoClientes();
 
-// ─── CLIENTE DROPDOWN (JS — fixed position para evitar overflow clip) ────────
-(function() {
-  const dropdown = document.querySelector('.mm-snav-dropdown');
-  const btn      = dropdown?.querySelector('.mm-snav-dropdown-btn');
-  const list     = document.getElementById('cliDropdownList');
-  if (!dropdown || !btn || !list) return;
-
-  let hideTimer;
-
-  function showList() {
-    clearTimeout(hideTimer);
-    const r = btn.getBoundingClientRect();
-    list.style.top  = r.bottom + 4 + 'px';
-    list.style.left = r.left + 'px';
-    list.style.display = 'block';
-    btn.classList.add('open');
-  }
-
-  function hideList() {
-    hideTimer = setTimeout(() => {
-      list.style.display = 'none';
-      btn.classList.remove('open');
-    }, 120);
-  }
-
-  dropdown.addEventListener('mouseenter', showList);
-  dropdown.addEventListener('mouseleave', hideList);
-  list.addEventListener('mouseenter', () => clearTimeout(hideTimer));
-  list.addEventListener('mouseleave', hideList);
-  btn.addEventListener('click', () => {
-    list.style.display === 'block' ? hideList() : showList();
-  });
-})();
-
-// ─── NAV HIGHLIGHT (IntersectionObserver) ────────────────────────────────────
-(function() {
-  const links   = document.querySelectorAll('.mm-snav-link');
-  const anchors = document.querySelectorAll('.sec-anchor');
-  const navMap  = {};
-  links.forEach(l => {
-    const id = l.getAttribute('href').replace('#', '');
-    navMap[id] = l;
-  });
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
-        const link = navMap[e.target.id];
-        if (link) {
-          link.classList.add('active');
-          link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        }
-      }
-    });
-  }, { rootMargin: '-20% 0px -75% 0px', threshold: 0 });
-  anchors.forEach(a => { if (a.id) obs.observe(a); });
-})();
+// (nav highlight e dropdown antigos removidos — substituídos pela sidebar direita)
 
 // ─── FIREBASE: carregar nuvem e escutar mudanças em tempo real ────────────────
 _loadFromCloud().then(changed => { if (changed) location.reload(); });
