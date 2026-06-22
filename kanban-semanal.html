@@ -341,6 +341,18 @@
       color: var(--text);
     }
 
+    .client-card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+    .client-card-hdr .client-name { margin-bottom: 0; flex: 1; min-width: 0; }
+    .board-nopost-btn {
+      background: none; border: 1px solid transparent; border-radius: 4px;
+      color: rgba(255,255,255,.2); font-size: 9px; padding: 2px 5px; cursor: pointer;
+      font-family: inherit; transition: all .12s; line-height: 1; flex-shrink: 0; white-space: nowrap;
+    }
+    .board-nopost-btn:hover { border-color: var(--border); color: var(--text-dim); }
+    .board-nopost-btn.active { background: rgba(100,116,139,.15); border-color: rgba(100,116,139,.35); color: #94a3b8; }
+    .client-card.no-post .platform-row { opacity: .2; pointer-events: none; }
+    .client-card.no-post { background: rgba(255,255,255,.015); }
+
     /* ── PLATFORM ROW ───────────────────────────── */
     .platform-row {
       display: flex;
@@ -3397,15 +3409,33 @@ function render() {
     body.className = 'col-body';
 
     CLIENTS.filter(c => !c.noKanban).forEach(client => {
+      const iso = kanbanDayToISO(currentWk, di);
+      const nopostData = loadNoPost(client.id);
+      const isNoPost = !!nopostData[iso];
+
       const card = document.createElement('div');
-      card.className = 'client-card';
+      card.className = 'client-card' + (isNoPost ? ' no-post' : '');
       card.style.setProperty('--client-color', client.color);
+
+      const hdr = document.createElement('div');
+      hdr.className = 'client-card-hdr';
 
       const nameEl = document.createElement('div');
       nameEl.className = 'client-name';
       nameEl.title = client.name;
       nameEl.textContent = client.name;
-      card.appendChild(nameEl);
+      hdr.appendChild(nameEl);
+
+      const npBtn = document.createElement('button');
+      npBtn.className = 'board-nopost-btn' + (isNoPost ? ' active' : '');
+      npBtn.dataset.client = client.id;
+      npBtn.dataset.iso = iso;
+      npBtn.title = isNoPost ? 'Retomar postagem' : 'Sem post neste dia';
+      npBtn.textContent = isNoPost ? 'Sem post' : '—';
+      npBtn.addEventListener('click', onToggleNoPost);
+      hdr.appendChild(npBtn);
+
+      card.appendChild(hdr);
 
       client.platforms.forEach(plat => {
         const row = document.createElement('div');
@@ -3448,6 +3478,21 @@ function render() {
     board.appendChild(col);
   });
 
+  updateStats();
+}
+
+function onToggleNoPost(e) {
+  const btn = e.currentTarget;
+  const { client, iso } = btn.dataset;
+  const data = loadNoPost(client);
+  const nowActive = !data[iso];
+  if (nowActive) data[iso] = true; else delete data[iso];
+  saveNoPost(client, data);
+  const card = btn.closest('.client-card');
+  card.classList.toggle('no-post', nowActive);
+  btn.classList.toggle('active', nowActive);
+  btn.textContent = nowActive ? 'Sem post' : '—';
+  btn.title = nowActive ? 'Retomar postagem' : 'Sem post neste dia';
   updateStats();
 }
 
