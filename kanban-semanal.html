@@ -1015,7 +1015,11 @@
     .tw-modal-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
     .tw-modal-row { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
     .tw-modal-date { background:var(--surface-2); border:1px solid var(--border); border-radius:7px; color:var(--text); font-family:inherit; font-size:12px; padding:6px 10px; }
+    .tw-modal-client-sel { background:var(--surface-2); border:1px solid var(--border); border-radius:7px; color:var(--text); font-family:inherit; font-size:12px; padding:6px 10px; width:100%; }
     .tw-modal-foot { display:flex; gap:8px; justify-content:flex-end; padding:12px 18px; border-top:1px solid var(--border); }
+    .tw-col-hdr { position:relative; }
+    .tw-new-task-btn { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:1px solid var(--border); border-radius:4px; color:var(--text-dim); font-size:11px; padding:1px 7px; cursor:pointer; font-family:inherit; line-height:1.6; transition:all .12s; }
+    .tw-new-task-btn:hover { background:var(--surface-2); border-color:var(--border-2); color:var(--text); }
 
     .tw-user-filters { display:flex; gap:4px; }
     .tw-filter-btn {
@@ -2947,6 +2951,10 @@
       <button class="tw-modal-close" id="twModalClose">×</button>
     </div>
     <div class="tw-modal-body">
+      <div id="twModalClientRow" style="display:none">
+        <div class="tw-modal-label">Cliente</div>
+        <select id="twModalClientSel" class="tw-modal-client-sel"></select>
+      </div>
       <div>
         <div class="tw-modal-label">Tarefa</div>
         <input type="text" id="twModalTitle" placeholder="Título da tarefa">
@@ -4074,7 +4082,7 @@ buildTasksGrid();
   const closeBtn  = document.getElementById('twModalClose');
   const cancelBtn = document.getElementById('twModalCancel');
   const saveBtn   = document.getElementById('twModalSave');
-  let _clientId = null, _taskId = null, _modalAssignee = '', _modalRecurrence = '', _modalUrgency = '';
+  let _clientId = null, _taskId = null, _modalAssignee = '', _modalRecurrence = '', _modalUrgency = '', _isNew = false;
 
   const REC_OPTS = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal']];
 
@@ -4092,64 +4100,80 @@ buildTasksGrid();
     });
   }
 
+  window.openTwNewTaskModal = function (iso) {
+    _isNew = true; _taskId = null; _clientId = null;
+    _modalAssignee = ''; _modalRecurrence = ''; _modalUrgency = '';
+
+    // populate client select
+    const allClients = [MOVING_CLIENT, ...CLIENTS].filter(c => !c.noKanban);
+    const sel = document.getElementById('twModalClientSel');
+    sel.innerHTML = allClients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+    document.getElementById('twModalClientRow').style.display = '';
+    document.getElementById('twModalClient').textContent = '';
+    document.getElementById('twModalTitle').value = '';
+    document.getElementById('twModalDesc').value  = '';
+    document.getElementById('twModalDate').value  = iso || '';
+
+    buildModalPills('', '', '');
+    overlay.classList.add('open');
+    document.getElementById('twModalTitle').focus();
+  };
+
   window.openTwTaskModal = function (clientId, taskId) {
     const task = loadTasks(clientId).find(t => t.id === taskId);
     if (!task) return;
     const client = [...CLIENTS, MOVING_CLIENT].find(c => c.id === clientId);
-    _clientId = clientId; _taskId = taskId;
+    _isNew = false; _clientId = clientId; _taskId = taskId;
     _modalAssignee   = task.assignee   || '';
     _modalRecurrence = task.recurrence || '';
     _modalUrgency    = task.urgency    || '';
 
+    document.getElementById('twModalClientRow').style.display = 'none';
     document.getElementById('twModalClient').textContent = client ? client.name : clientId;
     document.getElementById('twModalClient').style.color = client ? client.color : '';
     document.getElementById('twModalTitle').value = task.text;
     document.getElementById('twModalDesc').value  = task.desc || '';
     document.getElementById('twModalDate').value  = task.dueDate || '';
 
-    // Assignee pills
-    const assigneeEl = document.getElementById('twModalAssignees');
-    const assigneePills = [...USERS.map(u => [u.id, u.name]), ['', '—']];
-    assigneeEl.innerHTML = assigneePills.map(([v, l]) =>
-      `<button class="task-assignee-pill${_modalAssignee===v?' sel':''}" data-uid="${v}">${l}</button>`
-    ).join('');
-    assigneeEl.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        _modalAssignee = b.dataset.uid;
-        assigneeEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
-        b.classList.add('sel');
-      });
-    });
-
-    // Recurrence pills
-    const recEl = document.getElementById('twModalRecurrence');
-    recEl.innerHTML = REC_OPTS.map(([v, l]) =>
-      `<button class="task-recurrence-pill${_modalRecurrence===v?' sel':''}" data-rec="${v}">${l}</button>`
-    ).join('');
-    recEl.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        _modalRecurrence = b.dataset.rec;
-        recEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
-        b.classList.add('sel');
-      });
-    });
-
-    // Urgency pills
-    const urgEl = document.getElementById('twModalUrgency');
-    urgEl.innerHTML = URGENCY_OPTS.map(([v, l]) =>
-      `<button class="task-urgency-pill${_modalUrgency===v?' sel':''}" data-urg="${v}">${l}</button>`
-    ).join('');
-    urgEl.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        _modalUrgency = b.dataset.urg;
-        urgEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
-        b.classList.add('sel');
-      });
-    });
-
+    buildModalPills(_modalAssignee, _modalRecurrence, _modalUrgency);
     overlay.classList.add('open');
     document.getElementById('twModalTitle').focus();
   };
+
+  function buildModalPills(assignee, recurrence, urgency) {
+    _modalAssignee = assignee; _modalRecurrence = recurrence; _modalUrgency = urgency;
+
+    const assigneeEl = document.getElementById('twModalAssignees');
+    assigneeEl.innerHTML = [...USERS.map(u => [u.id, u.name]), ['', '—']].map(([v, l]) =>
+      `<button class="task-assignee-pill${assignee===v?' sel':''}" data-uid="${v}">${l}</button>`
+    ).join('');
+    assigneeEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      _modalAssignee = b.dataset.uid;
+      assigneeEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    }));
+
+    const recEl = document.getElementById('twModalRecurrence');
+    recEl.innerHTML = REC_OPTS.map(([v, l]) =>
+      `<button class="task-recurrence-pill${recurrence===v?' sel':''}" data-rec="${v}">${l}</button>`
+    ).join('');
+    recEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      _modalRecurrence = b.dataset.rec;
+      recEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    }));
+
+    const urgEl = document.getElementById('twModalUrgency');
+    urgEl.innerHTML = URGENCY_OPTS.map(([v, l]) =>
+      `<button class="task-urgency-pill${urgency===v?' sel':''}" data-urg="${v}">${l}</button>`
+    ).join('');
+    urgEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      _modalUrgency = b.dataset.urg;
+      urgEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    }));
+  }
 
   function closeModal() { overlay.classList.remove('open'); }
 
@@ -4160,7 +4184,25 @@ buildTasksGrid();
 
   saveBtn.addEventListener('click', () => {
     const newText = document.getElementById('twModalTitle').value.trim();
-    if (!newText || !_clientId || !_taskId) return;
+    if (!newText) return;
+
+    if (_isNew) {
+      const selEl = document.getElementById('twModalClientSel');
+      const cid = selEl ? selEl.value : null;
+      if (!cid) return;
+      addTask(cid, newText,
+        document.getElementById('twModalDesc').value.trim(),
+        document.getElementById('twModalDate').value,
+        _modalAssignee, _modalRecurrence, _modalUrgency
+      );
+      closeModal();
+      refreshTaskPanel(cid);
+      refreshWeeklyManager();
+      refreshDashboard();
+      return;
+    }
+
+    if (!_clientId || !_taskId) return;
     const tasks = loadTasks(_clientId);
     const t = tasks.find(t => t.id === _taskId);
     if (t) {
@@ -4309,6 +4351,7 @@ function renderWeeklyManager() {
         <div class="tw-col-hdr${isToday ? ' tw-today' : ''}">
           <span class="tw-col-day">${DAYS_FULL[i]}</span>
           <span class="tw-col-date">${dayNum}</span>
+          <button class="tw-new-task-btn" data-action="tw-new" data-iso="${iso}" title="Nova tarefa">+</button>
         </div>
         <div class="tw-body">${itemsHtml}</div>
       </div>`;
@@ -4321,6 +4364,10 @@ function renderWeeklyManager() {
   // bind edit buttons
   grid.querySelectorAll('[data-action="tw-edit"]').forEach(btn => {
     btn.addEventListener('click', () => openTwTaskModal(btn.dataset.client, btn.dataset.id));
+  });
+  // bind new task buttons
+  grid.querySelectorAll('[data-action="tw-new"]').forEach(btn => {
+    btn.addEventListener('click', () => openTwNewTaskModal(btn.dataset.iso));
   });
 }
 
