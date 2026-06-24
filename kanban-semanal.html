@@ -2635,6 +2635,145 @@
     #main-tarefas .tw-grid { grid-template-columns: repeat(7, minmax(190px, 1fr)); gap: 14px; min-width: 0; }
     #main-tarefas .tw-col { min-height: 400px; }
 
+    /* ── CÉUS ABERTOS ─────────────────────────────────────────────────────────── */
+    .ceus-wrap { padding: 0; }
+    .ceus-nav {
+      display: flex; gap: 0; border-bottom: 1px solid var(--border);
+      padding: 0 20px; background: var(--bg2);
+    }
+    .ceus-nav-btn {
+      background: none; border: none; border-bottom: 2px solid transparent;
+      color: var(--text-muted); cursor: pointer; font-size: 13px;
+      font-family: inherit; padding: 12px 16px; margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+    }
+    .ceus-nav-btn:hover { color: var(--text); }
+    .ceus-nav-btn.active { color: #a78bfa; border-bottom-color: #a78bfa; }
+    .ceus-sec { display: none; padding: 20px; }
+    .ceus-sec.active { display: block; }
+    .ceus-ficha-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 700px;
+    }
+    .ceus-field { display: flex; flex-direction: column; gap: 4px; }
+    .ceus-field label {
+      font-size: 11px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    .ceus-field input, .ceus-field textarea {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: inherit; font-size: 13px;
+      padding: 8px 10px; width: 100%; box-sizing: border-box;
+    }
+    .ceus-field textarea { resize: vertical; min-height: 70px; }
+    .ceus-field input:focus, .ceus-field textarea:focus { outline: none; border-color: #a78bfa; }
+    .ceus-field-full { grid-column: 1 / -1; }
+    .ceus-save-btn {
+      margin-top: 16px; background: #a78bfa; border: none; border-radius: 6px;
+      color: #fff; cursor: pointer; font-size: 13px; font-family: inherit; padding: 8px 20px;
+    }
+    .ceus-save-btn:hover { background: #9061f9; }
+    .ceus-fase {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; margin-bottom: 12px; overflow: hidden;
+    }
+    .ceus-fase-hdr {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; cursor: pointer; user-select: none;
+    }
+    .ceus-fase-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #a78bfa22; color: #a78bfa; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .ceus-fase-nome { font-size: 14px; font-weight: 600; flex: 1; }
+    .ceus-fase-dates { display: flex; gap: 8px; align-items: center; }
+    .ceus-fase-date-in {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text); font-family: inherit; font-size: 12px; padding: 4px 8px; width: 130px;
+    }
+    .ceus-fase-date-in:focus { outline: none; border-color: #a78bfa; }
+    .ceus-fase-sep { font-size: 11px; color: var(--text-muted); }
+    .ceus-fase-toggle { color: var(--text-muted); font-size: 12px; margin-left: 4px; }
+    .ceus-fase-body { display: none; padding: 0 16px 14px; }
+    .ceus-fase-body.open { display: block; }
+    .ceus-fase-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+    .ceus-chk-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+    .ceus-chk-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .ceus-chk-item input[type=checkbox] { accent-color: #a78bfa; width: 14px; height: 14px; flex-shrink: 0; }
+    .ceus-chk-item span { flex: 1; }
+    .ceus-chk-item span.done { text-decoration: line-through; color: var(--text-muted); }
+    .ceus-chk-del {
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      font-size: 14px; padding: 0 4px; opacity: 0;
+    }
+    .ceus-chk-item:hover .ceus-chk-del { opacity: 1; }
+    .ceus-chk-add { display: flex; gap: 8px; margin-top: 4px; }
+    .ceus-chk-add input {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text); font-family: inherit; font-size: 13px; padding: 5px 10px; flex: 1;
+    }
+    .ceus-chk-add input:focus { outline: none; border-color: #a78bfa; }
+    .ceus-chk-add button {
+      background: #a78bfa22; border: 1px solid #a78bfa55; border-radius: 4px;
+      color: #a78bfa; cursor: pointer; font-size: 13px; padding: 5px 12px;
+    }
+    .ceus-chk-add button:hover { background: #a78bfa33; }
+    .ceus-task-add-row {
+      display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .ceus-task-add-row input, .ceus-task-add-row select {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: inherit; font-size: 13px; padding: 7px 10px;
+    }
+    .ceus-task-add-row input[type=text] { flex: 1; min-width: 180px; }
+    .ceus-task-add-row input:focus { outline: none; border-color: #a78bfa; }
+    .ceus-task-add-btn {
+      background: #a78bfa; border: none; border-radius: 6px; color: #fff;
+      cursor: pointer; font-size: 13px; font-family: inherit; padding: 7px 16px;
+    }
+    .ceus-task-add-btn:hover { background: #9061f9; }
+    .ceus-task-list { display: flex; flex-direction: column; gap: 6px; }
+    .ceus-task-item {
+      display: flex; align-items: center; gap: 10px; background: var(--bg2);
+      border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; font-size: 13px;
+    }
+    .ceus-task-item input[type=checkbox] { accent-color: #a78bfa; width: 14px; height: 14px; flex-shrink: 0; }
+    .ceus-task-text { flex: 1; }
+    .ceus-task-text.done { text-decoration: line-through; color: var(--text-muted); }
+    .ceus-task-meta { display: flex; gap: 6px; align-items: center; }
+    .ceus-task-date { font-size: 11px; color: var(--text-muted); }
+    .ceus-task-resp {
+      font-size: 11px; color: var(--text-muted);
+      background: var(--bg); border-radius: 4px; padding: 2px 7px;
+    }
+    .ceus-task-del {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 14px; opacity: 0;
+    }
+    .ceus-task-item:hover .ceus-task-del { opacity: 1; }
+    .ceus-canais-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px; max-width: 800px;
+    }
+    .ceus-canal-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+    }
+    .ceus-canal-nome { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .ceus-canal-status {
+      font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text); font-family: inherit; padding: 4px 8px;
+      width: 100%; box-sizing: border-box; margin-bottom: 6px;
+    }
+    .ceus-canal-status:focus { outline: none; border-color: #a78bfa; }
+    .ceus-canal-obs {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text); font-family: inherit; font-size: 12px; padding: 5px 8px;
+      width: 100%; box-sizing: border-box; resize: vertical; min-height: 50px;
+    }
+    .ceus-canal-obs:focus { outline: none; border-color: #a78bfa; }
+    .ceus-canal-saved { font-size: 11px; color: #a78bfa; margin-top: 4px; display: none; }
+    .ceus-canal-saved.show { display: block; }
+
   </style>
 </head>
 <body>
@@ -2690,6 +2829,7 @@
     <button class="sb-tab" data-main-tab="postagens">Gestão de Postagens</button>
     <button class="sb-tab" data-main-tab="clientes">Clientes</button>
     <div class="sb-cli-list" id="sbCliList"></div>
+    <button class="sb-tab" data-main-tab="ideias">Ideias</button>
     <button class="sb-tab" data-main-tab="projetos">Projetos</button>
     <button class="sb-tab" data-main-tab="admin">Administrativo</button>
   </nav>
@@ -2753,11 +2893,11 @@
   <div id="clientSectionsWrap"></div>
 </div>
 
-<!-- TAB: PROJETOS -->
-<div class="main-tab" id="main-projetos">
+<!-- TAB: IDEIAS -->
+<div class="main-tab" id="main-ideias">
   <div class="proj-section">
     <div class="proj-hdr">
-      <span class="proj-hdr-title">Projetos</span>
+      <span class="proj-hdr-title">Ideias</span>
       <button class="proj-new-btn" id="projNewBtn">+ Novo Projeto</button>
     </div>
     <div class="proj-filters" id="projFilters">
@@ -2768,6 +2908,92 @@
       <button class="proj-filter-btn" data-status="concluido">Concluído</button>
     </div>
     <div class="proj-grid" id="projGrid"></div>
+  </div>
+</div>
+
+<!-- TAB: PROJETOS -->
+<div class="main-tab" id="main-projetos">
+  <div class="proj-section">
+    <div class="proj-hdr">
+      <span class="proj-hdr-title">Projetos</span>
+    </div>
+    <div class="client-tabs" id="projSubTabs">
+      <button class="client-tab-btn active" data-proj-sub="dna">DNA Movement</button>
+      <button class="client-tab-btn" data-proj-sub="ceus">Céus Abertos</button>
+    </div>
+    <div class="client-tab-panels">
+      <div class="client-tab-panel active" id="proj-sub-dna"></div>
+      <div class="client-tab-panel" id="proj-sub-ceus">
+        <div class="ceus-wrap">
+          <div class="ceus-nav">
+            <button class="ceus-nav-btn active" data-ceus-sec="ficha">Ficha</button>
+            <button class="ceus-nav-btn" data-ceus-sec="fases">Cronograma</button>
+            <button class="ceus-nav-btn" data-ceus-sec="tarefas">Tarefas</button>
+            <button class="ceus-nav-btn" data-ceus-sec="canais">Canais</button>
+          </div>
+
+          <!-- FICHA -->
+          <div class="ceus-sec active" id="ceus-sec-ficha">
+            <div class="ceus-ficha-grid">
+              <div class="ceus-field">
+                <label>Evento</label>
+                <input id="ceusEvento" type="text" value="Céus Abertos 2026 — Grand Finale">
+              </div>
+              <div class="ceus-field">
+                <label>Local</label>
+                <input id="ceusLocal" type="text" value="Igreja Verbo da Vida, Caxias do Sul">
+              </div>
+              <div class="ceus-field">
+                <label>Data início</label>
+                <input id="ceusDataIni" type="date" value="2026-11-06">
+              </div>
+              <div class="ceus-field">
+                <label>Data fim</label>
+                <input id="ceusDataFim" type="date" value="2026-11-07">
+              </div>
+              <div class="ceus-field">
+                <label>Objetivo comercial</label>
+                <input id="ceusObjetivo" type="text" value="Vender 500 ingressos a partir de R$ 60">
+              </div>
+              <div class="ceus-field">
+                <label>Ministros</label>
+                <input id="ceusMinistros" type="text" value="Josias Goulart e Ricardo Medeiros">
+              </div>
+              <div class="ceus-field ceus-field-full">
+                <label>Identidade Visual</label>
+                <textarea id="ceusIdVisual">Paleta: azul profundo, azul médio, azul claro, creme e dourado. Elementos: relógios antigos dourados, ampulhetas com nuvens, céus abertos, luz celestial. Estilo cinematográfico e místico.</textarea>
+              </div>
+              <div class="ceus-field ceus-field-full">
+                <label>Observações</label>
+                <textarea id="ceusObs" placeholder="Anotações gerais…"></textarea>
+              </div>
+            </div>
+            <button class="ceus-save-btn" onclick="saveCeusData()">Salvar ficha</button>
+          </div>
+
+          <!-- CRONOGRAMA / FASES -->
+          <div class="ceus-sec" id="ceus-sec-fases">
+            <div id="ceusFasesWrap"></div>
+          </div>
+
+          <!-- TAREFAS -->
+          <div class="ceus-sec" id="ceus-sec-tarefas">
+            <div class="ceus-task-add-row">
+              <input type="text" id="ceusTaskInput" placeholder="Nova tarefa…">
+              <input type="text" id="ceusTaskResp" placeholder="Responsável" style="width:130px;flex:none">
+              <input type="date" id="ceusTaskDate" style="flex:none">
+              <button class="ceus-task-add-btn" onclick="addCeusTask()">+ Adicionar</button>
+            </div>
+            <div class="ceus-task-list" id="ceusTaskList"></div>
+          </div>
+
+          <!-- CANAIS -->
+          <div class="ceus-sec" id="ceus-sec-canais">
+            <div class="ceus-canais-grid" id="ceusCanaisGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -7240,6 +7466,20 @@ function renderProjAnexList() {
   renderProjGrid();
 })();
 
+// ── PROJETOS: sub-abas ────────────────────────────────────────────────────────
+(function() {
+  const tabs = document.getElementById('projSubTabs');
+  if (!tabs) return;
+  tabs.querySelectorAll('[data-proj-sub]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.querySelectorAll('[data-proj-sub]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#main-projetos .client-tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('proj-sub-' + btn.dataset.projSub)?.classList.add('active');
+    });
+  });
+})();
+
 // ── NAVEGAÇÃO PRINCIPAL (tabs da sidebar) ────────────────────────────────────
 
 function switchMainTab(tab) {
@@ -7540,6 +7780,264 @@ function buildClientSections() {
 buildClientSections();
 buildCliCards();
 refreshVisaoClientes();
+
+// ── CÉUS ABERTOS ────────────────────────────────────────────────────────────
+
+const _CEUS_FASES_DEFAULT = [
+  { id:'f1', num:1, nome:'Suspense e Ruptura', dateIni:'2026-07-01', dateFim:'2026-07-07',
+    desc:'Mudança de fotos de perfil para identidade visual misteriosa, stories simbólicos e ativação da influenciadora cristã.',
+    items:[
+      {id:'f1a',text:'Selecionar os 12 perfis estratégicos da igreja',done:false},
+      {id:'f1b',text:'Mudança de foto de perfil (tema relógio/ampulheta)',done:false},
+      {id:'f1c',text:'Publicar stories simbólicos e enigmáticos',done:false},
+      {id:'f1d',text:'Ativar influenciadora cristã para comentar mudanças',done:false},
+      {id:'f1e',text:'Validar lista dos 12 + influenciadora com Pastor Josias',done:false},
+    ]
+  },
+  { id:'f2', num:2, nome:'Revelação Controlada', dateIni:'2026-07-07', dateFim:'2026-07-08',
+    desc:'Lançamento do vídeo oficial de revelação, publicação do save the date e reposts coordenados dos 12 envolvidos.',
+    items:[
+      {id:'f2a',text:'Produzir vídeo oficial de revelação (8 passos narrativos)',done:false},
+      {id:'f2b',text:'Publicar save the date oficial',done:false},
+      {id:'f2c',text:'Coordenar reposts dos 12 perfis',done:false},
+      {id:'f2d',text:'Publicar no Instagram oficial da conferência',done:false},
+    ]
+  },
+  { id:'f3', num:3, nome:'Construção de Desejo', dateIni:'2026-07-15', dateFim:'2026-08-31',
+    desc:'Conteúdos conceituais sobre o tema, apresentação gradual dos ministros, bastidores leves e perguntas provocativas.',
+    items:[
+      {id:'f3a',text:'Produzir carrosséis conceituais sobre tempo e eternidade',done:false},
+      {id:'f3b',text:'Apresentação gradual de Josias Goulart',done:false},
+      {id:'f3c',text:'Apresentação gradual de Ricardo Medeiros',done:false},
+      {id:'f3d',text:'Bastidores leves da produção',done:false},
+      {id:'f3e',text:'Vídeos curtos de atmosfera espiritual',done:false},
+      {id:'f3f',text:'Perguntas provocativas no feed',done:false},
+    ]
+  },
+  { id:'f4', num:4, nome:'Abertura de Vendas — Lote 1', dateIni:'2026-09-01', dateFim:'2026-09-07',
+    desc:'Anúncio oficial do 1º lote, links de compra em todos os canais, FAQ de ingressos e vídeos de convocação.',
+    items:[
+      {id:'f4a',text:'Anunciar abertura do 1º lote (R$ 60)',done:false},
+      {id:'f4b',text:'Publicar links de compra em todos os canais',done:false},
+      {id:'f4c',text:'Publicar FAQ sobre ingressos',done:false},
+      {id:'f4d',text:'Vídeos de convocação com os ministros',done:false},
+      {id:'f4e',text:'Ativar tráfego pago para vendas',done:false},
+    ]
+  },
+  { id:'f5', num:5, nome:'Venda, Urgência e Preparação', dateIni:'2026-09-08', dateFim:'2026-11-07',
+    desc:'Setembro: conteúdos de decisão e Lote 2. Outubro: urgência real e contagem regressiva. Semana do evento: informações práticas e preparação espiritual.',
+    items:[
+      {id:'f5a',text:'Lote 2 — setembro (reforço com ministros)',done:false},
+      {id:'f5b',text:'Último lote — outubro (urgência real)',done:false},
+      {id:'f5c',text:'Contagem regressiva semanal',done:false},
+      {id:'f5d',text:'Informações práticas: local, pulseiras, estacionamento, alimentação',done:false},
+      {id:'f5e',text:'Conteúdos de preparação espiritual (oração, jejum, expectativa)',done:false},
+      {id:'f5f',text:'Comunicação pós-evento',done:false},
+    ]
+  }
+];
+
+const _CEUS_CANAIS_DEFAULT = [
+  {id:'ca1',nome:'Instagram Oficial',status:'ativo',obs:''},
+  {id:'ca2',nome:'TikTok',status:'planejado',obs:''},
+  {id:'ca3',nome:'WhatsApp / Transmissão',status:'ativo',obs:''},
+  {id:'ca4',nome:'Posts Colaborativos (Igreja)',status:'planejado',obs:''},
+  {id:'ca5',nome:'12 Perfis Estratégicos',status:'planejado',obs:''},
+  {id:'ca6',nome:'Influenciadora Cristã',status:'planejado',obs:''},
+  {id:'ca7',nome:'Lideranças (a alinhar)',status:'pendente',obs:''},
+  {id:'ca8',nome:'Tráfego Pago',status:'planejado',obs:''},
+];
+
+function _ceusUID() { return 'u'+Date.now()+Math.random().toString(36).slice(2,5); }
+
+function saveCeusData() {
+  const d = {
+    evento: document.getElementById('ceusEvento')?.value||'',
+    local: document.getElementById('ceusLocal')?.value||'',
+    dataIni: document.getElementById('ceusDataIni')?.value||'',
+    dataFim: document.getElementById('ceusDataFim')?.value||'',
+    objetivo: document.getElementById('ceusObjetivo')?.value||'',
+    ministros: document.getElementById('ceusMinistros')?.value||'',
+    idVisual: document.getElementById('ceusIdVisual')?.value||'',
+    obs: document.getElementById('ceusObs')?.value||'',
+  };
+  localStorage.setItem('mmceus__ficha', JSON.stringify(d));
+  const btn = document.querySelector('.ceus-save-btn');
+  if (btn) { btn.textContent='Salvo ✓'; setTimeout(()=>btn.textContent='Salvar ficha',1500); }
+}
+
+function _loadCeusFicha() {
+  const raw = localStorage.getItem('mmceus__ficha');
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    ['ceusEvento','ceusLocal','ceusDataIni','ceusDataFim','ceusObjetivo','ceusMinistros','ceusIdVisual','ceusObs'].forEach(id => {
+      const key = id.replace('ceus','').charAt(0).toLowerCase()+id.replace('ceus','').slice(1);
+      const el = document.getElementById(id);
+      if (el && d[key] !== undefined) el.value = d[key];
+    });
+  } catch(e){}
+}
+
+function _getCeusFases() {
+  const raw = localStorage.getItem('mmceus__fases');
+  if (!raw) return JSON.parse(JSON.stringify(_CEUS_FASES_DEFAULT));
+  try { return JSON.parse(raw); } catch(e) { return JSON.parse(JSON.stringify(_CEUS_FASES_DEFAULT)); }
+}
+function _saveCeusFases(f) { localStorage.setItem('mmceus__fases', JSON.stringify(f)); }
+
+function renderCeusFases() {
+  const wrap = document.getElementById('ceusFasesWrap');
+  if (!wrap) return;
+  const fases = _getCeusFases();
+  wrap.innerHTML = fases.map(f => `
+    <div class="ceus-fase" id="ceusFase-${f.id}">
+      <div class="ceus-fase-hdr" onclick="toggleCeusFase('${f.id}')">
+        <div class="ceus-fase-num">${f.num}</div>
+        <div class="ceus-fase-nome">${f.nome}</div>
+        <div class="ceus-fase-dates" onclick="event.stopPropagation()">
+          <input type="date" class="ceus-fase-date-in" value="${f.dateIni}" onchange="_updateCeusFaseDate('${f.id}','ini',this.value)">
+          <span class="ceus-fase-sep">→</span>
+          <input type="date" class="ceus-fase-date-in" value="${f.dateFim}" onchange="_updateCeusFaseDate('${f.id}','fim',this.value)">
+        </div>
+        <span class="ceus-fase-toggle">▾</span>
+      </div>
+      <div class="ceus-fase-body" id="ceusFaseBody-${f.id}">
+        <div class="ceus-fase-desc">${f.desc}</div>
+        <div class="ceus-chk-list" id="ceusFaseChk-${f.id}">
+          ${f.items.map(item=>`
+            <div class="ceus-chk-item" id="ceusFaseItem-${f.id}-${item.id}">
+              <input type="checkbox" ${item.done?'checked':''} onchange="_toggleCeusFaseItem('${f.id}','${item.id}',this.checked)">
+              <span class="${item.done?'done':''}">${item.text}</span>
+              <button class="ceus-chk-del" onclick="_delCeusFaseItem('${f.id}','${item.id}')">✕</button>
+            </div>`).join('')}
+        </div>
+        <div class="ceus-chk-add">
+          <input type="text" id="ceusFaseAdd-${f.id}" placeholder="Novo item…" onkeydown="if(event.key==='Enter')_addCeusFaseItem('${f.id}')">
+          <button onclick="_addCeusFaseItem('${f.id}')">+</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleCeusFase(id) {
+  document.getElementById('ceusFaseBody-'+id)?.classList.toggle('open');
+}
+function _updateCeusFaseDate(id,tipo,val) {
+  const f=_getCeusFases(); const fase=f.find(x=>x.id===id); if(!fase)return;
+  if(tipo==='ini') fase.dateIni=val; else fase.dateFim=val;
+  _saveCeusFases(f);
+}
+function _toggleCeusFaseItem(faseId,itemId,done) {
+  const f=_getCeusFases(); const fase=f.find(x=>x.id===faseId); if(!fase)return;
+  const item=fase.items.find(x=>x.id===itemId); if(!item)return;
+  item.done=done; _saveCeusFases(f);
+  const sp=document.querySelector(`#ceusFaseItem-${faseId}-${itemId} span`);
+  if(sp) sp.className=done?'done':'';
+}
+function _addCeusFaseItem(faseId) {
+  const inp=document.getElementById('ceusFaseAdd-'+faseId);
+  if(!inp||!inp.value.trim())return;
+  const f=_getCeusFases(); const fase=f.find(x=>x.id===faseId); if(!fase)return;
+  fase.items.push({id:_ceusUID(),text:inp.value.trim(),done:false});
+  _saveCeusFases(f); inp.value='';
+  renderCeusFases();
+  document.getElementById('ceusFaseBody-'+faseId)?.classList.add('open');
+}
+function _delCeusFaseItem(faseId,itemId) {
+  const f=_getCeusFases(); const fase=f.find(x=>x.id===faseId); if(!fase)return;
+  fase.items=fase.items.filter(x=>x.id!==itemId); _saveCeusFases(f);
+  renderCeusFases();
+  document.getElementById('ceusFaseBody-'+faseId)?.classList.add('open');
+}
+
+function _getCeusTasks() {
+  try { return JSON.parse(localStorage.getItem('mmceus__tarefas')||'[]'); } catch(e){return[];}
+}
+function _saveCeusTasks(t) { localStorage.setItem('mmceus__tarefas',JSON.stringify(t)); }
+
+function renderCeusTasks() {
+  const list=document.getElementById('ceusTaskList'); if(!list)return;
+  const tasks=_getCeusTasks();
+  if(!tasks.length){list.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:8px 0">Nenhuma tarefa ainda.</div>';return;}
+  list.innerHTML=tasks.map(t=>`
+    <div class="ceus-task-item" id="ceusTask-${t.id}">
+      <input type="checkbox" ${t.done?'checked':''} onchange="_toggleCeusTask('${t.id}',this.checked)">
+      <span class="ceus-task-text${t.done?' done':''}">${t.text}</span>
+      <div class="ceus-task-meta">
+        ${t.resp?`<span class="ceus-task-resp">${t.resp}</span>`:''}
+        ${t.date?`<span class="ceus-task-date">${t.date}</span>`:''}
+      </div>
+      <button class="ceus-task-del" onclick="_delCeusTask('${t.id}')">✕</button>
+    </div>`).join('');
+}
+
+function addCeusTask() {
+  const txt=document.getElementById('ceusTaskInput');
+  const resp=document.getElementById('ceusTaskResp');
+  const date=document.getElementById('ceusTaskDate');
+  if(!txt||!txt.value.trim())return;
+  const tasks=_getCeusTasks();
+  tasks.push({id:_ceusUID(),text:txt.value.trim(),done:false,resp:resp?.value.trim()||'',date:date?.value||''});
+  _saveCeusTasks(tasks);
+  txt.value=''; if(resp)resp.value=''; if(date)date.value='';
+  renderCeusTasks();
+}
+function _toggleCeusTask(id,done) {
+  const tasks=_getCeusTasks(); const t=tasks.find(x=>x.id===id); if(!t)return;
+  t.done=done; _saveCeusTasks(tasks);
+  const sp=document.querySelector(`#ceusTask-${id} .ceus-task-text`);
+  if(sp) sp.className='ceus-task-text'+(done?' done':'');
+}
+function _delCeusTask(id) {
+  _saveCeusTasks(_getCeusTasks().filter(x=>x.id!==id));
+  renderCeusTasks();
+}
+
+function _getCeusCanais() {
+  const raw=localStorage.getItem('mmceus__canais');
+  if(!raw) return JSON.parse(JSON.stringify(_CEUS_CANAIS_DEFAULT));
+  try{return JSON.parse(raw);}catch(e){return JSON.parse(JSON.stringify(_CEUS_CANAIS_DEFAULT));}
+}
+function saveCeusCanal(id) {
+  const canais=_getCeusCanais(); const c=canais.find(x=>x.id===id); if(!c)return;
+  c.status=document.getElementById('ceusCanalSt-'+id)?.value||c.status;
+  c.obs=document.getElementById('ceusCanalObs-'+id)?.value||'';
+  localStorage.setItem('mmceus__canais',JSON.stringify(canais));
+  const msg=document.getElementById('ceusCanalSaved-'+id);
+  if(msg){msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),1500);}
+}
+function renderCeusCanais() {
+  const grid=document.getElementById('ceusCanaisGrid'); if(!grid)return;
+  const canais=_getCeusCanais();
+  const opts=['ativo','planejado','pendente','pausado','concluído'];
+  grid.innerHTML=canais.map(c=>`
+    <div class="ceus-canal-card">
+      <div class="ceus-canal-nome">${c.nome}</div>
+      <select class="ceus-canal-status" id="ceusCanalSt-${c.id}" onchange="saveCeusCanal('${c.id}')">
+        ${opts.map(s=>`<option value="${s}"${c.status===s?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
+      </select>
+      <textarea class="ceus-canal-obs" id="ceusCanalObs-${c.id}" placeholder="Observações…" onblur="saveCeusCanal('${c.id}')">${c.obs}</textarea>
+      <div class="ceus-canal-saved" id="ceusCanalSaved-${c.id}">Salvo ✓</div>
+    </div>`).join('');
+}
+
+(function initCeusAbertos() {
+  document.querySelectorAll('.ceus-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ceus-nav-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.ceus-sec').forEach(s=>s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('ceus-sec-'+btn.dataset.ceusSec)?.classList.add('active');
+    });
+  });
+  const ti=document.getElementById('ceusTaskInput');
+  if(ti) ti.addEventListener('keydown',e=>{if(e.key==='Enter')addCeusTask();});
+  _loadCeusFicha();
+  renderCeusFases();
+  renderCeusTasks();
+  renderCeusCanais();
+})();
 
 // (nav highlight e dropdown antigos removidos — substituídos pela sidebar direita)
 
