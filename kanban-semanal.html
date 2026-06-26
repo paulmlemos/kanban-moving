@@ -2635,6 +2635,135 @@
     #main-tarefas .tw-grid { grid-template-columns: repeat(7, minmax(190px, 1fr)); gap: 14px; min-width: 0; }
     #main-tarefas .tw-col { min-height: 400px; }
 
+    /* ── DNA MOVEMENT ────────────────────────────────────────────────────────── */
+    .dna-wrap { padding: 0; }
+    .dna-nav {
+      display: flex; gap: 0; border-bottom: 1px solid var(--border);
+      padding: 0 20px; background: var(--bg2);
+    }
+    .dna-nav-btn {
+      background: none; border: none; border-bottom: 2px solid transparent;
+      color: var(--text-muted); cursor: pointer; font-size: 13px;
+      font-family: inherit; padding: 12px 16px; margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+    }
+    .dna-nav-btn:hover { color: var(--text); }
+    .dna-nav-btn.active { color: #00c878; border-bottom-color: #00c878; }
+    .dna-sec { display: none; padding: 20px; }
+    .dna-sec.active { display: block; }
+    .dna-cal-hdr {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+    }
+    .dna-cal-range { font-size: 14px; font-weight: 600; color: var(--text); }
+    .dna-cal-nav-btn {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); cursor: pointer; font-size: 13px; font-family: inherit;
+      padding: 6px 14px; transition: background .15s;
+    }
+    .dna-cal-nav-btn:hover { background: #2a2a2a; }
+    .dna-cal-months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    @media (max-width: 900px) { .dna-cal-months { grid-template-columns: 1fr; } }
+    .dna-month {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px;
+    }
+    .dna-month-name {
+      font-size: 13px; font-weight: 700; text-align: center;
+      margin-bottom: 10px; color: var(--text);
+    }
+    .dna-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 2px; }
+    .dna-wd { font-size: 10px; text-align: center; color: var(--text-muted); padding: 3px 0; font-weight: 600; }
+    .dna-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .dna-day {
+      display: flex; flex-direction: column; align-items: center;
+      border-radius: 6px; cursor: pointer; min-height: 40px; padding: 4px 2px;
+      transition: background .1s;
+    }
+    .dna-day:hover:not(.dna-day-empty) { background: #2a2a2a; }
+    .dna-day-empty { cursor: default; }
+    .dna-day-num { font-size: 12px; color: var(--text-muted); line-height: 1; }
+    .dna-day.today .dna-day-num { color: #00c878; font-weight: 700; }
+    .dna-day.today { background: #00c87812; }
+    .dna-day.selected { background: #00c87822; outline: 1px solid #00c87866; }
+    .dna-dots { display: flex; gap: 2px; margin-top: 3px; flex-wrap: wrap; justify-content: center; }
+    .dna-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .dna-event-panel {
+      margin-top: 20px; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; display: none;
+    }
+    .dna-event-panel-hdr {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    }
+    .dna-event-panel-hdr span { font-size: 13px; font-weight: 600; color: var(--text); }
+    .dna-event-add-btn {
+      background: #00c878; border: none; border-radius: 6px; color: #000;
+      cursor: pointer; font-size: 12px; font-family: inherit; font-weight: 700; padding: 5px 12px;
+    }
+    .dna-event-add-btn:hover { background: #00b36a; }
+    .dna-event-empty { font-size: 13px; color: var(--text-muted); }
+    .dna-event-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+      padding: 10px 12px; margin-bottom: 8px;
+    }
+    .dna-event-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+    .dna-event-info { flex: 1; }
+    .dna-event-titulo { font-size: 13px; color: var(--text); font-weight: 500; }
+    .dna-event-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .dna-event-edit {
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      font-size: 14px; padding: 0 4px; opacity: 0;
+    }
+    .dna-event-item:hover .dna-event-edit { opacity: 1; }
+    .dna-modal-bg {
+      display: none; position: fixed; inset: 0; background: #0008; z-index: 9999;
+      align-items: center; justify-content: center;
+    }
+    .dna-modal-bg.open { display: flex; }
+    .dna-modal {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      width: 400px; max-width: 95vw; overflow: hidden;
+    }
+    .dna-modal-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+    }
+    .dna-modal-hdr span { font-size: 14px; font-weight: 700; color: var(--text); }
+    .dna-modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; }
+    .dna-modal-body { padding: 18px; }
+    .dna-modal-field { margin-bottom: 14px; }
+    .dna-modal-field label {
+      display: block; font-size: 11px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px;
+    }
+    .dna-modal-field input[type=text],
+    .dna-modal-field input[type=date],
+    .dna-modal-field textarea {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: inherit; font-size: 13px;
+      padding: 8px 10px; width: 100%; box-sizing: border-box;
+    }
+    .dna-modal-field textarea { resize: vertical; min-height: 70px; }
+    .dna-modal-field input:focus, .dna-modal-field textarea:focus { outline: none; border-color: #00c878; }
+    .dna-color-row { display: flex; gap: 8px; }
+    .dna-color-opt {
+      width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent;
+      cursor: pointer; padding: 0; transition: border-color .1s, transform .1s;
+    }
+    .dna-color-opt:hover { transform: scale(1.15); }
+    .dna-color-opt.active { border-color: #fff; transform: scale(1.2); }
+    .dna-modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+    .dna-modal-del {
+      background: none; border: 1px solid #ef444466; border-radius: 6px;
+      color: #ef4444; cursor: pointer; font-size: 12px; font-family: inherit; padding: 6px 14px;
+    }
+    .dna-modal-del:hover { background: #ef444422; }
+    .dna-modal-save {
+      background: #00c878; border: none; border-radius: 6px; color: #000;
+      cursor: pointer; font-size: 13px; font-family: inherit; font-weight: 700; padding: 8px 20px;
+    }
+    .dna-modal-save:hover { background: #00b36a; }
+
     /* ── CÉUS ABERTOS ─────────────────────────────────────────────────────────── */
     .ceus-wrap { padding: 0; }
     .ceus-nav {
@@ -2922,7 +3051,28 @@
       <button class="client-tab-btn" data-proj-sub="ceus">Céus Abertos</button>
     </div>
     <div class="client-tab-panels">
-      <div class="client-tab-panel active" id="proj-sub-dna"></div>
+      <div class="client-tab-panel active" id="proj-sub-dna">
+        <div class="dna-wrap">
+          <div class="dna-nav">
+            <button class="dna-nav-btn active" data-dna-sec="calendario">Calendário</button>
+          </div>
+          <div class="dna-sec active" id="dna-sec-calendario">
+            <div class="dna-cal-hdr">
+              <button class="dna-cal-nav-btn" id="dnaCalPrev">‹ Anterior</button>
+              <span class="dna-cal-range" id="dnaCalRange"></span>
+              <button class="dna-cal-nav-btn" id="dnaCalNext">Próximo ›</button>
+            </div>
+            <div class="dna-cal-months" id="dnaCalMonths"></div>
+            <div class="dna-event-panel" id="dnaEventPanel">
+              <div class="dna-event-panel-hdr">
+                <span id="dnaEventPanelDate"></span>
+                <button class="dna-event-add-btn" id="dnaEventAddBtn">+ Adicionar evento</button>
+              </div>
+              <div class="dna-event-list" id="dnaEventList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="client-tab-panel" id="proj-sub-ceus">
         <div class="ceus-wrap">
           <div class="ceus-nav">
@@ -3154,6 +3304,45 @@
       <div style="display:flex;gap:8px">
         <button class="btn" id="pickerCancel">Cancelar</button>
         <button class="btn btn-accent" id="pickerConfirm">Adicionar ao dia</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dna-modal-bg" id="dnaModalBg">
+  <div class="dna-modal">
+    <div class="dna-modal-hdr">
+      <span id="dnaModalLabel">Novo evento</span>
+      <button class="dna-modal-close" id="dnaModalClose">✕</button>
+    </div>
+    <div class="dna-modal-body">
+      <input type="hidden" id="dnaModalId">
+      <div class="dna-modal-field">
+        <label>Data</label>
+        <input type="date" id="dnaModalDateInput">
+      </div>
+      <div class="dna-modal-field">
+        <label>Título</label>
+        <input type="text" id="dnaModalTitulo" placeholder="Nome do evento">
+      </div>
+      <div class="dna-modal-field">
+        <label>Descrição</label>
+        <textarea id="dnaModalDesc" placeholder="Detalhes opcionais"></textarea>
+      </div>
+      <div class="dna-modal-field">
+        <label>Cor</label>
+        <div class="dna-color-row">
+          <button class="dna-color-opt active" data-cor="#00c878" style="background:#00c878"></button>
+          <button class="dna-color-opt" data-cor="#3b82f6" style="background:#3b82f6"></button>
+          <button class="dna-color-opt" data-cor="#f59e0b" style="background:#f59e0b"></button>
+          <button class="dna-color-opt" data-cor="#ef4444" style="background:#ef4444"></button>
+          <button class="dna-color-opt" data-cor="#a78bfa" style="background:#a78bfa"></button>
+          <button class="dna-color-opt" data-cor="#ec4899" style="background:#ec4899"></button>
+        </div>
+      </div>
+      <div class="dna-modal-actions">
+        <button class="dna-modal-del" id="dnaModalDel" style="display:none">Excluir</button>
+        <button class="dna-modal-save" id="dnaModalSave">Salvar</button>
       </div>
     </div>
   </div>
@@ -8042,6 +8231,247 @@ function renderCeusCanais() {
 // (nav highlight e dropdown antigos removidos — substituídos pela sidebar direita)
 
 // ─── FIREBASE: carregar nuvem e escutar mudanças em tempo real ────────────────
+// ── DNA MOVEMENT — CALENDÁRIO ────────────────────────────────────────────────
+(function () {
+  const STORE_KEY = 'mmdna_eventos';
+  let _eventos = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+  const now = new Date();
+  let _baseYear = now.getFullYear();
+  let _baseMonth = now.getMonth();
+  let _selectedDate = null;
+  let _editingId = null;
+  let _selectedCor = '#00c878';
+
+  const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const WDS = ['D','S','T','Q','Q','S','S'];
+
+  function save() { localStorage.setItem(STORE_KEY, JSON.stringify(_eventos)); }
+  function uid() { return 'e' + Date.now() + Math.random().toString(36).slice(2, 5); }
+  function isoDate(y, m, d) {
+    return `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+  function eventsOn(iso) { return _eventos.filter(e => e.date === iso); }
+
+  function renderCal() {
+    const todayIso = isoDate(now.getFullYear(), now.getMonth(), now.getDate());
+    const lastMIdx = (_baseMonth + 2) % 12;
+    const lastY    = _baseYear + Math.floor((_baseMonth + 2) / 12);
+    const rangeEl  = document.getElementById('dnaCalRange');
+    if (rangeEl) rangeEl.textContent =
+      `${MONTHS[_baseMonth]} ${_baseYear} — ${MONTHS[lastMIdx]} ${lastY}`;
+
+    const container = document.getElementById('dnaCalMonths');
+    if (!container) return;
+    container.innerHTML = '';
+
+    for (let i = 0; i < 3; i++) {
+      const mIdx = (_baseMonth + i) % 12;
+      const yr   = _baseYear + Math.floor((_baseMonth + i) / 12);
+
+      const monthEl = document.createElement('div');
+      monthEl.className = 'dna-month';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'dna-month-name';
+      nameEl.textContent = `${MONTHS[mIdx]} ${yr}`;
+      monthEl.appendChild(nameEl);
+
+      const wdEl = document.createElement('div');
+      wdEl.className = 'dna-weekdays';
+      WDS.forEach(d => {
+        const c = document.createElement('div');
+        c.className = 'dna-wd';
+        c.textContent = d;
+        wdEl.appendChild(c);
+      });
+      monthEl.appendChild(wdEl);
+
+      const daysEl      = document.createElement('div');
+      daysEl.className  = 'dna-days';
+      const firstDay    = new Date(yr, mIdx, 1).getDay();
+      const daysInMonth = new Date(yr, mIdx + 1, 0).getDate();
+
+      for (let j = 0; j < firstDay; j++) {
+        const empty = document.createElement('div');
+        empty.className = 'dna-day dna-day-empty';
+        daysEl.appendChild(empty);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const iso   = isoDate(yr, mIdx, d);
+        const evs   = eventsOn(iso);
+        const dayEl = document.createElement('div');
+        dayEl.className = 'dna-day';
+        if (iso === todayIso)      dayEl.classList.add('today');
+        if (iso === _selectedDate) dayEl.classList.add('selected');
+
+        const numEl = document.createElement('span');
+        numEl.className = 'dna-day-num';
+        numEl.textContent = d;
+        dayEl.appendChild(numEl);
+
+        if (evs.length) {
+          const dotsEl = document.createElement('div');
+          dotsEl.className = 'dna-dots';
+          evs.slice(0, 3).forEach(ev => {
+            const dot = document.createElement('span');
+            dot.className = 'dna-dot';
+            dot.style.background = ev.cor || '#00c878';
+            dotsEl.appendChild(dot);
+          });
+          dayEl.appendChild(dotsEl);
+        }
+
+        dayEl.addEventListener('click', () => selectDate(iso));
+        daysEl.appendChild(dayEl);
+      }
+
+      monthEl.appendChild(daysEl);
+      container.appendChild(monthEl);
+    }
+
+    if (_selectedDate) renderEventPanel();
+  }
+
+  function selectDate(iso) {
+    _selectedDate = iso;
+    renderCal();
+    const panel = document.getElementById('dnaEventPanel');
+    if (panel) panel.style.display = 'block';
+    renderEventPanel();
+  }
+
+  function renderEventPanel() {
+    if (!_selectedDate) return;
+    const [y, m, d] = _selectedDate.split('-').map(Number);
+    const dateLabel = document.getElementById('dnaEventPanelDate');
+    if (dateLabel) dateLabel.textContent = `${d} de ${MONTHS[m - 1]} de ${y}`;
+
+    const list = document.getElementById('dnaEventList');
+    if (!list) return;
+    const evs = eventsOn(_selectedDate);
+    if (!evs.length) {
+      list.innerHTML = '<div class="dna-event-empty">Nenhum evento neste dia.</div>';
+      return;
+    }
+    list.innerHTML = evs.map(ev => `
+      <div class="dna-event-item">
+        <span class="dna-event-color" style="background:${ev.cor || '#00c878'}"></span>
+        <div class="dna-event-info">
+          <div class="dna-event-titulo">${ev.titulo}</div>
+          ${ev.desc ? `<div class="dna-event-desc">${ev.desc}</div>` : ''}
+        </div>
+        <button class="dna-event-edit" data-id="${ev.id}">&#9998;</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.dna-event-edit').forEach(btn => {
+      btn.addEventListener('click', () => openModal(_selectedDate, btn.dataset.id));
+    });
+  }
+
+  function openModal(date, id) {
+    _editingId = id || null;
+    document.getElementById('dnaModalLabel').textContent = id ? 'Editar evento' : 'Novo evento';
+    document.getElementById('dnaModalDateInput').value = date;
+    document.getElementById('dnaModalDel').style.display = id ? 'inline-block' : 'none';
+    if (id) {
+      const ev = _eventos.find(e => e.id === id);
+      document.getElementById('dnaModalId').value = ev.id;
+      document.getElementById('dnaModalTitulo').value = ev.titulo;
+      document.getElementById('dnaModalDesc').value = ev.desc || '';
+      _selectedCor = ev.cor || '#00c878';
+    } else {
+      document.getElementById('dnaModalId').value = '';
+      document.getElementById('dnaModalTitulo').value = '';
+      document.getElementById('dnaModalDesc').value = '';
+      _selectedCor = '#00c878';
+    }
+    document.querySelectorAll('.dna-color-opt').forEach(b =>
+      b.classList.toggle('active', b.dataset.cor === _selectedCor));
+    document.getElementById('dnaModalBg').classList.add('open');
+    setTimeout(() => document.getElementById('dnaModalTitulo').focus(), 50);
+  }
+
+  function closeModal() {
+    document.getElementById('dnaModalBg').classList.remove('open');
+    _editingId = null;
+  }
+
+  function saveModal() {
+    const titulo = document.getElementById('dnaModalTitulo').value.trim();
+    if (!titulo) { document.getElementById('dnaModalTitulo').focus(); return; }
+    const date = document.getElementById('dnaModalDateInput').value;
+    const desc = document.getElementById('dnaModalDesc').value.trim();
+    if (_editingId) {
+      const ev = _eventos.find(e => e.id === _editingId);
+      ev.titulo = titulo; ev.date = date; ev.desc = desc; ev.cor = _selectedCor;
+    } else {
+      _eventos.push({ id: uid(), date, titulo, desc, cor: _selectedCor });
+    }
+    save();
+    closeModal();
+    _selectedDate = date;
+    renderCal();
+    const panel = document.getElementById('dnaEventPanel');
+    if (panel) panel.style.display = 'block';
+    renderEventPanel();
+  }
+
+  function deleteModal() {
+    if (!_editingId) return;
+    _eventos = _eventos.filter(e => e.id !== _editingId);
+    save();
+    closeModal();
+    renderCal();
+    if (_selectedDate) renderEventPanel();
+  }
+
+  document.getElementById('dnaCalPrev').addEventListener('click', () => {
+    _baseMonth -= 3;
+    if (_baseMonth < 0) { _baseYear--; _baseMonth += 12; }
+    renderCal();
+  });
+  document.getElementById('dnaCalNext').addEventListener('click', () => {
+    _baseMonth += 3;
+    if (_baseMonth > 11) { _baseYear++; _baseMonth -= 12; }
+    renderCal();
+  });
+
+  document.getElementById('dnaEventAddBtn').addEventListener('click', () =>
+    openModal(_selectedDate));
+
+  document.getElementById('dnaModalClose').addEventListener('click', closeModal);
+  document.getElementById('dnaModalBg').addEventListener('click', e => {
+    if (e.target === document.getElementById('dnaModalBg')) closeModal();
+  });
+  document.getElementById('dnaModalSave').addEventListener('click', saveModal);
+  document.getElementById('dnaModalDel').addEventListener('click', deleteModal);
+  document.getElementById('dnaModalTitulo').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveModal();
+  });
+
+  document.querySelectorAll('.dna-color-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _selectedCor = btn.dataset.cor;
+      document.querySelectorAll('.dna-color-opt').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.dna-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.dna-nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.dna-sec').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      const sec = document.getElementById('dna-sec-' + btn.dataset.dnaSec);
+      if (sec) sec.classList.add('active');
+    });
+  });
+
+  renderCal();
+})();
+
 _loadFromCloud().then(changed => { if (changed) location.reload(); });
 _subscribeToChanges();
 </script>
