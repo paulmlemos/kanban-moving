@@ -778,7 +778,6 @@
     .task-assignee-pill:hover { border-color:var(--border-2); }
     .task-assignee-pill.sel[data-uid="priscila"] { background:#ec4899; border-color:#ec4899; color:#fff; }
     .task-assignee-pill.sel[data-uid="paul"]     { background:#7c5cfc; border-color:#7c5cfc; color:#fff; }
-    .task-assignee-pill.sel[data-uid=""]         { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); color:var(--text); }
     .task-recurrence-row { display:flex; gap:4px; padding:4px 9px 8px; border-bottom:1px solid var(--border); align-items:center; }
     .task-recurrence-pill {
       font-size:9px; font-weight:600; padding:2px 9px; border-radius:20px;
@@ -4047,8 +4046,10 @@ function fileToBase64(file) {
 }
 
 function loadTasks(clientId) {
-  try { return JSON.parse(mmGet(taskKey(clientId)) || '[]'); }
-  catch { return []; }
+  let tasks;
+  try { tasks = JSON.parse(mmGet(taskKey(clientId)) || '[]'); }
+  catch { tasks = []; }
+  return tasks.map(t => ({ ...t, assignees: t.assignees || (t.assignee ? [t.assignee] : []) }));
 }
 
 function saveTasks(clientId, tasks) {
@@ -4063,7 +4064,7 @@ function nextRecurrenceDate(iso, recurrence) {
   return base.toISOString().slice(0, 10);
 }
 
-function addTask(clientId, text, desc, dueDate, assignee, recurrence, urgency) {
+function addTask(clientId, text, desc, dueDate, assignees, recurrence, urgency) {
   if (!text.trim()) return;
   const tasks = loadTasks(clientId);
   tasks.push({
@@ -4072,7 +4073,7 @@ function addTask(clientId, text, desc, dueDate, assignee, recurrence, urgency) {
     desc: desc ? desc.trim() : '',
     done: false,
     dueDate:    dueDate    || '',
-    assignee:   assignee   || '',
+    assignees:  assignees  || [],
     recurrence: recurrence || '',
     urgency:    urgency    || ''
   });
@@ -4096,7 +4097,7 @@ function toggleTask(clientId, id) {
         desc: t.desc || '',
         done: false,
         dueDate:    nextRecurrenceDate(t.dueDate, t.recurrence),
-        assignee:   t.assignee   || '',
+        assignees:  t.assignees  || [],
         recurrence: t.recurrence,
         urgency:    t.urgency    || ''
       });
@@ -4137,7 +4138,7 @@ function refreshTaskPanel(clientId) {
   const allTasks = loadTasks(clientId);
   const filter   = taskFilters[clientId] || 'all';
 
-  const visible = filter === 'all' ? allTasks : allTasks.filter(t => t.assignee === filter);
+  const visible = filter === 'all' ? allTasks : allTasks.filter(t => (t.assignees||[]).includes(filter));
   const pending  = allTasks.filter(t => !t.done).length;
   const doneCnt  = allTasks.length - pending;
 
@@ -4168,7 +4169,10 @@ function refreshTaskPanel(clientId) {
     ];
     listEl.innerHTML = sorted.map(task => {
       const dueBadge  = task.dueDate  ? `<span class="task-due ${dueCls(task.dueDate)}">${dueFmt(task.dueDate)}</span>` : '';
-      const userBadge = task.assignee ? `<span class="task-user-badge" data-uid="${task.assignee}">${USERS.find(u=>u.id===task.assignee)?.name||''}</span>` : '';
+      const userBadge = (task.assignees||[]).map(uid => {
+        const u = USERS.find(u => u.id === uid);
+        return u ? `<span class="task-user-badge" data-uid="${uid}">${u.name}</span>` : '';
+      }).join('');
       const descHtml  = task.desc     ? `<div class="task-desc">${escHtml(task.desc)}</div>` : '';
       const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
       const recBadge  = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
@@ -4284,13 +4288,13 @@ function buildTasksGrid() {
     panel.style.setProperty('--client-color', client.color);
 
     taskFilters[client.id]     = 'all';
-    taskAssignees[client.id]   = '';
+    taskAssignees[client.id]   = [];
     taskRecurrences[client.id] = '';
     taskUrgencies[client.id]   = '';
 
     const assigneePillsHtml = USERS.map(u =>
       `<button class="task-assignee-pill" data-uid="${u.id}">${u.name}</button>`
-    ).join('') + `<button class="task-assignee-pill sel" data-uid="">Nenhum</button>`;
+    ).join('');
 
     panel.innerHTML = `
       <div class="task-panel-header">
@@ -4369,20 +4373,25 @@ function buildTasksGrid() {
       });
     });
 
-    // Assignee selector
+    // Assignee selector (múltipla escolha)
     panel.querySelectorAll('.task-assignee-pill').forEach(b => {
       b.addEventListener('click', () => {
-        taskAssignees[client.id] = b.dataset.uid;
-        panel.querySelectorAll('.task-assignee-pill').forEach(x => x.classList.remove('sel'));
-        b.classList.add('sel');
+        const uid = b.dataset.uid;
+        const arr = taskAssignees[client.id];
+        const pos = arr.indexOf(uid);
+        if (pos === -1) { arr.push(uid); b.classList.add('sel'); }
+        else { arr.splice(pos, 1); b.classList.remove('sel'); }
       });
     });
 
     const doAdd = () => {
-      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id], taskRecurrences[client.id], taskUrgencies[client.id]);
+      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id].slice(), taskRecurrences[client.id], taskUrgencies[client.id]);
       input.value = '';
       if (descInput) descInput.value = '';
       dateInput.value = '';
+      // Reset assignees
+      taskAssignees[client.id] = [];
+      panel.querySelectorAll('.task-assignee-pill').forEach(x => x.classList.remove('sel'));
       // Reset recurrence to "Única"
       taskRecurrences[client.id] = '';
       panel.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.toggle('sel', x.dataset.rec === ''));
@@ -4416,7 +4425,7 @@ function editTask(clientId, id) {
   const task  = tasks.find(t => t.id === id);
   if (!task) return;
 
-  let editAssignee   = task.assignee   || '';
+  let editAssignees  = (task.assignees || []).slice();
   let editRecurrence = task.recurrence || '';
   let editUrgency    = task.urgency    || '';
 
@@ -4427,8 +4436,7 @@ function editTask(clientId, id) {
     <textarea class="task-edit-desc" rows="2" placeholder="Descrição (opcional)…">${escHtml(task.desc||'')}</textarea>
     <div class="task-edit-row">
       <input class="task-edit-date" type="date" value="${task.dueDate||''}">
-      ${USERS.map(u => `<button class="task-assignee-pill${task.assignee===u.id?' sel':''}" data-uid="${u.id}">${u.name}</button>`).join('')}
-      <button class="task-assignee-pill${!task.assignee?' sel':''}" data-uid="">—</button>
+      ${USERS.map(u => `<button class="task-assignee-pill${editAssignees.includes(u.id)?' sel':''}" data-uid="${u.id}">${u.name}</button>`).join('')}
     </div>
     <div class="task-edit-row">
       ${recOpts.map(([v,l]) => `<button class="task-recurrence-pill${editRecurrence===v?' sel':''}" data-rec="${v}">↻ ${l}</button>`).join('')}
@@ -4489,9 +4497,10 @@ function editTask(clientId, id) {
 
   item.querySelectorAll('.task-assignee-pill').forEach(b => {
     b.addEventListener('click', () => {
-      editAssignee = b.dataset.uid;
-      item.querySelectorAll('.task-assignee-pill').forEach(x => x.classList.remove('sel'));
-      b.classList.add('sel');
+      const uid = b.dataset.uid;
+      const pos = editAssignees.indexOf(uid);
+      if (pos === -1) { editAssignees.push(uid); b.classList.add('sel'); }
+      else { editAssignees.splice(pos, 1); b.classList.remove('sel'); }
     });
   });
 
@@ -4522,7 +4531,7 @@ function editTask(clientId, id) {
       t2.text       = newText;
       t2.desc       = newDesc;
       t2.dueDate    = newDate;
-      t2.assignee   = editAssignee;
+      t2.assignees  = editAssignees;
       t2.recurrence = editRecurrence;
       t2.urgency    = editUrgency;
       saveTasks(clientId, tasks2);
@@ -4548,7 +4557,7 @@ buildTasksGrid();
   const closeBtn  = document.getElementById('twModalClose');
   const cancelBtn = document.getElementById('twModalCancel');
   const saveBtn   = document.getElementById('twModalSave');
-  let _clientId = null, _taskId = null, _modalAssignee = '', _modalRecurrence = '', _modalUrgency = '', _isNew = false;
+  let _clientId = null, _taskId = null, _modalAssignees = [], _modalRecurrence = '', _modalUrgency = '', _isNew = false;
 
   const REC_OPTS = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal']];
 
@@ -4568,7 +4577,7 @@ buildTasksGrid();
 
   window.openTwNewTaskModal = function (iso) {
     _isNew = true; _taskId = null; _clientId = null;
-    _modalAssignee = ''; _modalRecurrence = ''; _modalUrgency = '';
+    _modalAssignees = []; _modalRecurrence = ''; _modalUrgency = '';
 
     // populate client select
     const allClients = [MOVING_CLIENT, ...CLIENTS].filter(c => !c.noKanban);
@@ -4581,7 +4590,7 @@ buildTasksGrid();
     document.getElementById('twModalDesc').value  = '';
     document.getElementById('twModalDate').value  = iso || '';
 
-    buildModalPills('', '', '');
+    buildModalPills([], '', '');
     overlay.classList.add('open');
     document.getElementById('twModalTitle').focus();
   };
@@ -4591,7 +4600,7 @@ buildTasksGrid();
     if (!task) return;
     const client = [...CLIENTS, MOVING_CLIENT].find(c => c.id === clientId);
     _isNew = false; _clientId = clientId; _taskId = taskId;
-    _modalAssignee   = task.assignee   || '';
+    _modalAssignees  = (task.assignees || []).slice();
     _modalRecurrence = task.recurrence || '';
     _modalUrgency    = task.urgency    || '';
 
@@ -4602,22 +4611,23 @@ buildTasksGrid();
     document.getElementById('twModalDesc').value  = task.desc || '';
     document.getElementById('twModalDate').value  = task.dueDate || '';
 
-    buildModalPills(_modalAssignee, _modalRecurrence, _modalUrgency);
+    buildModalPills(_modalAssignees, _modalRecurrence, _modalUrgency);
     overlay.classList.add('open');
     document.getElementById('twModalTitle').focus();
   };
 
-  function buildModalPills(assignee, recurrence, urgency) {
-    _modalAssignee = assignee; _modalRecurrence = recurrence; _modalUrgency = urgency;
+  function buildModalPills(assignees, recurrence, urgency) {
+    _modalAssignees = assignees.slice(); _modalRecurrence = recurrence; _modalUrgency = urgency;
 
     const assigneeEl = document.getElementById('twModalAssignees');
-    assigneeEl.innerHTML = [...USERS.map(u => [u.id, u.name]), ['', '—']].map(([v, l]) =>
-      `<button class="task-assignee-pill${assignee===v?' sel':''}" data-uid="${v}">${l}</button>`
+    assigneeEl.innerHTML = USERS.map(u =>
+      `<button class="task-assignee-pill${_modalAssignees.includes(u.id)?' sel':''}" data-uid="${u.id}">${u.name}</button>`
     ).join('');
     assigneeEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-      _modalAssignee = b.dataset.uid;
-      assigneeEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
-      b.classList.add('sel');
+      const uid = b.dataset.uid;
+      const pos = _modalAssignees.indexOf(uid);
+      if (pos === -1) { _modalAssignees.push(uid); b.classList.add('sel'); }
+      else { _modalAssignees.splice(pos, 1); b.classList.remove('sel'); }
     }));
 
     const recEl = document.getElementById('twModalRecurrence');
@@ -4659,7 +4669,7 @@ buildTasksGrid();
       addTask(cid, newText,
         document.getElementById('twModalDesc').value.trim(),
         document.getElementById('twModalDate').value,
-        _modalAssignee, _modalRecurrence, _modalUrgency
+        _modalAssignees, _modalRecurrence, _modalUrgency
       );
       closeModal();
       refreshTaskPanel(cid);
@@ -4675,7 +4685,7 @@ buildTasksGrid();
       t.text       = newText;
       t.desc       = document.getElementById('twModalDesc').value.trim();
       t.dueDate    = document.getElementById('twModalDate').value;
-      t.assignee   = _modalAssignee;
+      t.assignees  = _modalAssignees;
       t.recurrence = _modalRecurrence;
       t.urgency    = _modalUrgency;
       saveTasks(_clientId, tasks);
@@ -4787,7 +4797,7 @@ function renderWeeklyManager() {
     const isToday = iso === todayISO;
     const dayNum = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
-    const filtered = twUserFilter === 'all' ? items : items.filter(e => e.task.assignee === twUserFilter);
+    const filtered = twUserFilter === 'all' ? items : items.filter(e => (e.task.assignees||[]).includes(twUserFilter));
     const filteredSorted = [...filtered].sort((a, b) => {
       if (a.task.done !== b.task.done) return a.task.done ? 1 : -1;
       return (URGENCY_ORDER[b.task.urgency||''] || 0) - (URGENCY_ORDER[a.task.urgency||''] || 0);
@@ -4795,8 +4805,10 @@ function renderWeeklyManager() {
     const itemsHtml = filteredSorted.length === 0
       ? '<div class="tw-empty">—</div>'
       : filteredSorted.map(({ clientId, clientName, clientColor, task }) => {
-          const user = USERS.find(u => u.id === task.assignee);
-          const userBadge = user ? `<span class="task-user-badge" data-uid="${task.assignee}">${user.name}</span>` : '';
+          const userBadge = (task.assignees||[]).map(uid => {
+            const u = USERS.find(u => u.id === uid);
+            return u ? `<span class="task-user-badge" data-uid="${uid}">${u.name}</span>` : '';
+          }).join('');
           const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
           const recBadge = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
           const urgBadge = task.urgency ? `<span class="task-urgency-badge" data-urg="${task.urgency}">${URGENCY_LABELS[task.urgency]||task.urgency}</span>` : '';
@@ -6717,10 +6729,11 @@ function refreshDashboard() {
   USERS.forEach(u => { userTaskData[u.id] = { overdue: [], today: [] }; });
   [...CLIENTS, MOVING_CLIENT].forEach(c => {
     loadTasks(c.id).filter(t => !t.done && t.dueDate).forEach(t => {
-      const uid = t.assignee && userTaskData[t.assignee] ? t.assignee : null;
-      if (!uid) return;
-      if (t.dueDate < todayISO) userTaskData[uid].overdue.push({client:c, task:t});
-      else if (t.dueDate === todayISO || t.dueDate === tomorrowISO) userTaskData[uid].today.push({client:c, task:t});
+      (t.assignees||[]).forEach(uid => {
+        if (!userTaskData[uid]) return;
+        if (t.dueDate < todayISO) userTaskData[uid].overdue.push({client:c, task:t});
+        else if (t.dueDate === todayISO || t.dueDate === tomorrowISO) userTaskData[uid].today.push({client:c, task:t});
+      });
     });
   });
 
