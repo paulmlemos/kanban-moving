@@ -972,6 +972,39 @@
       padding: 14px 0;
       font-style: italic;
     }
+    /* pending tasks list — all clients, independent of week */
+    .tw-pending-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .tw-pending-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border-left: 2px solid var(--client-color, rgba(255,255,255,0.15));
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left-width: 2px;
+      transition: background 0.1s;
+    }
+    .tw-pending-item:hover { background: var(--surface-2); }
+    .tw-pending-item .tw-edit-btn { opacity: 0; }
+    .tw-pending-item:hover .tw-edit-btn { opacity: .7; }
+    .tw-pending-item .tw-edit-btn:hover { opacity: 1 !important; color: var(--text); }
+    .tw-pending-item .tw-client-tag { flex-shrink: 0; width: 90px; }
+    .tw-pending-item .tw-task-body { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .tw-pending-item .tw-task-text { font-size: 11px; }
+    .tw-pending-item .tw-task-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 0; }
+    .tw-pending-empty {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+      padding: 20px 0;
+      font-style: italic;
+    }
     /* tasks outside the displayed week */
     .tw-out-section { padding: 16px 0 0; }
     .tw-out-title {
@@ -3039,6 +3072,21 @@
     </div>
     <div class="tw-grid" id="twGrid"></div>
   </div>
+
+  <div class="tw-section sec-anchor" id="taskPendingWrap">
+    <div class="tw-section-header">
+      <span class="tw-section-title">Todas as Tarefas Pendentes</span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="tw-user-filters" id="tpUserFilters">
+          <button class="tw-filter-btn active" data-uid="all">Todas</button>
+          <button class="tw-filter-btn" data-uid="priscila">Priscila</button>
+          <button class="tw-filter-btn" data-uid="paul">Paul</button>
+        </div>
+        <span class="task-count" id="tpCount"></span>
+      </div>
+    </div>
+    <div class="tw-pending-list" id="tpList"></div>
+  </div>
 </div>
 
 <!-- TAB: GESTÃO DE POSTAGENS -->
@@ -4852,9 +4900,98 @@ function renderWeeklyManager() {
 
 function refreshWeeklyManager() {
   if (document.getElementById('twGrid')) renderWeeklyManager();
+  if (document.getElementById('tpList')) renderPendingList();
 }
 
 buildWeeklyManager();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LISTAGEM DE TODAS AS TAREFAS PENDENTES (independente da semana exibida)
+// ══════════════════════════════════════════════════════════════════════════════
+
+let tpUserFilter = 'all';
+
+function buildPendingList() {
+  const wrap = document.getElementById('taskPendingWrap');
+  if (!wrap) return;
+  wrap.querySelectorAll('#tpUserFilters .tw-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tpUserFilter = btn.dataset.uid;
+      wrap.querySelectorAll('#tpUserFilters .tw-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPendingList();
+    });
+  });
+  renderPendingList();
+}
+
+function renderPendingList() {
+  const list  = document.getElementById('tpList');
+  const count = document.getElementById('tpCount');
+  if (!list) return;
+
+  let pending = [];
+  [...CLIENTS, MOVING_CLIENT].forEach(client => {
+    loadTasks(client.id).forEach(task => {
+      if (task.done) return;
+      pending.push({ clientId: client.id, clientName: client.name, clientColor: client.color, task });
+    });
+  });
+
+  if (tpUserFilter !== 'all') {
+    pending = pending.filter(e => (e.task.assignees || []).includes(tpUserFilter));
+  }
+
+  pending.sort((a, b) => {
+    const urg = (URGENCY_ORDER[b.task.urgency || ''] || 0) - (URGENCY_ORDER[a.task.urgency || ''] || 0);
+    if (urg !== 0) return urg;
+    if (!a.task.dueDate && !b.task.dueDate) return 0;
+    if (!a.task.dueDate) return 1;
+    if (!b.task.dueDate) return -1;
+    return a.task.dueDate.localeCompare(b.task.dueDate);
+  });
+
+  if (count) {
+    count.textContent = `${pending.length} pendente${pending.length !== 1 ? 's' : ''}`;
+    count.className = 'task-count' + (pending.length > 0 ? ' has-pending' : '');
+  }
+
+  if (pending.length === 0) {
+    list.innerHTML = `<div class="tw-pending-empty">Nenhuma tarefa pendente${tpUserFilter !== 'all' ? ' para este usuário' : ''}</div>`;
+    return;
+  }
+
+  const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
+
+  list.innerHTML = pending.map(({ clientId, clientName, clientColor, task }) => {
+    const userBadge = (task.assignees || []).map(uid => {
+      const u = USERS.find(u => u.id === uid);
+      return u ? `<span class="task-user-badge" data-uid="${uid}">${u.name}</span>` : '';
+    }).join('');
+    const dueBadge = task.dueDate ? `<span class="task-due ${dueCls(task.dueDate)}">${dueFmt(task.dueDate)}</span>` : '';
+    const recBadge = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence] || task.recurrence}</span>` : '';
+    const urgBadge = task.urgency ? `<span class="task-urgency-badge" data-urg="${task.urgency}">${URGENCY_LABELS[task.urgency] || task.urgency}</span>` : '';
+    return `
+    <div class="tw-pending-item" style="--client-color:${clientColor}">
+      <button class="tw-cb" data-action="tp-toggle" data-client="${clientId}" data-id="${task.id}" title="Concluir"></button>
+      <div class="tw-client-tag">${escHtml(clientName)}</div>
+      <div class="tw-task-body">
+        <div class="tw-task-text">${escHtml(task.text)}</div>
+        <div class="tw-task-badges">${dueBadge}${urgBadge}${recBadge}${userBadge}</div>
+      </div>
+      <button class="tw-edit-btn" data-action="tp-edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-action="tp-toggle"]').forEach(btn => {
+    btn.addEventListener('click', () => toggleTask(btn.dataset.client, btn.dataset.id));
+  });
+  list.querySelectorAll('[data-action="tp-edit"]').forEach(btn => {
+    btn.addEventListener('click', () => openTwTaskModal(btn.dataset.client, btn.dataset.id));
+  });
+}
+
+buildPendingList();
 
 // ══════════════════════════════════════════════════════════════════════════════
 // CONTROLE DE CAPTAÇÕES
