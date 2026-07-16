@@ -3001,6 +3001,7 @@
         <div class="legend-item"><div class="legend-dot s1"></div><span>Programado</span></div>
         <div class="legend-item"><div class="legend-dot s2"></div><span>Postado</span></div>
       </div>
+      <button class="btn" id="btnForceSync" title="Reenvia os dados deste navegador para a nuvem agora, sem esperar nenhuma edicao">🔄 Sincronizar agora</button>
       <button class="btn" id="btnBackup" title="Baixa um arquivo com TODOS os dados deste navegador, incluindo acessos e arquivos">⬇ Backup</button>
       <button class="btn" id="btnImport" title="Restaura um arquivo de backup neste navegador">⬆ Importar</button>
       <input type="file" id="importFile" accept=".json" style="display:none">
@@ -3560,10 +3561,11 @@ async function _pushToCloud() {
   } catch (e) {
     if (e && e.code === 'not-found') {
       try { await docRef.set({ data: snap, ts: Date.now() }); }
-      catch (e2) { console.warn('[Firebase] push error', e2); return; }
-    } else { console.warn('[Firebase] push error', e); return; }
+      catch (e2) { console.warn('[Firebase] push error', e2); return false; }
+    } else { console.warn('[Firebase] push error', e); return false; }
   }
   _lastPushedKeys = currentKeys;
+  return true;
 }
 
 function _applyRemoteData(data) {
@@ -3604,6 +3606,37 @@ function _subscribeToChanges() {
     }
   });
 }
+
+function _withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('tempo esgotado, sem conexao com o servidor')), ms))
+  ]);
+}
+
+document.getElementById('btnForceSync').onclick = async () => {
+  const btn = document.getElementById('btnForceSync');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '🔄 Sincronizando...';
+  try {
+    _lastLocalWrite = Date.now(); // evita que o eco do proprio push dispare o banner/reload
+    const pushed = await _withTimeout(_pushToCloud(), 8000);
+    if (!pushed) { alert('Falha ao sincronizar — verifique sua conexao e tente de novo.'); return; }
+    const changed = await _withTimeout(_loadFromCloud(), 8000);
+    if (changed) {
+      alert('Sincronizado! Recebemos dados novos de outro navegador — a pagina vai recarregar.');
+      location.reload();
+    } else {
+      alert('Sincronizado! Seus dados foram enviados para a nuvem.');
+    }
+  } catch (e) {
+    alert('Erro ao sincronizar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+};
 
 // ─── BACKUP / IMPORTAÇÃO LOCAL (inclui acessos e arquivos que não vão pro Firebase) ───
 document.getElementById('btnBackup').onclick = () => {
