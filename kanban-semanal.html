@@ -3510,6 +3510,11 @@ let _syncTimer      = null;
 let _lastLocalWrite = 0;
 const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__', 'mmideaf__', 'mmeditf__']; // base64 e senhas — só localStorage
 
+// Chaves incluidas no ultimo push (para detectar remocoes locais) e no ultimo
+// snapshot remoto (para detectar remocoes feitas por outro navegador).
+let _lastPushedKeys  = new Set();
+let _knownRemoteKeys = new Set();
+
 function mmGet(key)       { return localStorage.getItem(key); }
 function mmSet(key, val)  {
   localStorage.setItem(key, val);
@@ -3525,14 +3530,53 @@ function _scheduleSync() {
   _syncTimer = setTimeout(_pushToCloud, 1500);
 }
 
-async function _pushToCloud() {
-  const data = {};
+function _syncableSnapshot() {
+  const snap = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && !_SKIP_SYNC.some(p => k.startsWith(p))) data[k] = localStorage.getItem(k);
+    if (k && !_SKIP_SYNC.some(p => k.startsWith(p))) snap[k] = localStorage.getItem(k);
   }
-  try { await _fsdb.collection('kanban').doc('state').set({ data, ts: Date.now() }); }
-  catch(e) { console.warn('[Firebase] push error', e); }
+  return snap;
+}
+
+// Faz merge campo a campo no Firestore (nunca sobrescreve o documento inteiro),
+// para que o que outro navegador ainda nao recebeu nao seja apagado por engano.
+async function _pushToCloud() {
+  const snap        = _syncableSnapshot();
+  const currentKeys = new Set(Object.keys(snap));
+  const docRef      = _fsdb.collection('kanban').doc('state');
+  const args        = [];
+
+  Object.entries(snap).forEach(([k, v]) => {
+    args.push(new firebase.firestore.FieldPath('data', k), v);
+  });
+  _lastPushedKeys.forEach(k => {
+    if (!currentKeys.has(k)) args.push(new firebase.firestore.FieldPath('data', k), firebase.firestore.FieldValue.delete());
+  });
+  args.push('ts', Date.now());
+
+  try {
+    await docRef.update(...args);
+  } catch (e) {
+    if (e && e.code === 'not-found') {
+      try { await docRef.set({ data: snap, ts: Date.now() }); }
+      catch (e2) { console.warn('[Firebase] push error', e2); return; }
+    } else { console.warn('[Firebase] push error', e); return; }
+  }
+  _lastPushedKeys = currentKeys;
+}
+
+function _applyRemoteData(data) {
+  let changed = false;
+  const remoteKeys = new Set(Object.keys(data));
+  Object.entries(data).forEach(([k, v]) => {
+    if (localStorage.getItem(k) !== v) { localStorage.setItem(k, v); changed = true; }
+  });
+  _knownRemoteKeys.forEach(k => {
+    if (!remoteKeys.has(k) && localStorage.getItem(k) !== null) { localStorage.removeItem(k); changed = true; }
+  });
+  _knownRemoteKeys = remoteKeys;
+  return changed;
 }
 
 async function _loadFromCloud() {
@@ -3540,11 +3584,7 @@ async function _loadFromCloud() {
     const doc = await _fsdb.collection('kanban').doc('state').get();
     if (doc.exists) {
       const { data } = doc.data();
-      let changed = false;
-      Object.entries(data).forEach(([k, v]) => {
-        if (localStorage.getItem(k) !== v) { localStorage.setItem(k, v); changed = true; }
-      });
-      return changed;
+      return _applyRemoteData(data || {});
     }
   } catch(e) { console.warn('[Firebase] load error', e); }
   return false;
@@ -3554,12 +3594,14 @@ function _subscribeToChanges() {
   let _firstSnap = true;
   _fsdb.collection('kanban').doc('state').onSnapshot(snap => {
     if (!snap.exists) return;
-    if (_firstSnap) { _firstSnap = false; return; }
-    const { data, ts } = snap.data();
+    const { data } = snap.data();
+    if (_firstSnap) { _firstSnap = false; _knownRemoteKeys = new Set(Object.keys(data || {})); return; }
     if (Date.now() - _lastLocalWrite < 4000) return;
-    Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v));
-    _showSyncBanner();
-    setTimeout(() => location.reload(), 1500);
+    const changed = _applyRemoteData(data || {});
+    if (changed) {
+      _showSyncBanner();
+      setTimeout(() => location.reload(), 1500);
+    }
   });
 }
 
