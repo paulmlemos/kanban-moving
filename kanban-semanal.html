@@ -1187,7 +1187,7 @@
     .cap-hist-add-btn { background: var(--client-color, #7c5cfc); border: none; color: #fff; border-radius: 5px; padding: 3px 9px; font-size: 11px; cursor: pointer; font-weight: 600; opacity: .85; }
     .cap-hist-add-btn:hover { opacity: 1; }
     .cap-hist-add-form { display: flex; flex-direction: column; gap: 5px; background: #1a1a2e; border: 1px solid #334155; border-radius: 6px; padding: 8px; margin-bottom: 6px; }
-    .cap-hist-date-inp, .cap-hist-obs-inp {
+    .cap-hist-date-inp, .cap-hist-link-inp, .cap-hist-obs-inp {
       background: #0f172a; border: 1px solid #334155; color: #e2e8f0;
       border-radius: 5px; padding: 5px 8px; font-size: 12px; width: 100%; box-sizing: border-box;
     }
@@ -1199,6 +1199,8 @@
     .cap-hist-empty { font-size: 11px; color: #475569; text-align: center; padding: 8px 0; }
     .cap-hist-item { display: flex; align-items: center; gap: 6px; background: #1e293b; border-radius: 5px; padding: 5px 8px; font-size: 12px; }
     .cap-hist-date { color: #e2e8f0; font-weight: 600; white-space: nowrap; }
+    .cap-hist-link { text-decoration: none; font-size: 13px; opacity: .8; flex-shrink: 0; }
+    .cap-hist-link:hover { opacity: 1; }
     .cap-hist-obs { color: #94a3b8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cap-hist-del-btn { background: none; border: none; color: #475569; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; margin-left: auto; flex-shrink: 0; }
     .cap-hist-del-btn:hover { color: #ef4444; }
@@ -5142,6 +5144,7 @@ function buildCapGrid() {
           </div>
           <div class="cap-hist-add-form" id="cap-hist-form-${client.id}" style="display:none;">
             <input class="cap-hist-date-inp" type="date" id="cap-hist-date-${client.id}">
+            <input class="cap-hist-link-inp" type="url" placeholder="Link da pasta (opcional)" id="cap-hist-link-${client.id}">
             <input class="cap-hist-obs-inp" type="text" placeholder="Observação (opcional)" id="cap-hist-obs-${client.id}">
             <div class="cap-hist-form-btns">
               <button class="cap-hist-save-btn" data-client="${client.id}">Salvar</button>
@@ -5171,6 +5174,7 @@ function buildCapGrid() {
         const today = new Date();
         document.getElementById(`cap-hist-date-${client.id}`).value =
           `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        document.getElementById(`cap-hist-link-${client.id}`).value = '';
         document.getElementById(`cap-hist-obs-${client.id}`).value = '';
       }
     });
@@ -5179,9 +5183,10 @@ function buildCapGrid() {
     card.querySelector('.cap-hist-save-btn').addEventListener('click', () => {
       const dateVal = document.getElementById(`cap-hist-date-${client.id}`).value;
       if (!dateVal) return;
+      const link = document.getElementById(`cap-hist-link-${client.id}`).value.trim();
       const obs = document.getElementById(`cap-hist-obs-${client.id}`).value.trim();
       const arr = loadCapHist(client.id);
-      arr.unshift({ id: Date.now().toString(36), date: dateVal, obs });
+      arr.unshift({ id: Date.now().toString(36), date: dateVal, obs, link });
       saveCapHist(client.id, arr);
       document.getElementById(`cap-hist-form-${client.id}`).style.display = 'none';
       renderCapHist(client.id);
@@ -5219,10 +5224,13 @@ function renderCapHist(clientId) {
     const [y,m,d] = iso.split('-');
     return `${d}/${m}/${y}`;
   };
+  const escHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const safeHref = url => /^https?:\/\//i.test(url || '') ? url : '';
   list.innerHTML = arr.map(entry => `
     <li class="cap-hist-item" data-id="${entry.id}" data-client="${clientId}">
       <span class="cap-hist-date">${fmt(entry.date)}</span>
-      ${entry.obs ? `<span class="cap-hist-obs">${entry.obs}</span>` : ''}
+      ${safeHref(entry.link) ? `<a class="cap-hist-link" href="${escHtml(safeHref(entry.link))}" target="_blank" rel="noopener noreferrer" title="Abrir pasta da captação">📁</a>` : ''}
+      ${entry.obs ? `<span class="cap-hist-obs">${escHtml(entry.obs)}</span>` : ''}
       <button class="cap-hist-del-btn" title="Remover">×</button>
     </li>`).join('');
   list.querySelectorAll('.cap-hist-del-btn').forEach(btn => {
