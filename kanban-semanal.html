@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema da Agência — Moving Marketing</title>
+  <title>Sistema da Agência — Vento Marketing</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -72,7 +72,7 @@
       content: '';
       position: fixed;
       inset: 0;
-      background-image: url('logo-moving.png');
+      background-image: url('logo-vento.png');
       background-repeat: no-repeat;
       background-position: center center;
       background-size: 55%;
@@ -3025,8 +3025,8 @@
 <!-- SIDEBAR DIREITA -->
 <aside class="sidebar-right" id="sidebarRight">
   <div class="sb-logo-wrap">
-    <img src="logo-moving.png" class="sb-logo" alt="Moving Marketing" onerror="this.style.display='none'">
-    <span class="sb-tagline">Conteúdo que move marcas.</span>
+    <img src="logo-vento.png" class="sb-logo" alt="Vento Marketing" onerror="this.style.display='none'">
+    <span class="sb-tagline">Você não vê o vento. Você vê o que ele move.</span>
   </div>
   <div class="sb-date" id="sbDateBadge">—</div>
   <nav class="sb-nav">
@@ -3866,7 +3866,7 @@ const USERS = [
   { id: 'paul',     name: 'Paul',     color: '#7c5cfc' },
 ];
 
-const MOVING_CLIENT = { id: 'moving', name: 'Moving Marketing', color: '#7c5cfc', isInternal: true };
+const MOVING_CLIENT = { id: 'moving', name: 'Vento Marketing', color: '#7c5cfc', isInternal: true };
 
 const taskFilters     = {}; // clientId → uid ('all'|'priscila'|'paul')
 const taskAssignees   = {}; // clientId → uid ('priscila'|'paul'|'')
@@ -4895,7 +4895,7 @@ function renderWeeklyManager() {
   const endFmt   = dates[6].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
   lbl.textContent = `${startFmt} – ${endFmt}`;
 
-  // bucket tasks by ISO date (clientes + Moving Marketing)
+  // bucket tasks by ISO date (clientes + Vento Marketing)
   const bucket = {};  // iso → [{clientId, task}]
   [...CLIENTS, MOVING_CLIENT].forEach(client => {
     loadTasks(client.id).forEach(task => {
@@ -6935,7 +6935,7 @@ function refreshDashboard() {
   const todayISO    = isoFromDate(now);
   const tomorrowISO = isoFromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()+1));
 
-  // — Tarefas por usuário (clientes + Moving Marketing) —
+  // — Tarefas por usuário (clientes + Vento Marketing) —
   const userTaskData = {};
   USERS.forEach(u => { userTaskData[u.id] = { overdue: [], today: [] }; });
   [...CLIENTS, MOVING_CLIENT].forEach(c => {
@@ -7657,7 +7657,7 @@ function initApprovalMode(){
             <button class="apv-btn apv-btn-aj" id="apvAjSend" style="padding:10px 24px">Enviar via WhatsApp</button>
           </div>
         </div>
-        <div style="text-align:center;margin-top:40px;font-size:10px;color:rgba(255,255,255,.2)">Desenvolvido por Moving Marketing</div>
+        <div style="text-align:center;margin-top:40px;font-size:10px;color:rgba(255,255,255,.2)">Desenvolvido por Vento Marketing</div>
       </div>`;
     view.classList.add('active');
     document.querySelector('header')?.style.setProperty('display','none');
