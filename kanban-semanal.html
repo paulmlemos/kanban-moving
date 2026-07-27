@@ -1437,7 +1437,8 @@
     .crono-acc-stat { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
     .crono-acc-stat.has-items { background: rgba(124,92,252,0.1); color: var(--accent-text); border-color: rgba(124,92,252,0.2); }
 
-    .crono-acc-body { display: none; background: #0c0c0c; padding: 12px; gap: 10px; grid-template-columns: 1fr 1fr 1fr 2fr; min-width: 0; }
+    .crono-acc-body { display: none; background: #0c0c0c; padding: 12px; gap: 10px; grid-template-columns: repeat(3, 1fr); min-width: 0; }
+    .crono-col-sched { grid-column: 1 / -1; }
     .crono-accordion.open .crono-acc-body { display: grid; }
 
     .crono-col { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
@@ -1599,6 +1600,20 @@
     .onboard-add-in::placeholder { color:rgba(232,227,220,.22); }
     .onboard-add-btn { background:var(--accent-dim); border:1px solid rgba(124,92,252,.3); color:var(--accent-text); border-radius:8px; padding:8px 14px; font-size:16px; cursor:pointer; font-family:inherit; transition:all .12s; }
     .onboard-add-btn:hover { background:rgba(124,92,252,.25); }
+    .onboard-section-title { font-size:10px; color:var(--text-dim); font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin:18px 0 8px; }
+    .onboard-links-list { display:flex; flex-direction:column; gap:3px; margin-bottom:10px; }
+    .onboard-link-item { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px; border:1px solid var(--border); }
+    .onboard-link-label { flex:1; font-size:12px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .onboard-link-open { color:var(--accent-text); text-decoration:none; font-size:13px; flex-shrink:0; }
+    .onboard-link-del { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:14px; padding:0; flex-shrink:0; }
+    .onboard-link-del:hover { color:#f87171; }
+    .onboard-empty { font-size:11px; color:var(--text-dim); padding:6px 0; }
+    .onboard-link-add-row { display:flex; gap:6px; flex-wrap:wrap; }
+    .onboard-link-label-in, .onboard-link-url-in { background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:12px; color:var(--text); font-family:inherit; outline:none; }
+    .onboard-link-label-in { flex:1; min-width:120px; }
+    .onboard-link-url-in { flex:2; min-width:160px; }
+    .onboard-link-add-btn { background:var(--accent-dim); border:1px solid rgba(124,92,252,.3); color:var(--accent-text); border-radius:8px; padding:8px 14px; font-size:16px; cursor:pointer; font-family:inherit; }
+    .onboard-link-add-btn:hover { background:rgba(124,92,252,.25); }
     /* ── APROVAÇÃO ── */
     .aprov-wrap { padding:16px; max-width:600px; }
     .aprov-gen-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:20px; }
@@ -1676,12 +1691,12 @@
     .sched-nav:hover { background: var(--surface-2); color: var(--text); }
     .sched-wdays { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--border); }
     .sched-wd { padding: 5px 0; font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; color: var(--text-dim); }
-    .sched-grid { overflow-y: auto; max-height: 360px; flex: 1; }
+    .sched-grid { overflow-y: auto; max-height: 640px; flex: 1; }
     .sched-grid::-webkit-scrollbar { width: 3px; }
     .sched-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
     .sched-week { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--border); }
     .sched-week:last-child { border-bottom: none; }
-    .sched-day { border-right: 1px solid var(--border); padding: 5px 5px 6px; min-height: 68px; transition: background 0.1s; }
+    .sched-day { border-right: 1px solid var(--border); padding: 5px 5px 6px; min-height: 90px; transition: background 0.1s; }
     .sched-day:last-child { border-right: none; }
     .sched-day:hover { background: rgba(255,255,255,0.02); }
     .sched-day.is-today { background: rgba(124,92,252,0.07); }
@@ -1708,7 +1723,7 @@
     .sched-st-btn[data-state="1"] { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.3); color: #fbbf24; }
     .sched-st-btn[data-state="2"] { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #22c55e; }
     .sched-thumbs { display: flex; gap: 3px; flex-wrap: wrap; }
-    .sched-thumb { width: 30px; height: 30px; border-radius: 3px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); flex-shrink: 0; position: relative; cursor: pointer; }
+    .sched-thumb { width: 36px; height: 36px; border-radius: 3px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); flex-shrink: 0; position: relative; cursor: pointer; }
     .sched-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .sched-thumb-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 13px; }
     .sched-thumb-del { position: absolute; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; color: white; font-size: 13px; cursor: pointer; }
@@ -2267,6 +2282,16 @@
     .client-tab-panel .nota-card     { max-width: 520px; }
     .client-tab-panel .result-card   { max-width: 980px; }
     .client-tab-panel .crono-accordion { max-width: 100%; }
+    .client-tab-panel[data-panel="onboard"] .ficha-card-header { display: none; }
+
+    /* ── SUB-ABAS internas do painel Tarefas (Tarefas / Anotações) ──── */
+    .task-subtabs { display: flex; gap: 16px; padding: 2px 2px 10px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .task-subtab-btn { background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-dim); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; padding: 0 0 8px; cursor: pointer; font-family: inherit; transition: color 0.15s; }
+    .task-subtab-btn:hover { color: var(--text); }
+    .task-subtab-btn.active { color: var(--client-color, var(--accent)); border-bottom-color: var(--client-color, var(--accent)); }
+    .task-subtab-panel { display: none; }
+    .task-subtab-panel.active { display: block; }
+    .task-subtab-panel .nota-card-header { display: none; }
 
     /* ── TAREFA: descrição ───────────────────────────── */
     .task-desc-row {
@@ -5610,6 +5635,8 @@ function buildCrono() {
     acc.querySelector('.crono-acc-header').addEventListener('click', () => toggleAcc(c.id));
     wrap.appendChild(acc);
     updateAccStats(c.id);
+    // Conteúdos abre direto (é o conteúdo inteiro da aba, não faz sentido ficar recolhido)
+    openAccs.add(c.id); acc.classList.add('open'); rebuildAccBody(c.id);
   });
 }
 
@@ -5626,10 +5653,10 @@ function toggleAcc(cid) {
 function rebuildAccBody(cid) {
   const body = document.getElementById(`accbody-${cid}`); if (!body) return;
   body.innerHTML = `
+    <div class="crono-col crono-col-sched" id="col-sched-${cid}">${schedColHtml(cid)}</div>
     <div class="crono-col" id="col-ideas-${cid}">${ideasColHtml(cid)}</div>
     <div class="crono-col" id="col-mats-${cid}">${matsColHtml(cid)}</div>
-    <div class="crono-col" id="col-edit-${cid}">${editColHtml(cid)}</div>
-    <div class="crono-col" id="col-sched-${cid}">${schedColHtml(cid)}</div>`;
+    <div class="crono-col" id="col-edit-${cid}">${editColHtml(cid)}</div>`;
   bindIdeas(cid); bindMats(cid); bindEdit(cid); bindSched(cid);
 }
 
@@ -6601,6 +6628,14 @@ function buildFichaGrid() {
             <label class="ficha-swatch" style="${sw(f.cor2)}" title="Cor 2"><input type="color" data-key="cor2" value="${f.cor2||'#ffffff'}"></label>
             <label class="ficha-swatch" style="${sw(f.cor3)}" title="Cor 3"><input type="color" data-key="cor3" value="${f.cor3||'#ffffff'}"></label>
           </div>
+        </div>
+        <div class="ficha-field">
+          <span class="ficha-lbl">Escopo de Entregas</span>
+          <textarea class="ficha-textarea" placeholder="O que está contratado/incluso para este cliente…" data-key="escopo" rows="3">${escHtml(f.escopo||'')}</textarea>
+        </div>
+        <div class="ficha-field">
+          <span class="ficha-lbl">Principais Concorrentes</span>
+          <textarea class="ficha-textarea" placeholder="Concorrentes diretos, referências…" data-key="concorrentes" rows="3">${escHtml(f.concorrentes||'')}</textarea>
         </div>
       </div>`;
     // auto-save
@@ -7590,9 +7625,14 @@ const ONBOARD_DEFAULT_ITEMS = ['Briefing preenchido','Contrato assinado','Acesso
 function loadOnboard(cid){ const s=lsGet(`mmonboard__${cid}`); return s||ONBOARD_DEFAULT_ITEMS.map((t,i)=>({id:'ob'+i,text:t,done:false})); }
 function saveOnboard(cid,v){ lsSave(`mmonboard__${cid}`,v); }
 
+function loadOnbLinks(cid)  { return lsGet(`mmonblinks__${cid}`) || []; }
+function saveOnbLinks(cid,v){ lsSave(`mmonblinks__${cid}`, v); }
+
 function renderOnboard(cid){
   const wrap=document.getElementById(`onwrap-${cid}`); if(!wrap)return;
   const items=loadOnboard(cid), done=items.filter(i=>i.done).length, pct=items.length?Math.round(done/items.length*100):0;
+  const links=loadOnbLinks(cid);
+  const safeHref = url => /^https?:\/\//i.test(url || '') ? url : '';
   wrap.innerHTML=`
     <div class="onboard-prog-hdr"><span class="onboard-prog-lbl">Progresso de ativação</span><span class="onboard-prog-val">${done}/${items.length} — ${pct}%</span></div>
     <div class="onboard-prog-track"><div class="onboard-prog-fill" style="width:${pct}%"></div></div>
@@ -7606,6 +7646,19 @@ function renderOnboard(cid){
     <div class="onboard-add-row">
       <input class="onboard-add-in" id="obinput-${cid}" placeholder="Adicionar etapa personalizada…">
       <button class="onboard-add-btn" id="obadd-${cid}">+</button>
+    </div>
+    <div class="onboard-section-title">Links Rápidos</div>
+    <div class="onboard-links-list" id="oblinks-${cid}">
+      ${links.length ? links.map(l=>`<div class="onboard-link-item">
+        <span class="onboard-link-label" title="${escHtml(l.label)}">${escHtml(l.label)}</span>
+        ${safeHref(l.url) ? `<a class="onboard-link-open" href="${escHtml(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="Abrir link">↗</a>` : ''}
+        <button class="onboard-link-del" data-obld="${l.id}">×</button>
+      </div>`).join('') : '<div class="onboard-empty">Nenhum link ainda.</div>'}
+    </div>
+    <div class="onboard-link-add-row">
+      <input class="onboard-link-label-in" id="oblabel-${cid}" placeholder="Do que é o link (ex: Drive, Canva)…">
+      <input class="onboard-link-url-in" id="oburl-${cid}" type="url" placeholder="https://…">
+      <button class="onboard-link-add-btn" id="obladd-${cid}">+</button>
     </div>`;
   wrap.querySelectorAll('[data-obid]').forEach(cb=>cb.addEventListener('change',()=>{
     const its=loadOnboard(cid),it=its.find(x=>x.id===cb.dataset.obid);
@@ -7616,6 +7669,19 @@ function renderOnboard(cid){
   const doAdd=()=>{const t=inp.value.trim();if(!t)return;const its=loadOnboard(cid);its.push({id:'ob'+Date.now().toString(36),text:t,done:false});saveOnboard(cid,its);inp.value='';renderOnboard(cid);};
   btn?.addEventListener('click',doAdd);
   inp?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doAdd();}});
+
+  wrap.querySelectorAll('[data-obld]').forEach(b=>b.addEventListener('click',()=>{
+    saveOnbLinks(cid,loadOnbLinks(cid).filter(x=>x.id!==b.dataset.obld));renderOnboard(cid);
+  }));
+  const linkLbl=document.getElementById(`oblabel-${cid}`), linkUrl=document.getElementById(`oburl-${cid}`), linkBtn=document.getElementById(`obladd-${cid}`);
+  const doAddLink=()=>{
+    const label=linkLbl.value.trim(), url=linkUrl.value.trim();
+    if(!label && !url) return;
+    const ls=loadOnbLinks(cid); ls.push({id:'obl'+Date.now().toString(36),label:label||url,url}); saveOnbLinks(cid,ls);
+    linkLbl.value=''; linkUrl.value=''; renderOnboard(cid);
+  };
+  linkBtn?.addEventListener('click',doAddLink);
+  [linkLbl,linkUrl].forEach(el=>el?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doAddLink();}}));
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -8428,17 +8494,12 @@ function buildClientSections() {
 
     // Abas por cliente
     const tabDefs = [];
-    tabDefs.push({ id: 'urgencias', label: 'Urgências' });
-    if (!c.isInternal) tabDefs.push({ id: 'crono',   label: 'Cronograma' });
-    tabDefs.push(                    { id: 'tasks',   label: 'Tarefas'   });
-    if (!c.isInternal) tabDefs.push({ id: 'cap',     label: 'Captações' });
-    if (!c.isInternal) tabDefs.push({ id: 'ficha',   label: 'Ficha'     });
-    tabDefs.push(                    { id: 'notas',   label: 'Notas'     });
-    if (!c.isInternal) tabDefs.push({ id: 'result',   label: 'Resultados' });
-    if (!c.isInternal) tabDefs.push({ id: 'onboard',  label: 'Onboarding' });
-    if (!c.isInternal) tabDefs.push({ id: 'aprov',    label: 'Aprovação'  });
-    tabDefs.push(                    { id: 'acessos',  label: 'Acessos'   });
-    tabDefs.push(                    { id: 'sat',      label: 'Satisfação' });
+    if (!c.isInternal) tabDefs.push({ id: 'onboard',   label: 'Onboarding' });
+    tabDefs.push(                    { id: 'acessos',   label: 'Acessos'   });
+    tabDefs.push(                    { id: 'tasks',     label: 'Tarefas'   });
+    if (!c.isInternal) tabDefs.push({ id: 'conteudos', label: 'Conteúdos' });
+    if (!c.isInternal) tabDefs.push({ id: 'result',    label: 'Resultados' });
+    tabDefs.push(                    { id: 'sat',       label: 'Satisfação' });
     if (c.id === 'encontros-fe') tabDefs.push({ id: 'eventos', label: 'Eventos' });
 
     const sec = document.createElement('div');
@@ -8482,28 +8543,53 @@ function buildClientSections() {
       const pnl = document.getElementById(`cpanel-${panelId}-${c.id}`);
       if (el && pnl) pnl.appendChild(el);
     };
+    const moveToId = (srcId, targetElId) => {
+      const el  = document.getElementById(srcId);
+      const pnl = document.getElementById(targetElId);
+      if (el && pnl) pnl.appendChild(el);
+    };
+    const moveQueryToId = (sel, targetElId) => {
+      const el  = document.querySelector(sel);
+      const pnl = document.getElementById(targetElId);
+      if (el && pnl) pnl.appendChild(el);
+    };
 
-    moveEl(`tpanel-${c.id}`,  'tasks');
-    moveQuery(`.nota-card[data-cid="${c.id}"]`, 'notas');
+    // Sub-abas internas do painel Tarefas: Tarefas / Anotações
+    const tasksPanel = document.getElementById(`cpanel-tasks-${c.id}`);
+    if (tasksPanel) {
+      tasksPanel.innerHTML = `
+        <div class="task-subtabs">
+          <button class="task-subtab-btn active" data-subtab="tasks">Tarefas</button>
+          <button class="task-subtab-btn" data-subtab="notas">Anotações</button>
+        </div>
+        <div class="task-subtab-panel active" data-subpanel="tasks" id="subpanel-tasks-${c.id}"></div>
+        <div class="task-subtab-panel" data-subpanel="notas" id="subpanel-notas-${c.id}"></div>
+      `;
+      tasksPanel.querySelectorAll('.task-subtab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          tasksPanel.querySelectorAll('.task-subtab-btn').forEach(b => b.classList.remove('active'));
+          tasksPanel.querySelectorAll('.task-subtab-panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          tasksPanel.querySelector(`[data-subpanel="${btn.dataset.subtab}"]`)?.classList.add('active');
+        });
+      });
+    }
+
+    moveToId(`tpanel-${c.id}`, `subpanel-tasks-${c.id}`);
+    moveQueryToId(`.nota-card[data-cid="${c.id}"]`, `subpanel-notas-${c.id}`);
     moveEl(`acesso-${c.id}`, 'acessos');
     if (!c.isInternal) {
-      moveEl(`capc-${c.id}`,   'cap');
-      moveEl(`ficha-${c.id}`,  'ficha');
       moveEl(`rescard-${c.id}`, 'result');
-      moveEl(`acc-${c.id}`,    'crono');
       const onPanel = document.getElementById(`cpanel-onboard-${c.id}`);
       if (onPanel) { onPanel.innerHTML=`<div class="onboard-wrap" id="onwrap-${c.id}"></div>`; renderOnboard(c.id); }
-      const apPanel = document.getElementById(`cpanel-aprov-${c.id}`);
-      if (apPanel) { apPanel.innerHTML=`<div class="aprov-wrap" id="aprovwrap-${c.id}"></div>`; renderAprov(c.id); }
+      moveEl(`ficha-${c.id}`, 'onboard');
+      moveEl(`acc-${c.id}`,   'conteudos');
+      moveEl(`capc-${c.id}`,  'conteudos');
     }
     if (c.id === 'encontros-fe') {
       const evPanel = document.getElementById(`cpanel-eventos-${c.id}`);
       if (evPanel) { evPanel.innerHTML=`<div id="igreja-eventos-wrap"></div>`; renderIgrejaEventos(); }
     }
-
-    // Urgências
-    const urgPanel = document.getElementById(`cpanel-urgencias-${c.id}`);
-    if (urgPanel) renderUrgencias(c.id, urgPanel);
 
     // Satisfação
     const satPanel = document.getElementById(`cpanel-sat-${c.id}`);
@@ -8517,8 +8603,6 @@ function buildClientSections() {
         btn.classList.add('active');
         const pnl = sec.querySelector(`[data-panel="${btn.dataset.tab}"]`);
         if (pnl) pnl.classList.add('active');
-        // Re-renderiza urgências ao abrir (dados podem ter mudado)
-        if (btn.dataset.tab === 'urgencias' && pnl) renderUrgencias(c.id, pnl);
       });
     });
   });
