@@ -789,6 +789,16 @@
     .task-recurrence-pill.sel[data-rec="daily"]   { background:#34d399; border-color:#34d399; color:#052e16; }
     .task-recurrence-pill.sel[data-rec="weekly"]  { background:#34d399; border-color:#34d399; color:#052e16; }
     .task-recurrence-pill.sel[data-rec="monthly"] { background:#34d399; border-color:#34d399; color:#052e16; }
+    .task-recurrence-pill.sel[data-rec="custom"]  { background:#34d399; border-color:#34d399; color:#052e16; }
+    .task-recdays-row { display:flex; gap:4px; padding:0 9px 8px; border-bottom:1px solid var(--border); align-items:center; flex-wrap:wrap; }
+    .task-recdays-row[hidden] { display:none; }
+    .task-weekday-pill {
+      font-size:9px; font-weight:600; width:22px; height:22px; padding:0; border-radius:50%;
+      border:1px solid var(--border); background:transparent; color:var(--text-dim);
+      cursor:pointer; font-family:inherit; transition:all .12s;
+    }
+    .task-weekday-pill:hover { border-color:var(--border-2); }
+    .task-weekday-pill.sel { background:#34d399; border-color:#34d399; color:#052e16; }
 
     .task-user-badge {
       font-size:8px; font-weight:700; padding:1px 6px; border-radius:20px;
@@ -3483,6 +3493,10 @@
         <div class="tw-modal-label">↻ Recorrência</div>
         <div class="tw-modal-row" id="twModalRecurrence"></div>
       </div>
+      <div id="twModalRecDaysRow" hidden>
+        <div class="tw-modal-label">Dias</div>
+        <div class="tw-modal-row" id="twModalRecDays"></div>
+      </div>
       <div>
         <div class="tw-modal-label">⚡ Urgência</div>
         <div class="tw-modal-row" id="twModalUrgency"></div>
@@ -3511,7 +3525,7 @@ const _fsdb = firebase.firestore();
 
 let _syncTimer      = null;
 let _lastLocalWrite = 0;
-const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__', 'mmideaf__', 'mmeditf__']; // base64 e senhas — só localStorage
+const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__', 'mmideaf__', 'mmeditf__', 'mmui']; // base64, senhas e estado de UI por navegador — só localStorage
 
 // Chaves incluidas no ultimo push (para detectar remocoes locais) e no ultimo
 // snapshot remoto (para detectar remocoes feitas por outro navegador).
@@ -3877,12 +3891,31 @@ const MOVING_CLIENT = { id: 'moving', name: 'Vento Marketing', color: '#7c5cfc',
 
 const taskFilters     = {}; // clientId → uid ('all'|'priscila'|'paul')
 const taskAssignees   = {}; // clientId → uid ('priscila'|'paul'|'')
-const taskRecurrences = {}; // clientId → recurrence (''|'daily'|'weekly'|'monthly')
+const taskRecurrences = {}; // clientId → recurrence (''|'daily'|'weekly'|'monthly'|'custom')
+const taskRecurrenceDays = {}; // clientId → dias da semana (0=Dom..6=Sáb) quando recurrence === 'custom'
 const taskUrgencies   = {}; // clientId → urgency (''|'baixa'|'media'|'alta'|'critica')
 
 const URGENCY_ORDER = { critica: 4, alta: 3, media: 2, baixa: 1, '': 0 };
 const URGENCY_LABELS = { '': '—', baixa: 'Baixa', media: 'Média', alta: 'Alta', critica: 'Crítica' };
 const URGENCY_OPTS = [['', '—'], ['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta'], ['critica', 'Crítica']];
+
+const REC_OPTS = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal'], ['custom', 'Personalizada']];
+const RECURRENCE_LABELS = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
+const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+function recurrenceBadgeHtml(task) {
+  if (!task.recurrence) return '';
+  const label = task.recurrence === 'custom'
+    ? ((task.recurrenceDays || []).slice().sort().map(d => WEEKDAY_LABELS[d]).join(', ') || 'personalizada')
+    : (RECURRENCE_LABELS[task.recurrence] || task.recurrence);
+  return `<span class="task-recurrence-badge">↻ ${label}</span>`;
+}
+
+function weekdayPillsHtml(selectedDays) {
+  return WEEKDAY_LABELS.map((l, i) =>
+    `<button class="task-weekday-pill${(selectedDays || []).includes(i) ? ' sel' : ''}" data-day="${i}">${l}</button>`
+  ).join('');
+}
 
 const DAYS_PT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 
@@ -4179,15 +4212,22 @@ function saveTasks(clientId, tasks) {
   mmSet(taskKey(clientId), JSON.stringify(tasks));
 }
 
-function nextRecurrenceDate(iso, recurrence) {
+function nextRecurrenceDate(iso, recurrence, recurrenceDays) {
   const base = iso ? new Date(iso + 'T00:00:00') : new Date();
   if (recurrence === 'daily')   base.setDate(base.getDate() + 1);
   if (recurrence === 'weekly')  base.setDate(base.getDate() + 7);
   if (recurrence === 'monthly') base.setMonth(base.getMonth() + 1);
+  if (recurrence === 'custom') {
+    if (!recurrenceDays || !recurrenceDays.length) { base.setDate(base.getDate() + 7); }
+    else {
+      base.setDate(base.getDate() + 1);
+      for (let i = 0; i < 7 && !recurrenceDays.includes(base.getDay()); i++) base.setDate(base.getDate() + 1);
+    }
+  }
   return base.toISOString().slice(0, 10);
 }
 
-function addTask(clientId, text, desc, dueDate, assignees, recurrence, urgency) {
+function addTask(clientId, text, desc, dueDate, assignees, recurrence, urgency, recurrenceDays) {
   if (!text.trim()) return;
   const tasks = loadTasks(clientId);
   tasks.push({
@@ -4198,6 +4238,7 @@ function addTask(clientId, text, desc, dueDate, assignees, recurrence, urgency) 
     dueDate:    dueDate    || '',
     assignees:  assignees  || [],
     recurrence: recurrence || '',
+    recurrenceDays: recurrence === 'custom' ? (recurrenceDays || []).slice() : [],
     urgency:    urgency    || ''
   });
   saveTasks(clientId, tasks);
@@ -4219,9 +4260,10 @@ function toggleTask(clientId, id) {
         text: t.text,
         desc: t.desc || '',
         done: false,
-        dueDate:    nextRecurrenceDate(t.dueDate, t.recurrence),
+        dueDate:    nextRecurrenceDate(t.dueDate, t.recurrence, t.recurrenceDays),
         assignees:  t.assignees  || [],
         recurrence: t.recurrence,
+        recurrenceDays: t.recurrenceDays || [],
         urgency:    t.urgency    || ''
       });
     }
@@ -4297,8 +4339,7 @@ function refreshTaskPanel(clientId) {
         return u ? `<span class="task-user-badge" data-uid="${uid}">${u.name}</span>` : '';
       }).join('');
       const descHtml  = task.desc     ? `<div class="task-desc">${escHtml(task.desc)}</div>` : '';
-      const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
-      const recBadge  = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
+      const recBadge  = recurrenceBadgeHtml(task);
       const urgBadge  = task.urgency  ? `<span class="task-urgency-badge" data-urg="${task.urgency}">${URGENCY_LABELS[task.urgency]||task.urgency}</span>` : '';
       const taskFiles = loadTaskFiles(task.id);
       const fileBadge = taskFiles.length > 0
@@ -4413,6 +4454,7 @@ function buildTasksGrid() {
     taskFilters[client.id]     = 'all';
     taskAssignees[client.id]   = [];
     taskRecurrences[client.id] = '';
+    taskRecurrenceDays[client.id] = [];
     taskUrgencies[client.id]   = '';
 
     const assigneePillsHtml = USERS.map(u =>
@@ -4445,11 +4487,9 @@ function buildTasksGrid() {
       </div>
       <div class="task-recurrence-row">
         <span class="task-assignee-lbl">↻</span>
-        <button class="task-recurrence-pill sel" data-rec="">Única</button>
-        <button class="task-recurrence-pill" data-rec="daily">Diária</button>
-        <button class="task-recurrence-pill" data-rec="weekly">Semanal</button>
-        <button class="task-recurrence-pill" data-rec="monthly">Mensal</button>
+        ${REC_OPTS.map(([v, l]) => `<button class="task-recurrence-pill${v === '' ? ' sel' : ''}" data-rec="${v}">${l}</button>`).join('')}
       </div>
+      <div class="task-recdays-row" hidden>${weekdayPillsHtml([])}</div>
       <div class="task-urgency-row">
         <span class="task-assignee-lbl">⚡</span>
         <button class="task-urgency-pill sel" data-urg="">—</button>
@@ -4471,11 +4511,24 @@ function buildTasksGrid() {
     const addBtn     = panel.querySelector('.task-add-btn');
 
     // Recurrence selector
+    const recDaysRow = panel.querySelector('.task-recdays-row');
     panel.querySelectorAll('.task-recurrence-pill').forEach(b => {
       b.addEventListener('click', () => {
         taskRecurrences[client.id] = b.dataset.rec;
         panel.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.remove('sel'));
         b.classList.add('sel');
+        recDaysRow.hidden = b.dataset.rec !== 'custom';
+      });
+    });
+
+    // Dias da semana (recorrência personalizada)
+    recDaysRow.querySelectorAll('.task-weekday-pill').forEach(b => {
+      b.addEventListener('click', () => {
+        const day = Number(b.dataset.day);
+        const arr = taskRecurrenceDays[client.id];
+        const pos = arr.indexOf(day);
+        if (pos === -1) { arr.push(day); b.classList.add('sel'); }
+        else { arr.splice(pos, 1); b.classList.remove('sel'); }
       });
     });
 
@@ -4508,7 +4561,7 @@ function buildTasksGrid() {
     });
 
     const doAdd = () => {
-      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id].slice(), taskRecurrences[client.id], taskUrgencies[client.id]);
+      addTask(client.id, input.value, descInput ? descInput.value : '', dateInput.value, taskAssignees[client.id].slice(), taskRecurrences[client.id], taskUrgencies[client.id], taskRecurrenceDays[client.id].slice());
       input.value = '';
       if (descInput) descInput.value = '';
       dateInput.value = '';
@@ -4518,6 +4571,10 @@ function buildTasksGrid() {
       // Reset recurrence to "Única"
       taskRecurrences[client.id] = '';
       panel.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.toggle('sel', x.dataset.rec === ''));
+      // Reset dias da semana
+      taskRecurrenceDays[client.id] = [];
+      recDaysRow.hidden = true;
+      recDaysRow.querySelectorAll('.task-weekday-pill').forEach(x => x.classList.remove('sel'));
       // Reset urgency to "—"
       taskUrgencies[client.id] = '';
       panel.querySelectorAll('.task-urgency-pill').forEach(x => x.classList.toggle('sel', x.dataset.urg === ''));
@@ -4550,10 +4607,10 @@ function editTask(clientId, id) {
 
   let editAssignees  = (task.assignees || []).slice();
   let editRecurrence = task.recurrence || '';
+  let editRecurrenceDays = (task.recurrenceDays || []).slice();
   let editUrgency    = task.urgency    || '';
 
   item.classList.add('editing');
-  const recOpts = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal']];
   item.innerHTML = `
     <input class="task-edit-input" type="text" value="${escHtml(task.text)}" placeholder="Título da tarefa">
     <textarea class="task-edit-desc" rows="2" placeholder="Descrição (opcional)…">${escHtml(task.desc||'')}</textarea>
@@ -4562,8 +4619,9 @@ function editTask(clientId, id) {
       ${USERS.map(u => `<button class="task-assignee-pill${editAssignees.includes(u.id)?' sel':''}" data-uid="${u.id}">${u.name}</button>`).join('')}
     </div>
     <div class="task-edit-row">
-      ${recOpts.map(([v,l]) => `<button class="task-recurrence-pill${editRecurrence===v?' sel':''}" data-rec="${v}">↻ ${l}</button>`).join('')}
+      ${REC_OPTS.map(([v,l]) => `<button class="task-recurrence-pill${editRecurrence===v?' sel':''}" data-rec="${v}">↻ ${l}</button>`).join('')}
     </div>
+    <div class="task-recdays-row"${editRecurrence==='custom'?'':' hidden'}>${weekdayPillsHtml(editRecurrenceDays)}</div>
     <div class="task-edit-row">
       ${URGENCY_OPTS.map(([v,l]) => `<button class="task-urgency-pill${editUrgency===v?' sel':''}" data-urg="${v}">⚡ ${l}</button>`).join('')}
     </div>
@@ -4627,11 +4685,22 @@ function editTask(clientId, id) {
     });
   });
 
+  const editRecDaysRow = item.querySelector('.task-recdays-row');
   item.querySelectorAll('.task-recurrence-pill').forEach(b => {
     b.addEventListener('click', () => {
       editRecurrence = b.dataset.rec;
       item.querySelectorAll('.task-recurrence-pill').forEach(x => x.classList.remove('sel'));
       b.classList.add('sel');
+      editRecDaysRow.hidden = b.dataset.rec !== 'custom';
+    });
+  });
+
+  editRecDaysRow.querySelectorAll('.task-weekday-pill').forEach(b => {
+    b.addEventListener('click', () => {
+      const day = Number(b.dataset.day);
+      const pos = editRecurrenceDays.indexOf(day);
+      if (pos === -1) { editRecurrenceDays.push(day); b.classList.add('sel'); }
+      else { editRecurrenceDays.splice(pos, 1); b.classList.remove('sel'); }
     });
   });
 
@@ -4656,6 +4725,7 @@ function editTask(clientId, id) {
       t2.dueDate    = newDate;
       t2.assignees  = editAssignees;
       t2.recurrence = editRecurrence;
+      t2.recurrenceDays = editRecurrence === 'custom' ? editRecurrenceDays : [];
       t2.urgency    = editUrgency;
       saveTasks(clientId, tasks2);
     }
@@ -4680,9 +4750,7 @@ buildTasksGrid();
   const closeBtn  = document.getElementById('twModalClose');
   const cancelBtn = document.getElementById('twModalCancel');
   const saveBtn   = document.getElementById('twModalSave');
-  let _clientId = null, _taskId = null, _modalAssignees = [], _modalRecurrence = '', _modalUrgency = '', _isNew = false;
-
-  const REC_OPTS = [['', 'Única'], ['daily', 'Diária'], ['weekly', 'Semanal'], ['monthly', 'Mensal']];
+  let _clientId = null, _taskId = null, _modalAssignees = [], _modalRecurrence = '', _modalRecurrenceDays = [], _modalUrgency = '', _isNew = false;
 
   function buildPills(containerId, pills, activeVal, dataAttr, onSelect, getActive) {
     const el = document.getElementById(containerId);
@@ -4700,7 +4768,7 @@ buildTasksGrid();
 
   window.openTwNewTaskModal = function (iso) {
     _isNew = true; _taskId = null; _clientId = null;
-    _modalAssignees = []; _modalRecurrence = ''; _modalUrgency = '';
+    _modalAssignees = []; _modalRecurrence = ''; _modalRecurrenceDays = []; _modalUrgency = '';
 
     // populate client select
     const allClients = [MOVING_CLIENT, ...CLIENTS].filter(c => !c.noKanban);
@@ -4713,7 +4781,7 @@ buildTasksGrid();
     document.getElementById('twModalDesc').value  = '';
     document.getElementById('twModalDate').value  = iso || '';
 
-    buildModalPills([], '', '');
+    buildModalPills([], '', [], '');
     overlay.classList.add('open');
     document.getElementById('twModalTitle').focus();
   };
@@ -4725,6 +4793,7 @@ buildTasksGrid();
     _isNew = false; _clientId = clientId; _taskId = taskId;
     _modalAssignees  = (task.assignees || []).slice();
     _modalRecurrence = task.recurrence || '';
+    _modalRecurrenceDays = (task.recurrenceDays || []).slice();
     _modalUrgency    = task.urgency    || '';
 
     document.getElementById('twModalClientRow').style.display = 'none';
@@ -4734,13 +4803,13 @@ buildTasksGrid();
     document.getElementById('twModalDesc').value  = task.desc || '';
     document.getElementById('twModalDate').value  = task.dueDate || '';
 
-    buildModalPills(_modalAssignees, _modalRecurrence, _modalUrgency);
+    buildModalPills(_modalAssignees, _modalRecurrence, _modalRecurrenceDays, _modalUrgency);
     overlay.classList.add('open');
     document.getElementById('twModalTitle').focus();
   };
 
-  function buildModalPills(assignees, recurrence, urgency) {
-    _modalAssignees = assignees.slice(); _modalRecurrence = recurrence; _modalUrgency = urgency;
+  function buildModalPills(assignees, recurrence, recurrenceDays, urgency) {
+    _modalAssignees = assignees.slice(); _modalRecurrence = recurrence; _modalRecurrenceDays = (recurrenceDays || []).slice(); _modalUrgency = urgency;
 
     const assigneeEl = document.getElementById('twModalAssignees');
     assigneeEl.innerHTML = USERS.map(u =>
@@ -4754,6 +4823,8 @@ buildTasksGrid();
     }));
 
     const recEl = document.getElementById('twModalRecurrence');
+    const recDaysRow = document.getElementById('twModalRecDaysRow');
+    const recDaysEl  = document.getElementById('twModalRecDays');
     recEl.innerHTML = REC_OPTS.map(([v, l]) =>
       `<button class="task-recurrence-pill${recurrence===v?' sel':''}" data-rec="${v}">${l}</button>`
     ).join('');
@@ -4761,6 +4832,16 @@ buildTasksGrid();
       _modalRecurrence = b.dataset.rec;
       recEl.querySelectorAll('button').forEach(x => x.classList.remove('sel'));
       b.classList.add('sel');
+      recDaysRow.hidden = b.dataset.rec !== 'custom';
+    }));
+
+    recDaysRow.hidden = recurrence !== 'custom';
+    recDaysEl.innerHTML = weekdayPillsHtml(_modalRecurrenceDays);
+    recDaysEl.querySelectorAll('.task-weekday-pill').forEach(b => b.addEventListener('click', () => {
+      const day = Number(b.dataset.day);
+      const pos = _modalRecurrenceDays.indexOf(day);
+      if (pos === -1) { _modalRecurrenceDays.push(day); b.classList.add('sel'); }
+      else { _modalRecurrenceDays.splice(pos, 1); b.classList.remove('sel'); }
     }));
 
     const urgEl = document.getElementById('twModalUrgency');
@@ -4792,7 +4873,7 @@ buildTasksGrid();
       addTask(cid, newText,
         document.getElementById('twModalDesc').value.trim(),
         document.getElementById('twModalDate').value,
-        _modalAssignees, _modalRecurrence, _modalUrgency
+        _modalAssignees, _modalRecurrence, _modalUrgency, _modalRecurrenceDays
       );
       closeModal();
       refreshTaskPanel(cid);
@@ -4810,6 +4891,7 @@ buildTasksGrid();
       t.dueDate    = document.getElementById('twModalDate').value;
       t.assignees  = _modalAssignees;
       t.recurrence = _modalRecurrence;
+      t.recurrenceDays = _modalRecurrence === 'custom' ? _modalRecurrenceDays : [];
       t.urgency    = _modalUrgency;
       saveTasks(_clientId, tasks);
     }
@@ -4932,8 +5014,7 @@ function renderWeeklyManager() {
             const u = USERS.find(u => u.id === uid);
             return u ? `<span class="task-user-badge" data-uid="${uid}">${u.name}</span>` : '';
           }).join('');
-          const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
-          const recBadge = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence]||task.recurrence}</span>` : '';
+          const recBadge = recurrenceBadgeHtml(task);
           const urgBadge = task.urgency ? `<span class="task-urgency-badge" data-urg="${task.urgency}">${URGENCY_LABELS[task.urgency]||task.urgency}</span>` : '';
           const badgesHtml = (urgBadge || recBadge || userBadge) ? `<div class="tw-task-badges">${urgBadge}${recBadge}${userBadge}</div>` : '';
           return `
@@ -5036,15 +5117,13 @@ function renderPendingList() {
     return;
   }
 
-  const recurrenceLabels = { daily: 'diária', weekly: 'semanal', monthly: 'mensal' };
-
   list.innerHTML = pending.map(({ clientId, clientName, clientColor, task }) => {
     const userBadge = (task.assignees || []).map(uid => {
       const u = USERS.find(u => u.id === uid);
       return u ? `<span class="task-user-badge" data-uid="${uid}">${u.name}</span>` : '';
     }).join('');
     const dueBadge = task.dueDate ? `<span class="task-due ${dueCls(task.dueDate)}">${dueFmt(task.dueDate)}</span>` : '';
-    const recBadge = task.recurrence ? `<span class="task-recurrence-badge">↻ ${recurrenceLabels[task.recurrence] || task.recurrence}</span>` : '';
+    const recBadge = recurrenceBadgeHtml(task);
     const urgBadge = task.urgency ? `<span class="task-urgency-badge" data-urg="${task.urgency}">${URGENCY_LABELS[task.urgency] || task.urgency}</span>` : '';
     return `
     <div class="tw-pending-item" style="--client-color:${clientColor}">
@@ -8161,7 +8240,11 @@ function switchMainTab(tab) {
     if (grid) grid.style.display = '';
     document.querySelectorAll('#clientSectionsWrap .client-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.sb-cli-item').forEach(i => i.classList.remove('active'));
+    localStorage.removeItem('mmuiActiveClient');
   }
+  // Guarda a aba ativa (só neste navegador — não sincroniza) para restaurar depois
+  // de um location.reload() disparado pelo sync remoto, em vez de sempre voltar pro Início.
+  localStorage.setItem('mmuiActiveTab', tab);
 }
 
 function selectClient(cid) {
@@ -8174,6 +8257,7 @@ function selectClient(cid) {
   document.querySelectorAll('.sb-cli-item').forEach(i => i.classList.remove('active'));
   const sbItem = document.querySelector(`.sb-cli-item[data-cid="${cid}"]`);
   if (sbItem) sbItem.classList.add('active');
+  localStorage.setItem('mmuiActiveClient', cid);
 }
 
 // ── SIDEBAR TABS ─────────────────────────────────────────────────────────────
@@ -8944,6 +9028,17 @@ function renderCeusCanais() {
   });
 
   renderCal();
+})();
+
+// Restaura a aba/cliente ativos deste navegador (evita cair sempre no Início
+// depois de um location.reload() automático disparado por sync remoto).
+(function restoreActiveTab() {
+  const savedTab    = localStorage.getItem('mmuiActiveTab');
+  const savedClient = localStorage.getItem('mmuiActiveClient'); // lido antes do switchMainTab, que limpa essa chave ao entrar em 'clientes'
+  if (savedTab && savedTab !== 'inicio') {
+    switchMainTab(savedTab);
+    if (savedTab === 'clientes' && savedClient) selectClient(savedClient);
+  }
 })();
 
 _loadFromCloud().then(changed => { if (changed) location.reload(); });
