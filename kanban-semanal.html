@@ -2891,6 +2891,24 @@
     .ceus-nav-btn.active { color: #a78bfa; border-bottom-color: #a78bfa; }
     .ceus-sec { display: none; padding: 20px; }
     .ceus-sec.active { display: block; }
+    .ceus-acao12-group-title {
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin: 0 0 10px;
+    }
+    .ceus-acao12-group-title.spaced { margin-top: 26px; }
+    .ceus-acao12-list { display: flex; flex-direction: column; gap: 8px; }
+    .ceus-acao12-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .ceus-acao12-card.complete { border-color: #a78bfa88; }
+    .ceus-acao12-hdr {
+      display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer;
+    }
+    .ceus-acao12-nome { font-size: 14px; font-weight: 600; flex: 1; }
+    .ceus-acao12-progress { font-size: 12px; color: var(--text-muted); }
+    .ceus-acao12-card.complete .ceus-acao12-progress { color: #a78bfa; }
+    .ceus-acao12-body { display: none; padding: 0 16px 14px; }
+    .ceus-acao12-body.open { display: block; }
     .ceus-ficha-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 700px;
     }
@@ -3203,14 +3221,20 @@
       <div class="client-tab-panel" id="proj-sub-ceus">
         <div class="ceus-wrap">
           <div class="ceus-nav">
-            <button class="ceus-nav-btn active" data-ceus-sec="ficha">Ficha</button>
+            <button class="ceus-nav-btn active" data-ceus-sec="acao12">Ação 12 perfis</button>
+            <button class="ceus-nav-btn" data-ceus-sec="ficha">Ficha</button>
             <button class="ceus-nav-btn" data-ceus-sec="fases">Cronograma</button>
             <button class="ceus-nav-btn" data-ceus-sec="tarefas">Tarefas</button>
             <button class="ceus-nav-btn" data-ceus-sec="canais">Canais</button>
           </div>
 
+          <!-- AÇÃO 12 PERFIS -->
+          <div class="ceus-sec active" id="ceus-sec-acao12">
+            <div id="ceusAcao12Wrap"></div>
+          </div>
+
           <!-- FICHA -->
-          <div class="ceus-sec active" id="ceus-sec-ficha">
+          <div class="ceus-sec" id="ceus-sec-ficha">
             <div class="ceus-ficha-grid">
               <div class="ceus-field">
                 <label>Evento</label>
@@ -8679,6 +8703,111 @@ const _CEUS_CANAIS_DEFAULT = [
   {id:'ca8',nome:'Tráfego Pago',status:'planejado',obs:''},
 ];
 
+const _CEUS_ACAO12_STEPS_DEFAULT = [
+  { id:'s1', text:'Primeiro contato Josias' },
+  { id:'s2', text:'Segundo contato Priscila' },
+  { id:'s3', text:'Aceite' },
+  { id:'s4', text:'Grupo no Whatsapp' },
+  { id:'s5', text:'Envio das informações' },
+  { id:'s6', text:'Ações' },
+  { id:'s7', text:'Conclusão' },
+];
+
+const _CEUS_ACAO12_DEFAULT = [
+  { id:'p1', nome:'Josias', tipo:'perfil' },
+  { id:'p2', nome:'Gisa', tipo:'perfil' },
+  { id:'p3', nome:'Silvio', tipo:'perfil' },
+  { id:'p4', nome:'Rosangela', tipo:'perfil' },
+  { id:'p5', nome:'Wagnão', tipo:'perfil' },
+  { id:'p6', nome:'Keli', tipo:'perfil' },
+  { id:'p7', nome:'Sabrina', tipo:'perfil' },
+  { id:'p8', nome:'Camila', tipo:'perfil' },
+  { id:'p9', nome:'Isma', tipo:'perfil' },
+  { id:'p10', nome:'Mica', tipo:'perfil' },
+  { id:'p11', nome:'André', tipo:'perfil' },
+  { id:'p12', nome:'Michele', tipo:'perfil' },
+  { id:'i1', nome:'Vanessa', tipo:'influenciador' },
+  { id:'i2', nome:'Marina', tipo:'influenciador' },
+  { id:'i3', nome:'Samuel', tipo:'influenciador' },
+  { id:'i4', nome:'Jonatan', tipo:'influenciador' },
+];
+
+function _ceusAcao12Defaults() {
+  return _CEUS_ACAO12_DEFAULT.map(p => ({
+    ...p,
+    items: _CEUS_ACAO12_STEPS_DEFAULT.map(s => ({ ...s, done:false }))
+  }));
+}
+
+function _getCeusAcao12() {
+  const raw = localStorage.getItem('mmceus__acao12');
+  if (!raw) return _ceusAcao12Defaults();
+  try {
+    const saved = JSON.parse(raw);
+    // reconcilia com a lista/etapas padrao, preservando o que ja foi marcado
+    return _CEUS_ACAO12_DEFAULT.map(p => {
+      const prev = saved.find(x => x.id === p.id);
+      return {
+        ...p,
+        items: _CEUS_ACAO12_STEPS_DEFAULT.map(s => {
+          const prevItem = prev?.items?.find(x => x.id === s.id);
+          return { ...s, done: prevItem?.done || false };
+        })
+      };
+    });
+  } catch(e) { return _ceusAcao12Defaults(); }
+}
+function _saveCeusAcao12(a) { localStorage.setItem('mmceus__acao12', JSON.stringify(a)); }
+
+function renderCeusAcao12() {
+  const wrap = document.getElementById('ceusAcao12Wrap');
+  if (!wrap) return;
+  const pessoas = _getCeusAcao12();
+  const perfis = pessoas.filter(p => p.tipo === 'perfil');
+  const infl = pessoas.filter(p => p.tipo === 'influenciador');
+  const renderCard = p => {
+    const done = p.items.filter(i => i.done).length;
+    const total = p.items.length;
+    const complete = done === total;
+    return `
+      <div class="ceus-acao12-card${complete?' complete':''}" id="ceusAcao12-${p.id}">
+        <div class="ceus-acao12-hdr" onclick="toggleCeusAcao12('${p.id}')">
+          <div class="ceus-acao12-nome">${p.nome}</div>
+          <div class="ceus-acao12-progress">${done}/${total}${complete?' ✓':''}</div>
+          <span class="ceus-fase-toggle">▾</span>
+        </div>
+        <div class="ceus-acao12-body" id="ceusAcao12Body-${p.id}">
+          <div class="ceus-chk-list">
+            ${p.items.map(item => `
+              <div class="ceus-chk-item">
+                <input type="checkbox" ${item.done?'checked':''} onchange="_toggleCeusAcao12Item('${p.id}','${item.id}',this.checked)">
+                <span class="${item.done?'done':''}">${item.text}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  };
+  wrap.innerHTML = `
+    <div class="ceus-acao12-group-title">Perfis</div>
+    <div class="ceus-acao12-list">${perfis.map(renderCard).join('')}</div>
+    <div class="ceus-acao12-group-title spaced">Influenciadores que vão espalhar a ação</div>
+    <div class="ceus-acao12-list">${infl.map(renderCard).join('')}</div>`;
+}
+
+function toggleCeusAcao12(id) {
+  document.getElementById('ceusAcao12Body-'+id)?.classList.toggle('open');
+}
+function _toggleCeusAcao12Item(personId, itemId, done) {
+  const pessoas = _getCeusAcao12();
+  const p = pessoas.find(x => x.id === personId); if (!p) return;
+  const item = p.items.find(x => x.id === itemId); if (!item) return;
+  item.done = done;
+  _saveCeusAcao12(pessoas);
+  const wasOpen = document.getElementById('ceusAcao12Body-'+personId)?.classList.contains('open');
+  renderCeusAcao12();
+  if (wasOpen) document.getElementById('ceusAcao12Body-'+personId)?.classList.add('open');
+}
+
 function _ceusUID() { return 'u'+Date.now()+Math.random().toString(36).slice(2,5); }
 
 function saveCeusData() {
@@ -8865,6 +8994,7 @@ function renderCeusCanais() {
   const ti=document.getElementById('ceusTaskInput');
   if(ti) ti.addEventListener('keydown',e=>{if(e.key==='Enter')addCeusTask();});
   _loadCeusFicha();
+  renderCeusAcao12();
   renderCeusFases();
   renderCeusTasks();
   renderCeusCanais();
