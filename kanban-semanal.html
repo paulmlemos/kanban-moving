@@ -6694,6 +6694,94 @@ function buildFichaGrid() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// BRIEFING (aba Briefing por cliente)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function loadBriefing(c)  { return lsGet(`mmbriefing__${c}`) || {}; }
+function saveBriefing(c,v){ lsSave(`mmbriefing__${c}`, v); }
+
+const BRIEFING_FIELDS = [
+  { key: 'website',            label: 'Website',                        type: 'text' },
+  { key: 'areasAtendimento',    label: 'Áreas de Atendimento',           type: 'textarea' },
+  { key: 'descNegocio',         label: 'Descrição do Negócio',           type: 'textarea' },
+  { key: 'tempoMercado',        label: 'Tempo de Mercado',               type: 'text' },
+  { key: 'missao',              label: 'Missão',                         type: 'textarea' },
+  { key: 'valores',             label: 'Valores Centrais',               type: 'text' },
+  { key: 'diferencial',         label: 'Diferencial Competitivo',        type: 'text' },
+  { key: 'portfolio',           label: 'Portfólio de Produtos/Serviços', type: 'text' },
+  { key: 'produtoPrincipal',    label: 'Produto Principal',              type: 'text' },
+  { key: 'setoresIdeais',       label: 'Setores do Cliente Ideal',       type: 'text' },
+  { key: 'generoCliente',       label: 'Gênero do Cliente',              type: 'text' },
+  { key: 'localizacao',         label: 'Localização Principal',          type: 'text' },
+  { key: 'necessidades',        label: 'Necessidades do Cliente',        type: 'text' },
+  { key: 'concorrentes',        label: 'Principais Concorrentes',        type: 'textarea' },
+  { key: 'empresasAdmiradas',   label: 'Empresas Admiradas',             type: 'text' },
+  { key: 'objetivoInsta',       label: 'Objetivo no Instagram',          type: 'text' },
+  { key: 'metaPercepcao',       label: 'Meta de Percepção de Marca',     type: 'text' },
+  { key: 'tomComunicacao',      label: 'Tom de Comunicação',             type: 'text' },
+  { key: 'manualMarca',         label: 'Possui Manual de Marca',         type: 'text' },
+  { key: 'logoQualidade',       label: 'Possui Logo de Qualidade',       type: 'text' },
+  { key: 'paletaCores',         label: 'Possui Paleta de Cores',         type: 'text' },
+  { key: 'fotosProfissionais',  label: 'Possui Fotos Profissionais',     type: 'text' }
+];
+
+// Respostas reais extraídas do formulário de briefing (Google Sheets) preenchido pelo cliente.
+const BRIEFING_DEFAULTS = {
+  dca: {
+    timestamp: '01/08/2026 19:26:49',
+    website: 'https://dcadistribuidoraalimentos.com.br',
+    areasAtendimento: 'Caxias do Sul, Farroupilha, Flores da Cunha, São Marcos, Bento Gonçalves, Garibaldi, Carlos Barbosa, Nova Petrópolis, Gramado, Canela, São Francisco de Paula, Vacaria',
+    descNegocio: 'Vendemos queijos, bacon, frios e embutidos',
+    tempoMercado: '4 anos',
+    missao: 'Distribuindo qualidade. Construindo parcerias.',
+    valores: 'A confiança dos clientes',
+    diferencial: 'Agilidade na entrega',
+    portfolio: 'Vendas de lácteos e embutidos',
+    produtoPrincipal: 'Queijos e bacon',
+    setoresIdeais: 'Pizzarias, lancherias, supermercados, restaurantes',
+    generoCliente: 'Ambos',
+    localizacao: 'Caxias do Sul',
+    necessidades: 'Bom atendimento, produtos de qualidade',
+    concorrentes: 'Di Sabores, Flor de Lis, Sgorla, SOS, Perte, Camaquã Distribuidora',
+    empresasAdmiradas: 'Camaquã Distribuidora e SOS',
+    objetivoInsta: 'Fortalecer a marca',
+    metaPercepcao: 'Produtos de qualidade, bom atendimento',
+    tomComunicacao: 'Formal',
+    manualMarca: 'Sim',
+    logoQualidade: 'Sim',
+    paletaCores: 'Sim',
+    fotosProfissionais: 'Não'
+  }
+};
+
+function renderBriefing(cid, panel) {
+  let saved = loadBriefing(cid);
+  const defaults = BRIEFING_DEFAULTS[cid] || {};
+  if (Object.keys(saved).length === 0 && Object.keys(defaults).length) {
+    saved = { ...defaults };
+    saveBriefing(cid, saved);
+  }
+  panel.innerHTML = `
+    <div class="ficha-card briefing-card">
+      ${saved.timestamp ? `<div class="ficha-card-header"><span class="ficha-card-name">Briefing preenchido em ${escHtml(saved.timestamp)}</span></div>` : ''}
+      <div class="ficha-body">
+        ${BRIEFING_FIELDS.map(f => {
+          const val = saved[f.key] || '';
+          return f.type === 'textarea'
+            ? `<div class="ficha-field"><span class="ficha-lbl">${f.label}</span><textarea class="ficha-textarea" data-key="${f.key}" rows="2">${escHtml(val)}</textarea></div>`
+            : `<div class="ficha-field"><span class="ficha-lbl">${f.label}</span><input class="ficha-input" type="text" data-key="${f.key}" value="${escHtml(val)}"></div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  panel.querySelectorAll('[data-key]').forEach(el => {
+    el.addEventListener('input', () => {
+      const d = loadBriefing(cid); d[el.dataset.key] = el.value; saveBriefing(cid, d);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // CONTROLE FINANCEIRO
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -8532,6 +8620,7 @@ function buildClientSections() {
     // Abas por cliente
     const tabDefs = [];
     if (!c.isInternal) tabDefs.push({ id: 'onboard',   label: 'Onboarding' });
+    if (c.id === 'dca') tabDefs.push({ id: 'briefing', label: 'Briefing' });
     tabDefs.push(                    { id: 'acessos',   label: 'Acessos'   });
     tabDefs.push(                    { id: 'tasks',     label: 'Tarefas'   });
     if (!c.isInternal) tabDefs.push({ id: 'conteudos', label: 'Conteúdos' });
@@ -8626,6 +8715,10 @@ function buildClientSections() {
     if (c.id === 'encontros-fe') {
       const evPanel = document.getElementById(`cpanel-eventos-${c.id}`);
       if (evPanel) { evPanel.innerHTML=`<div id="igreja-eventos-wrap"></div>`; renderIgrejaEventos(); }
+    }
+    if (c.id === 'dca') {
+      const brPanel = document.getElementById(`cpanel-briefing-${c.id}`);
+      if (brPanel) renderBriefing(c.id, brPanel);
     }
 
     // Satisfação
