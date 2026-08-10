@@ -151,6 +151,30 @@ mudar totalmente o HTML gerado *dentro* de cada `buildXGrid()`, só precisa mant
 "constrói no grid global → `buildClientSections` mexe/move para a aba certa" ou refatorar as duas
 pontas juntas (build + move) de forma consistente.
 
+## 4.1 Pegadinha real nº 2: `body{padding-left:220px}` fora de qualquer media query
+
+Perto do bloco `.main-tab`/`.main-tab.active` (busque por `.mm-brand-row { display: none !important; }`)
+existem 4 regras **sem media query**, sempre ativas:
+
+```css
+.mm-brand-row { display: none !important; }
+.mm-snav      { display: none !important; }
+body { padding-left: 220px; }
+body::before { left: 220px; }
+```
+
+`.mm-brand-row` e `.mm-snav` são resquício de um header antigo (mantido intencionalmente oculto —
+o cabeçalho visível hoje é `.mm-nav-row`, não `.mm-brand-row`). As duas regras de `body` existem
+para compensar a largura da sidebar fixa (`.sidebar-right`, 220px, `position:fixed`).
+
+**Armadilha de cascata**: como essas 4 regras não têm media query e vêm *depois* no arquivo, elas
+vencem qualquer regra de mesma especificidade escrita antes delas — inclusive dentro de um
+`@media (max-width: ...)`. A versão mobile (drawer da sidebar, ver seção 8) precisou colocar seu
+próprio `@media (max-width: 900px) { body { padding-left: 0 !important; } ... }` **depois** desse
+bloco (com `!important` de reforço) só para conseguir sobrescrever. Se for redesenhar o header/
+sidebar, mova ou revise este bloco primeiro — é a causa mais provável de qualquer CSS "não
+aplicar" nessa região do arquivo.
+
 ## 5. Contrato mínimo para considerar a reforma "só front-end"
 
 Antes de dar como concluída qualquer mudança, confirme:
@@ -188,3 +212,20 @@ desatualizar rápido. Sempre confirme pela busca de texto (nome de função, com
 `// ── NOME ──` ou `// ══...══`) em vez de confiar cegamente nos números. Se encontrar uma
 contradição real entre este documento e o código, o código manda — mas registre a divergência
 (ex.: atualizando este arquivo) para a próxima IA não tropeçar de novo.
+
+## 8. Versão mobile (sidebar vira drawer abaixo de 900px)
+
+Adicionado em 2026-08-09 (commit local `72f8e60`, sem push): abaixo de 900px de largura, a
+`.sidebar-right` deixa de ocupar espaço fixo e vira um drawer off-canvas.
+
+- Botão novo `#btnMobileMenu` (classe `.mm-menu-btn`) dentro de `.mm-nav-row` — só ele, não
+  `.mm-brand-row`, porque `.mm-brand-row` está permanentemente oculto (ver 4.1).
+- Overlay `#mmSidebarBackdrop` (classe `.mm-sidebar-backdrop`), inserido logo antes de
+  `<aside class="sidebar-right">`.
+- Classe de estado `.mm-open` alternada em `#sidebarRight` e `#mmSidebarBackdrop` por
+  `openMobileSidebar()`/`closeMobileSidebar()` (perto de `switchMainTab`, seção "SIDEBAR MOBILE").
+- `switchMainTab()` chama `closeMobileSidebar()` no final — trocar de aba ou selecionar cliente
+  (via `selectClient` → `switchMainTab('clientes')`) já fecha o drawer sozinho.
+- Testado com Playwright em 390×844 (mobile) e 1440×900 (desktop, sem regressão), rede do
+  Firestore bloqueada (ver regra 2). Board, modais e abas do cliente já tinham `overflow-x`/
+  `max-width: 92vw` prontos de antes — só precisavam da sidebar liberar espaço de tela.
