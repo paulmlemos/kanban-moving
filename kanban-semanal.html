@@ -2662,6 +2662,34 @@
     body { padding-left: 220px; }
     body::before { left: 220px; }
 
+    /* ── SIDEBAR MOBILE (drawer) ─────────────────────────────── */
+    .mm-menu-btn {
+      display: none;
+      width: 34px; height: 34px; flex-shrink: 0;
+      align-items: center; justify-content: center;
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 16px; line-height: 1; cursor: pointer;
+    }
+    .mm-menu-btn:hover { background: rgba(255,255,255,0.06); }
+    .mm-sidebar-backdrop {
+      display: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 190; opacity: 0; transition: opacity 0.2s ease;
+    }
+    .mm-sidebar-backdrop.mm-open { display: block; opacity: 1; }
+
+    @media (max-width: 900px) {
+      body { padding-left: 0 !important; }
+      body::before { left: 0 !important; }
+      .mm-menu-btn { display: flex; }
+      .sidebar-right {
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 4px 0 28px rgba(0,0,0,0.55);
+      }
+      .sidebar-right.mm-open { transform: translateX(0); }
+    }
+
     /* ── CLIENTE — LISTING (tab Clientes) ──────────────────── */
     .cli-cards-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -3050,6 +3078,7 @@
     </div>
   </div>
   <div class="mm-nav-row">
+    <button class="mm-menu-btn" id="btnMobileMenu" aria-label="Abrir menu" title="Menu">☰</button>
     <div class="week-nav">
       <button class="btn" id="btnPrev" title="Semana anterior">‹</button>
       <span class="week-label" id="weekLabel">—</span>
@@ -3080,6 +3109,9 @@
     </div>
   </nav>
 </header>
+
+<!-- Overlay de fundo, só usado no drawer mobile (ver media query mm-menu-btn) -->
+<div class="mm-sidebar-backdrop" id="mmSidebarBackdrop"></div>
 
 <!-- SIDEBAR DIREITA -->
 <aside class="sidebar-right" id="sidebarRight">
@@ -8436,7 +8468,25 @@ function switchMainTab(tab) {
   // Guarda a aba ativa (só neste navegador — não sincroniza) para restaurar depois
   // de um location.reload() disparado pelo sync remoto, em vez de sempre voltar pro Início.
   localStorage.setItem('mmuiActiveTab', tab);
+  closeMobileSidebar();
 }
+
+// ── SIDEBAR MOBILE (drawer) ───────────────────────────────────────────────
+
+function openMobileSidebar() {
+  document.getElementById('sidebarRight')?.classList.add('mm-open');
+  document.getElementById('mmSidebarBackdrop')?.classList.add('mm-open');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebarRight')?.classList.remove('mm-open');
+  document.getElementById('mmSidebarBackdrop')?.classList.remove('mm-open');
+}
+document.getElementById('btnMobileMenu')?.addEventListener('click', () => {
+  const sidebar = document.getElementById('sidebarRight');
+  if (sidebar?.classList.contains('mm-open')) closeMobileSidebar();
+  else openMobileSidebar();
+});
+document.getElementById('mmSidebarBackdrop')?.addEventListener('click', closeMobileSidebar);
 
 function selectClient(cid) {
   switchMainTab('clientes');
