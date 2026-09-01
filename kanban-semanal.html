@@ -2653,6 +2653,10 @@
     .sb-cli-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
     .sb-cli-item.active { color: var(--text); background: rgba(255,255,255,0.03); }
     .sb-cli-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .sb-cli-divider {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-dim); opacity: 0.6; padding: 8px 10px 3px;
+    }
 
     /* ── MAIN TABS ───────────────────────────────────────────── */
     .main-tab { display: none; min-height: calc(100vh - 60px); }
@@ -2704,6 +2708,10 @@
     .cli-card:hover { background: var(--surface-2); border-color: var(--border-2); }
     .cli-card-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .cli-card-name { font-size: 12px; font-weight: 500; }
+    .cli-section-hdr {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-dim); padding: 4px 20px; margin-top: 4px;
+    }
     .cli-back-btn {
       display: inline-flex; align-items: center; gap: 6px;
       background: none; border: 1px solid var(--border); color: var(--text-dim);
@@ -3202,6 +3210,8 @@
 <!-- TAB: CLIENTES -->
 <div class="main-tab" id="main-clientes">
   <div class="cli-cards-grid" id="cliCardsGrid"></div>
+  <div class="cli-section-hdr" id="cliInactiveHdr" style="display:none">Clientes Inativos</div>
+  <div class="cli-cards-grid" id="cliCardsGridInactive"></div>
   <div id="clientSectionsWrap"></div>
 </div>
 
@@ -3822,7 +3832,8 @@ const CLIENTS = [
     color: '#3b82f6',
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
-    ]
+    ],
+    inactive: true
   },
   {
     id: 'delcapo-fat',
@@ -3830,7 +3841,8 @@ const CLIENTS = [
     color: '#06b6d4',
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
-    ]
+    ],
+    inactive: true
   },
   {
     id: 'rochele',
@@ -3854,7 +3866,8 @@ const CLIENTS = [
     color: '#84cc16',
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
-    ]
+    ],
+    hideFromBoard: true
   },
   {
     id: 'encontros-fe',
@@ -3862,7 +3875,8 @@ const CLIENTS = [
     color: '#fb923c',
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
-    ]
+    ],
+    inactive: true
   },
   {
     id: 'keli',
@@ -4008,6 +4022,10 @@ const USERS = [
 
 const MOVING_CLIENT = { id: 'moving', name: 'Vento Marketing', color: '#7c5cfc', isInternal: true };
 
+// Cliente aparece no Gestor de Postagens (quadro semanal) só se não for noKanban,
+// não estiver na pasta Inativos e não tiver sido retirado individualmente do quadro.
+function inBoard(c) { return !c.noKanban && !c.inactive && !c.hideFromBoard; }
+
 const taskFilters     = {}; // clientId → uid ('all'|'priscila'|'paul')
 const taskAssignees   = {}; // clientId → uid ('priscila'|'paul'|'')
 const taskRecurrences = {}; // clientId → recurrence (''|'daily'|'weekly'|'monthly'|'custom')
@@ -4109,7 +4127,7 @@ function clearWeek(wk) {
 
 function computeStats(wk) {
   let total = 0, prog = 0, posted = 0;
-  CLIENTS.filter(c => !c.noKanban).forEach(c => {
+  CLIENTS.filter(inBoard).forEach(c => {
     c.platforms.forEach(p => {
       const types = ['feed', ...(p.stories ? ['stories'] : [])];
       for (let d = 0; d < 5; d++) {
@@ -4156,7 +4174,7 @@ function render() {
     const body = document.createElement('div');
     body.className = 'col-body';
 
-    CLIENTS.filter(c => !c.noKanban).forEach(client => {
+    CLIENTS.filter(inBoard).forEach(client => {
       const iso = kanbanDayToISO(currentWk, di);
       const nopostData = loadNoPost(client.id);
       const isNoPost = !!nopostData[iso];
@@ -7275,7 +7293,7 @@ function refreshDashboard() {
 
   // — Progresso semanal —
   let totalSlots = 0, completedSlots = 0;
-  CLIENTS.filter(c => !c.noKanban).forEach(c => c.platforms.forEach(p => {
+  CLIENTS.filter(inBoard).forEach(c => c.platforms.forEach(p => {
     for (let di = 0; di < 5; di++) {
       totalSlots++;
       if (getState(currentWk, c.id, di, p.id, 'feed') > 0) completedSlots++;
@@ -8484,8 +8502,7 @@ function switchMainTab(tab) {
   if (tab === 'inicio') refreshVisaoClientes();
   if (tab === 'clientes') {
     // mostra cards, esconde seções individuais
-    const grid = document.getElementById('cliCardsGrid');
-    if (grid) grid.style.display = '';
+    restoreCliGrids();
     document.querySelectorAll('#clientSectionsWrap .client-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.sb-cli-item').forEach(i => i.classList.remove('active'));
     localStorage.removeItem('mmuiActiveClient');
@@ -8513,10 +8530,29 @@ document.getElementById('btnMobileMenu')?.addEventListener('click', () => {
 });
 document.getElementById('mmSidebarBackdrop')?.addEventListener('click', closeMobileSidebar);
 
-function selectClient(cid) {
-  switchMainTab('clientes');
+// Grade de clientes ativos + grade de "Clientes Inativos" (tab Clientes):
+// mostradas juntas na listagem, escondidas juntas ao abrir a página de um cliente.
+function hideCliGrids() {
   const grid = document.getElementById('cliCardsGrid');
   if (grid) grid.style.display = 'none';
+  const igrid = document.getElementById('cliCardsGridInactive');
+  const ihdr  = document.getElementById('cliInactiveHdr');
+  if (igrid) igrid.style.display = 'none';
+  if (ihdr)  ihdr.style.display  = 'none';
+}
+function restoreCliGrids() {
+  const grid = document.getElementById('cliCardsGrid');
+  if (grid) grid.style.display = '';
+  const igrid = document.getElementById('cliCardsGridInactive');
+  const ihdr  = document.getElementById('cliInactiveHdr');
+  const hasInactive = !!igrid && igrid.children.length > 0;
+  if (igrid) igrid.style.display = hasInactive ? '' : 'none';
+  if (ihdr)  ihdr.style.display  = hasInactive ? '' : 'none';
+}
+
+function selectClient(cid) {
+  switchMainTab('clientes');
+  hideCliGrids();
   document.querySelectorAll('#clientSectionsWrap .client-section').forEach(s => s.style.display = 'none');
   const sec = document.getElementById('sec-cli-' + cid);
   if (sec) sec.style.display = 'block';
@@ -8660,15 +8696,22 @@ function buildCliCards() {
   const grid = document.getElementById('cliCardsGrid');
   if (!grid) return;
   grid.innerHTML = '';
+  const inactiveGrid = document.getElementById('cliCardsGridInactive');
+  const inactiveHdr  = document.getElementById('cliInactiveHdr');
+  if (inactiveGrid) inactiveGrid.innerHTML = '';
   const ALL_CLI = [...CLIENTS, MOVING_CLIENT];
-  ALL_CLI.filter(c => !c.isPersonal).forEach(c => {
+  const makeCliCard = c => {
     const card = document.createElement('div');
     card.className = 'cli-card';
     card.style.setProperty('--client-color', c.color);
     card.innerHTML = `<span class="cli-card-dot" style="background:${c.color}"></span><span class="cli-card-name">${c.name}</span>`;
     card.addEventListener('click', () => selectClient(c.id));
-    grid.appendChild(card);
-  });
+    return card;
+  };
+  ALL_CLI.filter(c => !c.isPersonal && !c.inactive).forEach(c => grid.appendChild(makeCliCard(c)));
+  const inactiveClients = ALL_CLI.filter(c => !c.isPersonal && c.inactive);
+  if (inactiveGrid) inactiveClients.forEach(c => inactiveGrid.appendChild(makeCliCard(c)));
+  if (inactiveHdr) inactiveHdr.style.display = inactiveClients.length ? '' : 'none';
 }
 
 // ── Seções por cliente ───────────────────────────────────────────────────────
@@ -8681,17 +8724,26 @@ function buildClientSections() {
 
   const ALL_CLI = [...CLIENTS, MOVING_CLIENT];
 
-  ALL_CLI.forEach(c => {
-    // Item na sidebar
-    if (sbCliList && !c.isPersonal) {
-      const sbItem = document.createElement('button');
-      sbItem.className = 'sb-cli-item';
-      sbItem.dataset.cid = c.id;
-      sbItem.innerHTML = `<span class="sb-cli-dot" style="background:${c.color}"></span>${c.name}`;
-      sbItem.addEventListener('click', () => selectClient(c.id));
-      sbCliList.appendChild(sbItem);
-    }
+  const addSidebarItem = c => {
+    if (!sbCliList || c.isPersonal) return;
+    const sbItem = document.createElement('button');
+    sbItem.className = 'sb-cli-item';
+    sbItem.dataset.cid = c.id;
+    sbItem.innerHTML = `<span class="sb-cli-dot" style="background:${c.color}"></span>${c.name}`;
+    sbItem.addEventListener('click', () => selectClient(c.id));
+    sbCliList.appendChild(sbItem);
+  };
+  ALL_CLI.filter(c => !c.inactive).forEach(addSidebarItem);
+  const inactiveSbClients = ALL_CLI.filter(c => c.inactive);
+  if (sbCliList && inactiveSbClients.length) {
+    const divider = document.createElement('div');
+    divider.className = 'sb-cli-divider';
+    divider.textContent = 'Inativos';
+    sbCliList.appendChild(divider);
+    inactiveSbClients.forEach(addSidebarItem);
+  }
 
+  ALL_CLI.forEach(c => {
     // Abas por cliente
     const tabDefs = [];
     if (!c.isInternal) tabDefs.push({ id: 'onboard',   label: 'Onboarding' });
@@ -8729,7 +8781,7 @@ function buildClientSections() {
     const backBtn = sec.querySelector(`#back-${c.id}`);
     if (backBtn) backBtn.addEventListener('click', () => {
       sec.style.display = 'none';
-      document.getElementById('cliCardsGrid').style.display = '';
+      restoreCliGrids();
       document.querySelectorAll('.sb-cli-item').forEach(i => i.classList.remove('active'));
     });
 
