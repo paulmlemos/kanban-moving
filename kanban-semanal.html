@@ -9769,14 +9769,36 @@ const LYON_CLIENTE_MAP = {
   'sublime capital': 'lyon-sublime-capital',
 };
 
+// Planilha Vento usa o mesmo nome de cliente que ja existe nativamente no CLIENTS
+// (sem prefixo lyon-) — mapeado explicitamente porque o nome na planilha nem sempre
+// bate 100% com CLIENTS[].name (evita depender de match automatico silencioso).
+const VENTO_CLIENTE_MAP = {
+  'fabi eventos': 'fabi',
+};
+
 function resolveClienteExterno(nomePlanilha) {
   const key = (nomePlanilha || '').trim().toLowerCase();
-  return LYON_CLIENTE_MAP[key] || null;
+  return LYON_CLIENTE_MAP[key] || VENTO_CLIENTE_MAP[key] || null;
 }
 
 function parseDataBR(str) {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((str||'').trim());
   return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
+
+// Migracao 2026-09-10: a fonte da Lyon mudou de uma planilha separada (id tipo
+// "lyon-<numero de linha>", instavel) para a aba "Tarefas Lyon" dentro da planilha
+// DRE Vento (id estavel da coluna "ID de sincronizacao", tipo "lyon-<hash>"). Tarefa
+// que ja foi importada em algum navegador com o id antigo nao bate mais por
+// origemExterna — em vez de duplicar, procura por cliente+texto igual numa tarefa
+// com origemPlanilha 'lyon' e id no formato antigo (numerico) e migra o
+// origemExterna dela pro id novo.
+function findLegacyLyonMatch(tasks, ext) {
+  return tasks.find(t =>
+    t.origemPlanilha === 'lyon' &&
+    /^lyon-\d+$/.test(t.origemExterna || '') &&
+    t.text === ext.tarefa
+  );
 }
 
 async function syncTarefasExternas() {
@@ -9787,10 +9809,10 @@ async function syncTarefasExternas() {
     data = await res.json();
   } catch (err) {
     console.error('Sync tarefas externas:', err);
-    return { imported: 0, updated: 0, skipped: 0 };
+    return { imported: 0, updated: 0, skipped: 0, migrated: 0 };
   }
 
-  let imported = 0, updated = 0, skipped = 0;
+  let imported = 0, updated = 0, skipped = 0, migrated = 0;
   const porCliente = {};
   data.tarefas.forEach(t => {
     const cid = resolveClienteExterno(t.cliente);
@@ -9803,7 +9825,19 @@ async function syncTarefasExternas() {
     let changed = false;
 
     externos.forEach(ext => {
-      const existing = tasks.find(t => t.origemExterna === ext.id);
+      let existing = tasks.find(t => t.origemExterna === ext.id);
+
+      if (!existing && ext.origem === 'lyon') {
+        const legacy = findLegacyLyonMatch(tasks, ext);
+        if (legacy) {
+          legacy.origemExterna = ext.id;
+          legacy.origemLinha = ext.linha;
+          existing = legacy;
+          changed = true;
+          migrated++;
+        }
+      }
+
       const dueDate = parseDataBR(ext.prazo);
       const done = ext.status === 'concluido';
 
@@ -9839,7 +9873,7 @@ async function syncTarefasExternas() {
     if (changed) saveTasks(cid, tasks);
   });
 
-  return { imported, updated, skipped };
+  return { imported, updated, skipped, migrated };
 }
 
 function computeHojeForUser(userId) {
