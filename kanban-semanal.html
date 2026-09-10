@@ -83,12 +83,13 @@
       white-space: nowrap;
     }
     .mm-nav-row {
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: space-between;
       padding: 9px 24px;
       gap: 16px;
     }
+    .mm-nav-row.tab-postagens-active { display: flex; }
 
     /* ── DASHBOARD ───────────────────────────────── (anatomia identica ao card KPI do Hub) */
     .dash-section {
@@ -902,6 +903,7 @@
     .tvc-wd { padding: 8px; text-align: center; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); background: var(--bg); border-bottom: 1px solid var(--border); }
     .tvc-day { min-height: 96px; padding: 6px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
     .tvc-day:nth-child(7n) { border-right: none; }
+    .tvc-day-week { min-height: 240px; }
     .tvc-day.other-month { background: var(--bg); opacity: .5; }
     .tvc-day.is-today { background: var(--accent-dim); }
     .tvc-day-num { font-size: 11px; font-weight: 700; color: var(--text-dim); }
@@ -1975,6 +1977,8 @@
     .sched-day:hover { background: rgba(255,255,255,0.02); }
     .sched-day.is-today { background: rgba(124,92,252,0.07); }
     .sched-day.other-month { opacity: 0.3; pointer-events: none; }
+    .sched-day.st-prog { background: rgba(251,191,36,0.08); }
+    .sched-day.st-post { background: rgba(34,197,94,0.08); }
     .sched-day.no-post { background: rgba(255,255,255,.012); }
     .sched-day.no-post .sched-thumbs,
     .sched-day.no-post .sched-brief-wrap,
@@ -1984,7 +1988,7 @@
     .sched-nopost-lbl { font-size: 9px; color: var(--text-dim); opacity: .45; text-align: center; padding: 6px 0 2px; letter-spacing: .04em; }
     .sched-nopost-btn {
       background: none; border: 1px solid transparent; border-radius: 4px;
-      color: rgba(255,255,255,.18); font-size: 9px; padding: 2px 4px; cursor: pointer;
+      color: var(--text-faint); font-size: 9px; padding: 2px 4px; cursor: pointer;
       font-family: inherit; transition: all .12s; line-height: 1; flex-shrink: 0;
     }
     .sched-nopost-btn:hover { border-color: var(--border); color: var(--text-dim); }
@@ -1993,7 +1997,7 @@
     .sched-day-num { font-size: 11px; font-weight: 500; color: var(--text-dim); line-height: 1; }
     .sched-day.is-today .sched-day-num { color: var(--accent-text); font-weight: 700; }
     .sched-st-btn { font-size: 8px; padding: 1px 5px; border-radius: 3px; border: 1px solid transparent; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.12s; white-space: nowrap; }
-    .sched-st-btn[data-state="0"] { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.09); color: rgba(255,255,255,0.25); }
+    .sched-st-btn[data-state="0"] { background: var(--surface-2); border-color: var(--border-2); color: var(--text); }
     .sched-st-btn[data-state="1"] { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.3); color: #fbbf24; }
     .sched-st-btn[data-state="2"] { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #22c55e; }
     .sched-thumbs { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -5813,7 +5817,9 @@ function isoFromDate(d) {
 
 let tvActiveView = 'lista';
 let tvUserFilter = 'all';
-let tvCalendarOffset = 0; // meses a partir do mes atual
+let tvCalendarMonthOffset = 0; // meses a partir do mes atual
+let tvCalendarWeekOffset = 0;  // semanas a partir da semana atual
+let tvCalendarMode = 'month';  // 'month' | 'week'
 
 function getAllTasksFlat(userFilter) {
   let out = [];
@@ -5963,15 +5969,6 @@ function renderCalendarioView() {
   const panel = document.getElementById('tvPanelCalendario');
   if (!panel) return;
 
-  const base = new Date(); base.setDate(1);
-  base.setMonth(base.getMonth() + tvCalendarOffset);
-  const year = base.getFullYear(), month = base.getMonth();
-
-  const first = new Date(year, month, 1);
-  const startDow = first.getDay();
-  const gridStart = new Date(first); gridStart.setDate(1 - startDow);
-  const days = Array.from({length: 42}, (_, i) => { const d = new Date(gridStart); d.setDate(gridStart.getDate()+i); return d; });
-
   const entries = getAllTasksFlat(tvUserFilter);
   const byDate = {};
   entries.forEach(e => {
@@ -5983,18 +5980,42 @@ function renderCalendarioView() {
   const MONTH_LBL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const WD = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
+  let days, monthForOtherCheck, labelHtml;
+
+  if (tvCalendarMode === 'week') {
+    const base = new Date(); base.setHours(0,0,0,0);
+    base.setDate(base.getDate() + tvCalendarWeekOffset * 7);
+    const weekStart = new Date(base); weekStart.setDate(base.getDate() - base.getDay());
+    days = Array.from({length: 7}, (_, i) => { const d = new Date(weekStart); d.setDate(weekStart.getDate()+i); return d; });
+    monthForOtherCheck = null;
+    const endD = days[6];
+    labelHtml = weekStart.getMonth() === endD.getMonth()
+      ? `${weekStart.getDate()}–${endD.getDate()} de ${MONTH_LBL[weekStart.getMonth()]} ${weekStart.getFullYear()}`
+      : `${weekStart.getDate()} de ${MONTH_LBL[weekStart.getMonth()]} – ${endD.getDate()} de ${MONTH_LBL[endD.getMonth()]} ${endD.getFullYear()}`;
+  } else {
+    const base = new Date(); base.setDate(1);
+    base.setMonth(base.getMonth() + tvCalendarMonthOffset);
+    const year = base.getFullYear(), month = base.getMonth();
+    const first = new Date(year, month, 1);
+    const startDow = first.getDay();
+    const gridStart = new Date(first); gridStart.setDate(1 - startDow);
+    days = Array.from({length: 42}, (_, i) => { const d = new Date(gridStart); d.setDate(gridStart.getDate()+i); return d; });
+    monthForOtherCheck = month;
+    labelHtml = `${MONTH_LBL[month]} ${year}`;
+  }
+
+  const cap = tvCalendarMode === 'week' ? 8 : 3;
   const dayCells = days.map(d => {
     const iso = isoFromDate(d);
     const items = (byDate[iso] || []).sort((a,b) => (a.task.done?1:0) - (b.task.done?1:0));
-    const isOther = d.getMonth() !== month;
+    const isOther = monthForOtherCheck !== null && d.getMonth() !== monthForOtherCheck;
     const isToday = iso === todayISO;
-    const MAX = 3;
-    const pillsHtml = items.slice(0, MAX).map(({clientId, clientColor, task}) => `
+    const pillsHtml = items.slice(0, cap).map(({clientId, clientColor, task}) => `
       <span class="tvc-pill${task.done?' done':''}" style="--client-color:${clientColor}" data-c="${clientId}" data-id="${task.id}" title="${escHtml(task.text)}">${escHtml(task.text)}</span>
     `).join('');
-    const moreHtml = items.length > MAX ? `<span class="tvc-more">+${items.length - MAX}</span>` : '';
+    const moreHtml = items.length > cap ? `<span class="tvc-more">+${items.length - cap}</span>` : '';
     return `
-      <div class="tvc-day${isOther?' other-month':''}${isToday?' is-today':''}">
+      <div class="tvc-day${isOther?' other-month':''}${isToday?' is-today':''}${tvCalendarMode==='week'?' tvc-day-week':''}">
         <span class="tvc-day-num">${d.getDate()}</span>
         ${pillsHtml}${moreHtml}
       </div>`;
@@ -6003,18 +6024,34 @@ function renderCalendarioView() {
   panel.innerHTML = `
     <div class="tvc-nav-row">
       <button class="tw-nav-btn" id="tvcPrev">‹</button>
-      <span class="tvc-month-lbl">${MONTH_LBL[month]} ${year}</span>
+      <span class="tvc-month-lbl">${labelHtml}</span>
       <button class="tw-nav-btn" id="tvcNext">›</button>
       <button class="btn" id="tvcToday" style="font-size:10px;padding:4px 10px;">Hoje</button>
+      <div class="tv-view-switch" id="tvcModeSwitch">
+        <button class="tv-view-btn${tvCalendarMode==='month'?' active':''}" data-mode="month">Mensal</button>
+        <button class="tv-view-btn${tvCalendarMode==='week'?' active':''}" data-mode="week">Semanal</button>
+      </div>
     </div>
     <div class="tvc-grid">
       ${WD.map(w => `<div class="tvc-wd">${w}</div>`).join('')}
       ${dayCells}
     </div>`;
 
-  panel.querySelector('#tvcPrev').addEventListener('click', () => { tvCalendarOffset--; renderCalendarioView(); });
-  panel.querySelector('#tvcNext').addEventListener('click', () => { tvCalendarOffset++; renderCalendarioView(); });
-  panel.querySelector('#tvcToday').addEventListener('click', () => { tvCalendarOffset = 0; renderCalendarioView(); });
+  panel.querySelector('#tvcPrev').addEventListener('click', () => {
+    if (tvCalendarMode === 'week') tvCalendarWeekOffset--; else tvCalendarMonthOffset--;
+    renderCalendarioView();
+  });
+  panel.querySelector('#tvcNext').addEventListener('click', () => {
+    if (tvCalendarMode === 'week') tvCalendarWeekOffset++; else tvCalendarMonthOffset++;
+    renderCalendarioView();
+  });
+  panel.querySelector('#tvcToday').addEventListener('click', () => {
+    tvCalendarMonthOffset = 0; tvCalendarWeekOffset = 0;
+    renderCalendarioView();
+  });
+  panel.querySelectorAll('#tvcModeSwitch .tv-view-btn').forEach(btn => {
+    btn.addEventListener('click', () => { tvCalendarMode = btn.dataset.mode; renderCalendarioView(); });
+  });
   panel.querySelectorAll('.tvc-pill').forEach(el => {
     el.addEventListener('click', () => openTwTaskModal(el.dataset.c, el.dataset.id));
   });
@@ -6514,7 +6551,15 @@ function syncKanbanToSched(cid, iso) {
   const state = getState(wk, cid, di, 'ig', 'feed');
   setSchedStLocal(cid, iso, state);
   const btn = document.getElementById(`ssb-${cid}-${iso}`);
-  if (btn) { btn.dataset.state = state; btn.textContent = SS_LBL[state]; }
+  if (btn) {
+    btn.dataset.state = state; btn.textContent = SS_LBL[state];
+    const dayEl = btn.closest('.sched-day');
+    if (dayEl) {
+      dayEl.classList.remove('st-prog', 'st-post');
+      if (state === 1) dayEl.classList.add('st-prog');
+      if (state === 2) dayEl.classList.add('st-post');
+    }
+  }
 }
 
 const SS_LBL = ['—', 'Prog.', 'Post.'];
@@ -7052,9 +7097,9 @@ function refreshEdit(cid) {
 
 // Formato do post
 const FORMATS    = ['', 'Foto', 'Carrossel', 'Reels', 'Story', 'CTA', 'Enquete'];
-const FMT_COLOR  = ['rgba(255,255,255,0.2)', '#3b82f6', '#7c5cfc', '#ef4444', '#10b981', '#f59e0b', '#06b6d4'];
-const FMT_BG     = ['rgba(255,255,255,0.04)', 'rgba(59,130,246,0.15)', 'rgba(124,92,252,0.15)', 'rgba(239,68,68,0.15)', 'rgba(16,185,129,0.15)', 'rgba(245,158,11,0.15)', 'rgba(6,182,212,0.15)'];
-const FMT_BORDER = ['rgba(255,255,255,0.08)', 'rgba(59,130,246,0.35)', 'rgba(124,92,252,0.35)', 'rgba(239,68,68,0.35)', 'rgba(16,185,129,0.35)', 'rgba(245,158,11,0.35)', 'rgba(6,182,212,0.35)'];
+const FMT_COLOR  = ['var(--text)', '#3b82f6', '#7c5cfc', '#ef4444', '#10b981', '#f59e0b', '#06b6d4'];
+const FMT_BG     = ['var(--surface-2)', 'rgba(59,130,246,0.15)', 'rgba(124,92,252,0.15)', 'rgba(239,68,68,0.15)', 'rgba(16,185,129,0.15)', 'rgba(245,158,11,0.15)', 'rgba(6,182,212,0.15)'];
+const FMT_BORDER = ['var(--border-2)', 'rgba(59,130,246,0.35)', 'rgba(124,92,252,0.35)', 'rgba(239,68,68,0.35)', 'rgba(16,185,129,0.35)', 'rgba(245,158,11,0.35)', 'rgba(6,182,212,0.35)'];
 
 // Datas comemorativas
 const FIXED_COMM = {
@@ -7277,6 +7322,8 @@ function schedColHtml(cid) {
       let cls = 'sched-day';
       if (!inMonth)  cls += ' other-month';
       if (isToday)   cls += ' is-today';
+      if (state === 1) cls += ' st-prog';
+      if (state === 2) cls += ' st-post';
       if (isNoPost)  cls += ' no-post';
 
       return `
@@ -7335,6 +7382,12 @@ function bindSched(cid) {
     setSchedStLocal(c, iso, next);
     b.dataset.state = next; b.textContent = SS_LBL[next];
     syncSchedToKanban(c, iso, next);
+    const dayEl = b.closest('.sched-day');
+    if (dayEl) {
+      dayEl.classList.remove('st-prog', 'st-post');
+      if (next === 1) dayEl.classList.add('st-prog');
+      if (next === 2) dayEl.classList.add('st-post');
+    }
   }));
   col.querySelectorAll('.sched-nopost-btn').forEach(b =>
     b.addEventListener('click', e => {
@@ -9608,6 +9661,7 @@ function switchMainTab(tab) {
   if (sidebarTab) sidebarTab.classList.add('active');
   const cliList = document.getElementById('sbCliList');
   if (cliList) cliList.classList.toggle('visible', tab === 'clientes');
+  document.querySelector('.mm-nav-row')?.classList.toggle('tab-postagens-active', tab === 'postagens');
   if (tab === 'inicio') { refreshHoje(); refreshVisaoClientes(); refreshSaudeCarteira(); }
   if (tab === 'tarefas') { refreshHoje(); renderActiveTaskView(); }
   if (tab === 'clientes') {
