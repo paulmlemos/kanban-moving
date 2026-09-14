@@ -2154,8 +2154,8 @@
     }
     .sday-modal-overlay.open { display: flex; }
     .sday-modal {
-      background: #111;
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 14px;
       width: 520px;
       max-width: 95vw;
@@ -2163,17 +2163,18 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      box-shadow: 0 20px 60px rgba(18,42,30,0.25);
     }
     .sday-modal-header {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 16px 18px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
     .sday-modal-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .sday-modal-title { font-size: 14px; font-weight: 600; flex: 1; }
+    .sday-modal-title { font-size: 14px; font-weight: 600; flex: 1; color: var(--text); }
     .sday-modal-date { font-size: 11px; color: var(--text-dim); }
     .sday-modal-close {
       background: none; border: none; color: var(--text-dim);
@@ -2194,7 +2195,7 @@
     }
     .sday-preview-item {
       border-radius: 8px; overflow: hidden;
-      background: #1a1a1a; border: 1px solid rgba(255,255,255,0.07);
+      background: var(--surface-2); border: 1px solid var(--border);
       aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
       font-size: 28px; cursor: pointer; transition: transform 0.15s;
     }
@@ -2202,8 +2203,8 @@
     .sday-preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .sday-preview-name { font-size: 9px; color: var(--text-dim); text-align: center; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sday-modal-text {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.07);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 10px 12px;
       font-size: 12px;
@@ -2215,7 +2216,7 @@
       overflow-y: auto;
     }
     .sday-modal-text.brief { color: var(--accent-text); }
-    .sday-empty-text { font-size: 11px; color: rgba(255,255,255,0.2); font-style: italic; }
+    .sday-empty-text { font-size: 11px; color: var(--text-dim); font-style: italic; }
 
     /* FORMATO DO POST */
     .sched-fmt-btn {
@@ -7681,7 +7682,7 @@ function openDayDetailModal(cid, iso) {
   const MONTHS_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   const dateStr  = `${DAYS_PT[d.getDay()]}, ${d.getDate()} de ${MONTHS_PT[d.getMonth()]}`;
 
-  const stColors = ['rgba(255,255,255,0.15)','rgba(251,191,36,0.25)','rgba(34,197,94,0.25)'];
+  const stColors = ['var(--surface-2)','rgba(251,191,36,0.25)','rgba(34,197,94,0.25)'];
   const stText   = ['Pendente','Programado','Postado'];
 
   document.getElementById('sdayModalDot').style.background = client.color;
@@ -7696,7 +7697,7 @@ function openDayDetailModal(cid, iso) {
   if (FORMATS[fmtIdx]) {
     html += `<span class="sched-fmt-btn" style="font-size:11px;padding:3px 10px;background:${FMT_BG[fmtIdx]};border-color:${FMT_BORDER[fmtIdx]};color:${FMT_COLOR[fmtIdx]}">${FORMATS[fmtIdx]}</span>`;
   }
-  html += `<span style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);background:${stColors[state]};color:var(--text)">${stText[state]}</span>`;
+  html += `<span style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:${stColors[state]};color:var(--text)">${stText[state]}</span>`;
   html += `</div>`;
 
   // Prévia de imagens/arquivos
