@@ -1713,7 +1713,7 @@
     .crono-acc-stat { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
     .crono-acc-stat.has-items { background: rgba(124,92,252,0.1); color: var(--accent-text); border-color: rgba(124,92,252,0.2); }
 
-    .crono-acc-body { display: none; background: #0c0c0c; padding: 12px; gap: 10px; grid-template-columns: repeat(3, 1fr); min-width: 0; }
+    .crono-acc-body { display: none; background: #0c0c0c; padding: 12px; gap: 10px; grid-template-columns: repeat(2, 1fr); min-width: 0; }
     .crono-col-sched { grid-column: 1 / -1; }
     .crono-accordion.open .crono-acc-body { display: grid; }
 
@@ -1724,7 +1724,7 @@
     .crono-empty { font-size: 11px; color: rgba(232,227,220,0.2); text-align: center; padding: 20px 0; font-style: italic; }
 
     /* IDEAS */
-    .idea-input-row { display: flex; gap: 6px; padding: 8px; border-bottom: 1px solid var(--border); }
+    .idea-input-row { padding: 8px 8px 4px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }
     .idea-textarea { flex: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 11px; font-family: inherit; color: var(--text); outline: none; resize: none; min-width: 0; line-height: 1.45; }
     .idea-textarea::placeholder { color: rgba(232,227,220,0.22); }
     .idea-textarea:focus { border-color: rgba(124,92,252,0.4); }
@@ -1757,6 +1757,9 @@
     .idea-desc-btn { background:none; border:none; color:rgba(255,255,255,.15); cursor:pointer; font-size:11px; padding:0; flex-shrink:0; transition:color .12s; }
     .idea-item:hover .idea-desc-btn { color:var(--text-dim); }
     .idea-desc-btn:hover { color:#a78bfa !important; }
+    .idea-item-footer { display: flex; align-items: center; gap: 6px; margin: 2px 0 0 18px; }
+    .idea-move-btn { background: rgba(124,92,252,.12); border: 1px solid rgba(124,92,252,.3); color: #a78bfa; cursor: pointer; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; flex-shrink: 0; white-space: nowrap; font-family: inherit; transition: all .12s; }
+    .idea-move-btn:hover { background: rgba(124,92,252,.25); }
     /* ── EDIÇÃO COLUMN ── */
     .edit-input-row { padding: 8px 8px 4px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }
     .edit-input-top { display: flex; gap: 5px; align-items: flex-start; }
@@ -1771,6 +1774,8 @@
     .edit-status-pill.active-parado { background: rgba(100,116,139,.2); border-color: rgba(100,116,139,.4); color: #94a3b8; }
     .edit-status-pill.active-andamento { background: rgba(245,158,11,.2); border-color: rgba(245,158,11,.4); color: #f59e0b; }
     .edit-status-pill.active-concluido { background: rgba(34,197,94,.2); border-color: rgba(34,197,94,.4); color: #22c55e; }
+    .edit-status-pill.active-ideia { background: rgba(124,92,252,.2); border-color: rgba(124,92,252,.4); color: #a78bfa; }
+    .edit-status-pill.active-referencia { background: rgba(6,182,212,.2); border-color: rgba(6,182,212,.4); color: #06b6d4; }
     .edit-pending-wrap { display: flex; flex-wrap: wrap; gap: 4px; }
     .edit-list { padding: 5px 6px; overflow-y: auto; max-height: 290px; flex: 1; display: flex; flex-direction: column; gap: 3px; }
     .edit-list::-webkit-scrollbar { width: 3px; }
@@ -1787,9 +1792,13 @@
     .edit-badge-st.parado { background: rgba(100,116,139,.15); border-color: rgba(100,116,139,.3); color: #94a3b8; }
     .edit-badge-st.andamento { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.3); color: #f59e0b; }
     .edit-badge-st.concluido { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.3); color: #22c55e; }
+    .edit-badge-st.ideia { background: rgba(124,92,252,.15); border-color: rgba(124,92,252,.3); color: #a78bfa; }
+    .edit-badge-st.referencia { background: rgba(6,182,212,.15); border-color: rgba(6,182,212,.3); color: #06b6d4; }
     .edit-badge-fmt { padding: 2px 7px; border-radius: 8px; font-size: 9px; font-weight: 600; letter-spacing: .03em; border: 1px solid transparent; }
     .edit-fmt-sel { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
     .edit-item-files { display: flex; flex-wrap: wrap; gap: 3px; }
+    .edit-send-cal-btn { background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.35); color: #22c55e; cursor: pointer; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; white-space: nowrap; font-family: inherit; transition: all .12s; }
+    .edit-send-cal-btn:hover { background: rgba(34,197,94,.25); }
     /* ── PIPELINE ── */
     .pipe-section { padding: 20px 24px 40px; }
     .pipe-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
@@ -6645,7 +6654,6 @@ function buildCrono() {
         <span class="crono-acc-name">${c.name}</span>
         <div class="crono-acc-stats">
           <span class="crono-acc-stat" id="astat-ideas-${c.id}">0 ideias</span>
-          <span class="crono-acc-stat" id="astat-mats-${c.id}">0 materiais</span>
         </div>
       </div>
       <div class="crono-acc-body" id="accbody-${c.id}"></div>`;
@@ -6672,9 +6680,8 @@ function rebuildAccBody(cid) {
   body.innerHTML = `
     <div class="crono-col crono-col-sched" id="col-sched-${cid}">${schedColHtml(cid)}</div>
     <div class="crono-col" id="col-ideas-${cid}">${ideasColHtml(cid)}</div>
-    <div class="crono-col" id="col-mats-${cid}">${matsColHtml(cid)}</div>
     <div class="crono-col" id="col-edit-${cid}">${editColHtml(cid)}</div>`;
-  bindIdeas(cid); bindMats(cid); bindEdit(cid); bindSched(cid);
+  bindIdeas(cid); bindEdit(cid); bindSched(cid);
 }
 
 // ── IDEAS COLUMN ──────────────────────────────────────────────────────────────
@@ -6687,6 +6694,15 @@ function ideaFileChipsHtml(files, prefix, id) {
     </span>`).join('');
 }
 
+// Formato na fase de ideia é um subconjunto do formato de Edição — "Estático"
+// mapeia pra "Foto" ao mover pra Edição, os demais têm o mesmo nome nos dois.
+const IDEA_FORMATS    = ['', 'Estático', 'Carrossel', 'Reels'];
+const IDEA_FMT_TO_MAIN = { 'Estático': 'Foto', 'Carrossel': 'Carrossel', 'Reels': 'Reels' };
+const IDEA_TIPOS = [
+  { id: 'ideia',      label: '💡 Ideia' },
+  { id: 'referencia', label: '🔗 Referência' },
+];
+
 function ideasColHtml(cid) {
   const list = loadIdeas(cid);
   const pending = pendingIdeaFiles[cid] || [];
@@ -6694,15 +6710,24 @@ function ideasColHtml(cid) {
     ? list.map(i => {
         const files = loadIdeaFiles(i.id);
         const descHtml = i.desc ? `<div class="idea-desc-text" data-id="${i.id}">${escHtml(i.desc)}</div>` : '';
+        const tipo = IDEA_TIPOS.find(t => t.id === (i.tipo || 'ideia')) || IDEA_TIPOS[0];
+        const mainFmt  = IDEA_FMT_TO_MAIN[i.formato] || '';
+        const fmtIdx   = FORMATS.indexOf(mainFmt);
+        const fmtColor = fmtIdx > 0 ? FMT_COLOR[fmtIdx] : null;
         return `
         <div class="idea-item" data-id="${i.id}">
           <div class="idea-item-main">
-            <span class="idea-icon">💡</span>
+            <span class="idea-icon">${tipo.id === 'referencia' ? '🔗' : '💡'}</span>
             <span class="idea-text">${escHtml(i.text)}</span>
+            <button class="idea-move-btn" data-action="move-edit" data-id="${i.id}" data-c="${cid}" title="Mover para Edição">→ Edição</button>
             <button class="idea-desc-btn" data-action="toggle-desc" data-id="${i.id}" data-c="${cid}" title="Adicionar descrição">📝</button>
             <button class="idea-del" data-id="${i.id}" data-c="${cid}">×</button>
           </div>
           ${descHtml}
+          <div class="idea-item-footer">
+            <button class="edit-badge-st ${tipo.id}" data-action="toggle-tipo" data-id="${i.id}" data-c="${cid}" title="Clique para alternar Ideia/Referência">${tipo.label}</button>
+            ${i.formato ? `<span class="edit-badge-fmt" style="background:${fmtColor}20;color:${fmtColor};border-color:${fmtColor}40">${escHtml(i.formato)}</span>` : ''}
+          </div>
           ${files.length ? `<div class="idea-item-files">${ideaFileChipsHtml(files,'item',i.id)}</div>` : ''}
         </div>`;
       }).join('')
@@ -6713,9 +6738,19 @@ function ideasColHtml(cid) {
       <span class="crono-col-count" id="cnt-ideas-${cid}">${list.length}</span>
     </div>
     <div class="idea-input-row">
-      <textarea class="idea-textarea" rows="2" placeholder="Nova ideia ou referência…" id="iinput-${cid}"></textarea>
-      <label class="idea-attach-btn" title="Anexar arquivo"><input type="file" id="ifile-${cid}" style="display:none" multiple>📎</label>
-      <button class="idea-add-btn" id="iadd-${cid}">+</button>
+      <div class="edit-input-top">
+        <textarea class="idea-textarea" rows="2" placeholder="Nova ideia ou referência…" id="iinput-${cid}"></textarea>
+        <label class="idea-attach-btn" title="Anexar arquivo"><input type="file" id="ifile-${cid}" style="display:none" multiple>📎</label>
+        <button class="idea-add-btn" id="iadd-${cid}">+</button>
+      </div>
+      <div class="edit-input-bottom">
+        <div class="edit-status-sel" id="itiposel-${cid}">
+          ${IDEA_TIPOS.map(t => `<button class="edit-status-pill" data-itipo="${t.id}">${t.label}</button>`).join('')}
+        </div>
+        <div class="edit-fmt-sel" id="ifmtsel-${cid}">
+          ${IDEA_FORMATS.slice(1).map(f => `<button class="edit-status-pill" data-ifmt="${f}">${f}</button>`).join('')}
+        </div>
+      </div>
     </div>
     ${pending.length ? `<div class="idea-pending-wrap" id="ipending-${cid}">${ideaFileChipsHtml(pending,'pending',cid)}</div>` : `<div id="ipending-${cid}"></div>`}
     <div class="idea-list" id="ilist-${cid}">${items}</div>`;
@@ -6737,12 +6772,43 @@ function bindIdeas(cid) {
   if (!input || !btn) return;
   if (!pendingIdeaFiles[cid]) pendingIdeaFiles[cid] = [];
 
+  // tipo (ideia/referência) selector
+  let selectedTipo = 'ideia';
+  const tipoPills = document.getElementById(`itiposel-${cid}`)?.querySelectorAll('[data-itipo]');
+  if (tipoPills) {
+    const updateTipoPills = () => {
+      tipoPills.forEach(p => { p.className = 'edit-status-pill' + (p.dataset.itipo === selectedTipo ? ` active-${p.dataset.itipo}` : ''); });
+    };
+    updateTipoPills();
+    tipoPills.forEach(p => p.addEventListener('click', () => { selectedTipo = p.dataset.itipo; updateTipoPills(); }));
+  }
+
+  // formato selector (Estático/Carrossel/Reels)
+  let selectedFormato = '';
+  const ifmtPills = document.getElementById(`ifmtsel-${cid}`)?.querySelectorAll('[data-ifmt]');
+  if (ifmtPills) {
+    const updateIfmtPills = () => {
+      ifmtPills.forEach(p => {
+        const fi  = FORMATS.indexOf(IDEA_FMT_TO_MAIN[p.dataset.ifmt] || '');
+        const clr = fi > 0 ? FMT_COLOR[fi] : null;
+        const on  = p.dataset.ifmt === selectedFormato;
+        p.className = 'edit-status-pill';
+        p.style.cssText = on && clr ? `background:${clr}22;border-color:${clr};color:${clr}` : '';
+      });
+    };
+    updateIfmtPills();
+    ifmtPills.forEach(p => p.addEventListener('click', () => {
+      selectedFormato = selectedFormato === p.dataset.ifmt ? '' : p.dataset.ifmt;
+      updateIfmtPills();
+    }));
+  }
+
   const doAdd = () => {
     const t = input.value.trim(); if (!t) return;
     const id = Date.now().toString(36);
     const list = loadIdeas(cid);
     const files = pendingIdeaFiles[cid] || [];
-    list.unshift({ id, text: t, desc: '', hasFiles: files.length > 0 });
+    list.unshift({ id, text: t, desc: '', tipo: selectedTipo, formato: selectedFormato, hasFiles: files.length > 0 });
     saveIdeas(cid, list);
     if (files.length) saveIdeaFiles(id, files);
     pendingIdeaFiles[cid] = [];
@@ -6775,6 +6841,21 @@ function bindIdeas(cid) {
       saveIdeas(cid, loadIdeas(cid).filter(x => x.id!==b.dataset.id));
       refreshIdeas(cid);
     })
+  );
+
+  ilist?.querySelectorAll('[data-action="toggle-tipo"]').forEach(b =>
+    b.addEventListener('click', () => {
+      const ideas = loadIdeas(cid);
+      const idea  = ideas.find(x => x.id === b.dataset.id);
+      if (!idea) return;
+      idea.tipo = idea.tipo === 'referencia' ? 'ideia' : 'referencia';
+      saveIdeas(cid, ideas);
+      refreshIdeas(cid);
+    })
+  );
+
+  ilist?.querySelectorAll('[data-action="move-edit"]').forEach(b =>
+    b.addEventListener('click', () => moveIdeaToEdit(b.dataset.c, b.dataset.id))
   );
 
   ilist?.querySelectorAll('[data-action="toggle-desc"]').forEach(btn => {
@@ -6840,69 +6921,29 @@ function refreshIdeas(cid) {
   col.innerHTML = ideasColHtml(cid); bindIdeas(cid); updateAccStats(cid);
 }
 
-// ── MATERIALS COLUMN ──────────────────────────────────────────────────────────
+// Move uma ideia/referência pra Edição — sai da lista de Ideias e entra em Edição
+// como item novo (status "Parado"), preservando texto, formato (mapeado pro
+// vocabulário de Edição) e mídia anexada.
+function moveIdeaToEdit(cid, ideaId) {
+  const ideas = loadIdeas(cid);
+  const idea  = ideas.find(x => x.id === ideaId);
+  if (!idea) return;
 
-function matsColHtml(cid) {
-  const mats = loadMats(cid);
-  const items = mats.length
-    ? mats.map(m => `
-        <div class="mat-card">
-          <div class="mat-card-thumb">
-            ${m.thumbnail
-              ? `<img src="${m.thumbnail}" title="${escHtml(m.name)}">`
-              : `<div class="mat-card-icon">${isVidFile(m.mimeType||m.name)?'🎬':'📄'}<span class="mat-card-ext">${fileExt(m.name)}</span></div>`}
-            <span class="mat-type-badge">${fileExt(m.name)}</span>
-            <button class="mat-card-del" data-id="${m.id}" data-c="${cid}">×</button>
-          </div>
-          <textarea class="mat-desc-in" data-mid="${m.id}" placeholder="Descrição…" rows="1">${escHtml(m.desc||'')}</textarea>
-        </div>`).join('')
-    : '<div class="crono-empty" style="grid-column:1/-1">Nenhum material</div>';
-  return `
-    <div class="crono-col-header">
-      <span class="crono-col-title">Materiais Prontos</span>
-      <span class="crono-col-count" id="cnt-mats-${cid}">${mats.length}</span>
-    </div>
-    <div class="mat-upload-row">
-      <label class="mat-upload-label">
-        ↑ Enviar arquivos
-        <input type="file" style="display:none" multiple accept=".png,.jpg,.jpeg,.heic,.mov,.mp4" id="mupl-${cid}">
-      </label>
-    </div>
-    <div class="mat-grid" id="mgrid-${cid}">${items}</div>`;
-}
+  const newId  = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const mainFmt = IDEA_FMT_TO_MAIN[idea.formato] || '';
+  const editList = loadEditItems(cid);
+  editList.unshift({ id: newId, text: idea.text, status: 'parado', format: mainFmt, urgency: '', hasFiles: !!idea.hasFiles });
+  saveEditItems(cid, editList);
 
-function bindMats(cid) {
-  const inp = document.getElementById(`mupl-${cid}`);
-  if (inp) {
-    inp.addEventListener('change', async () => {
-      for (const f of Array.from(inp.files)) {
-        const gen   = await genThumb(f);
-        const mats  = loadMats(cid);
-        mats.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2), name: f.name, mimeType: f.type, thumbnail: gen });
-        saveMats(cid, mats);
-      }
-      inp.value = ''; refreshMats(cid);
-    });
+  if (idea.hasFiles) {
+    const files = loadIdeaFiles(idea.id);
+    if (files.length) saveEditFiles(newId, files);
+    localStorage.removeItem(`mmideaf__${idea.id}`);
   }
-  document.getElementById(`mgrid-${cid}`)?.querySelectorAll('.mat-card-del').forEach(b =>
-    b.addEventListener('click', e => {
-      e.stopPropagation();
-      saveMats(cid, loadMats(cid).filter(m => m.id!==b.dataset.id));
-      refreshMats(cid);
-    })
-  );
-  document.getElementById(`mgrid-${cid}`)?.querySelectorAll('.mat-desc-in').forEach(ta =>
-    ta.addEventListener('input', () => {
-      const mats = loadMats(cid);
-      const mat = mats.find(m => m.id === ta.dataset.mid);
-      if (mat) { mat.desc = ta.value; saveMats(cid, mats); }
-    })
-  );
-}
 
-function refreshMats(cid) {
-  const col = document.getElementById(`col-mats-${cid}`); if (!col) return;
-  col.innerHTML = matsColHtml(cid); bindMats(cid); updateAccStats(cid);
+  saveIdeas(cid, ideas.filter(x => x.id !== ideaId));
+  refreshIdeas(cid);
+  refreshEdit(cid);
 }
 
 // ── EDIT COLUMN ───────────────────────────────────────────────────────────────
@@ -6952,6 +6993,7 @@ function editColHtml(cid) {
             ${urgBadge}
             <button class="edit-badge-st ${st.cls}" data-eid="${it.id}" data-ec="${cid}" title="Clique para mudar status">${st.label}</button>
             ${fmtColor ? `<span class="edit-badge-fmt" style="background:${fmtColor}20;color:${fmtColor};border-color:${fmtColor}40">${escHtml(it.format)}</span>` : ''}
+            ${it.status === 'concluido' ? `<button class="edit-send-cal-btn" data-action="send-cal" data-id="${it.id}" data-c="${cid}" title="Escolher o dia e enviar pro calendário">📅 Calendário</button>` : ''}
             ${files.length ? `<div class="edit-item-files">${editFileChipsHtml(files)}</div>` : ''}
           </div>
         </div>`;
@@ -7097,6 +7139,10 @@ function bindEdit(cid) {
       refreshEdit(cid);
     })
   );
+
+  document.getElementById(`elist-${cid}`)?.querySelectorAll('[data-action="send-cal"]').forEach(b =>
+    b.addEventListener('click', () => openSendToCalendarPicker(b.dataset.c, b.dataset.id))
+  );
 }
 
 function refreshEdit(cid) {
@@ -7111,6 +7157,66 @@ const FORMATS    = ['', 'Foto', 'Carrossel', 'Reels', 'Story', 'CTA', 'Enquete']
 const FMT_COLOR  = ['var(--text)', '#3b82f6', '#7c5cfc', '#ef4444', '#10b981', '#f59e0b', '#06b6d4'];
 const FMT_BG     = ['var(--surface-2)', 'rgba(59,130,246,0.15)', 'rgba(124,92,252,0.15)', 'rgba(239,68,68,0.15)', 'rgba(16,185,129,0.15)', 'rgba(245,158,11,0.15)', 'rgba(6,182,212,0.15)'];
 const FMT_BORDER = ['var(--border-2)', 'rgba(59,130,246,0.35)', 'rgba(124,92,252,0.35)', 'rgba(239,68,68,0.35)', 'rgba(16,185,129,0.35)', 'rgba(245,158,11,0.35)', 'rgba(6,182,212,0.35)'];
+
+// ── Envio de item de Edição pro calendário ─────────────────────────────────────
+// Item concluído na Edição -> escolhe o dia (showPicker, mesmo padrão do modal de
+// tarefa) -> preenche Pauta e Legenda daquele dia com o texto, aplica o formato e
+// migra a mídia anexada -> sai da lista de Edição.
+
+let _calSendPending = null;
+
+function ensureCalSendDateInput() {
+  let inp = document.getElementById('calSendDateInput');
+  if (inp) return inp;
+  inp = document.createElement('input');
+  inp.type = 'date';
+  inp.id = 'calSendDateInput';
+  inp.style.cssText = 'position:fixed; left:-9999px; top:-9999px; opacity:0; pointer-events:none;';
+  document.body.appendChild(inp);
+  inp.addEventListener('change', () => {
+    if (inp.value && _calSendPending) sendEditItemToCalendar(_calSendPending.cid, _calSendPending.id, inp.value);
+    _calSendPending = null;
+    inp.value = '';
+  });
+  return inp;
+}
+
+function openSendToCalendarPicker(cid, itemId) {
+  _calSendPending = { cid, id: itemId };
+  const inp = ensureCalSendDateInput();
+  inp.value = '';
+  if (typeof inp.showPicker === 'function') { try { inp.showPicker(); return; } catch (_) { /* cai no fallback abaixo */ } }
+  inp.click();
+}
+
+function sendEditItemToCalendar(cid, itemId, iso) {
+  const list = loadEditItems(cid);
+  const it = list.find(x => x.id === itemId);
+  if (!it) return;
+
+  const legends = loadLegend(cid); legends[iso] = it.text; saveLegend(cid, legends);
+  const briefs  = loadBrief(cid);  briefs[iso]   = it.text; saveBrief(cid, briefs);
+
+  if (it.format) {
+    const fi = FORMATS.indexOf(it.format);
+    if (fi > 0) { const fmts = loadFormat(cid); fmts[iso] = fi; saveFormat(cid, fmts); }
+  }
+
+  const files = loadEditFiles(itemId);
+  if (files.length) {
+    const sched = loadSched(cid);
+    if (!sched[iso]) sched[iso] = [];
+    files.forEach(f => {
+      sched[iso].push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), name: f.name, mimeType: f.type, thumbnail: f.data });
+    });
+    saveSched(cid, sched);
+    localStorage.removeItem(`mmeditf__${itemId}`);
+  }
+
+  saveEditItems(cid, list.filter(x => x.id !== itemId));
+  refreshEdit(cid);
+  refreshSched(cid);
+}
 
 // Datas comemorativas
 const FIXED_COMM = {
@@ -7579,11 +7685,9 @@ function refreshSchedDay(cid, iso) {
 // ── STATS ─────────────────────────────────────────────────────────────────────
 
 function updateAccStats(cid) {
-  const ideas = loadIdeas(cid); const mats = loadMats(cid);
+  const ideas = loadIdeas(cid);
   const iEl = document.getElementById(`astat-ideas-${cid}`);
-  const mEl = document.getElementById(`astat-mats-${cid}`);
   if (iEl) { iEl.textContent=`${ideas.length} ideia${ideas.length!==1?'s':''}`; iEl.className=`crono-acc-stat${ideas.length?' has-items':''}`; }
-  if (mEl) { mEl.textContent=`${mats.length} material${mats.length!==1?'is':''}`; mEl.className=`crono-acc-stat${mats.length?' has-items':''}`; }
 }
 
 // ── MATERIAL PICKER MODAL ─────────────────────────────────────────────────────
@@ -7646,7 +7750,7 @@ document.getElementById('pickerFileInput').addEventListener('change', async func
     mats.push(nm); saveMats(pickerCid, mats);
     pickerSel.push(nm.id);
   }
-  this.value = ''; renderPickerGrid(); refreshMats(pickerCid); updateAccStats(pickerCid);
+  this.value = ''; renderPickerGrid();
   document.getElementById('pickerSelCount').textContent = `${pickerSel.length} selecionado${pickerSel.length!==1?'s':''}`;
 });
 
