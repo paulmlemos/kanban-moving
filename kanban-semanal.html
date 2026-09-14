@@ -1938,7 +1938,8 @@
     .apv-post-date { font-size:10px; color:rgba(255,255,255,.4); font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px; }
     .apv-post-fmt { display:inline-block; padding:2px 9px; border-radius:8px; font-size:9px; font-weight:700; margin-bottom:8px; }
     .apv-post-legend { font-size:13px; color:#fff; line-height:1.55; margin-bottom:4px; }
-    .apv-post-brief { font-size:11px; color:rgba(255,255,255,.45); line-height:1.5; }
+    .apv-post-brief { display:block; font-size:11px; color:rgba(255,255,255,.45); line-height:1.5; word-break:break-all; text-decoration:underline; }
+    .apv-post-brief:hover { color:rgba(255,255,255,.7); }
     .apv-actions { display:flex; gap:12px; justify-content:center; margin-bottom:16px; }
     .apv-btn { padding:14px 32px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; border:none; font-family:inherit; transition:all .15s; }
     .apv-btn-ok { background:#22c55e; color:#000; }
@@ -1992,7 +1993,7 @@
     .sched-day.st-post { background: rgba(34,197,94,0.08); }
     .sched-day.no-post { background: rgba(255,255,255,.012); }
     .sched-day.no-post .sched-thumbs,
-    .sched-day.no-post .sched-brief-wrap,
+    .sched-day.no-post .sched-drivelink-wrap,
     .sched-day.no-post .sched-legend-wrap,
     .sched-day.no-post .sched-fmt-btn,
     .sched-day.no-post .sched-st-btn { opacity: .18; pointer-events: none; }
@@ -2248,13 +2249,13 @@
       text-overflow: ellipsis;
     }
 
-    /* PAUTA (BRIEF) */
-    .sched-brief-wrap {
+    /* LINK DO DRIVE (mídia original) */
+    .sched-drivelink-wrap {
       margin-top: 3px;
       padding-top: 3px;
       border-top: 1px solid rgba(255,255,255,0.05);
     }
-    .sched-brief {
+    .sched-drivelink {
       width: 100%;
       box-sizing: border-box;
       background: transparent;
@@ -2263,15 +2264,13 @@
       font-size: 9px;
       font-family: inherit;
       line-height: 1.45;
-      resize: none;
       outline: none;
       padding: 0;
-      overflow: hidden;
       min-height: 14px;
       transition: color 0.12s;
     }
-    .sched-brief::placeholder { color: rgba(124,92,252,0.25); font-style: italic; }
-    .sched-brief:focus { color: rgba(124,92,252,0.9); }
+    .sched-drivelink::placeholder { color: rgba(124,92,252,0.25); font-style: italic; }
+    .sched-drivelink:focus { color: rgba(124,92,252,0.9); }
 
     /* ══════════════════════════════════════════════
        FICHAS DOS CLIENTES
@@ -6533,8 +6532,8 @@ function loadLegend(c)  { return lsGet(`mmlegend__${c}`) || {}; }
 function saveLegend(c,v){ lsSave(`mmlegend__${c}`, v); }
 function loadFormat(c)  { return lsGet(`mmformat__${c}`) || {}; }
 function saveFormat(c,v){ lsSave(`mmformat__${c}`, v); }
-function loadBrief(c)   { return lsGet(`mmbrief__${c}`) || {}; }
-function saveBrief(c,v) { lsSave(`mmbrief__${c}`, v); }
+function loadDriveLink(c)   { return lsGet(`mmdrivelink__${c}`) || {}; }
+function saveDriveLink(c,v) { lsSave(`mmdrivelink__${c}`, v); }
 
 function getSchedSt(c, iso)         { return parseInt(mmGet(`mmss__${c}__${iso}`)||'0'); }
 function setSchedStLocal(c, iso, s) { if(s===0) mmRemove(`mmss__${c}__${iso}`); else mmSet(`mmss__${c}__${iso}`, String(s)); }
@@ -7240,7 +7239,6 @@ function sendEditItemToCalendar(cid, itemId, iso) {
   if (!it) return;
 
   const legends = loadLegend(cid); legends[iso] = it.text; saveLegend(cid, legends);
-  const briefs  = loadBrief(cid);  briefs[iso]   = it.text; saveBrief(cid, briefs);
 
   if (it.format) {
     const fi = FORMATS.indexOf(it.format);
@@ -7457,10 +7455,10 @@ function schedColHtml(cid) {
   const today   = new Date(); today.setHours(0,0,0,0);
   const weeks   = getWeeksForMonth(y, m);
   const items   = loadSched(cid);
-  const legends = loadLegend(cid);
-  const formats = loadFormat(cid);
-  const briefs  = loadBrief(cid);
-  const nopost  = loadNoPost(cid);
+  const legends    = loadLegend(cid);
+  const formats    = loadFormat(cid);
+  const driveLinks = loadDriveLink(cid);
+  const nopost     = loadNoPost(cid);
 
   const weeksHtml = weeks.map(wk =>
     `<div class="sched-week">${wk.map(d => {
@@ -7470,7 +7468,7 @@ function schedColHtml(cid) {
       const state    = getSchedSt(cid, iso);
       const dayItems = items[iso] || [];
       const legVal   = escHtml(legends[iso] || '');
-      const briefVal = escHtml(briefs[iso] || '');
+      const driveVal = escHtml(driveLinks[iso] || '');
       const fmtIdx   = formats[iso] || 0;
       const commEvt  = getCommDates(d.getFullYear())[iso];
 
@@ -7505,11 +7503,11 @@ function schedColHtml(cid) {
           </div>
           <button class="sched-more-toggle" data-toggle-c="${cid}" data-toggle-iso="${iso}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            Pauta e legenda
+            Link e legenda
           </button>
           <div class="sched-more-body">
-            <div class="sched-brief-wrap">
-              <textarea class="sched-brief" data-c="${cid}" data-iso="${iso}" placeholder="Pauta…" rows="1">${briefVal}</textarea>
+            <div class="sched-drivelink-wrap">
+              <input type="url" class="sched-drivelink" data-c="${cid}" data-iso="${iso}" placeholder="Link do Drive (mídia original)…" value="${driveVal}">
             </div>
             <div class="sched-legend-wrap">
               <textarea class="sched-legend" data-c="${cid}" data-iso="${iso}" placeholder="Legenda…" rows="1">${legVal}</textarea>
@@ -7604,15 +7602,12 @@ function bindSched(cid) {
       openDayDetailModal(span.dataset.c, span.dataset.iso);
     });
   });
-  col.querySelectorAll('.sched-brief').forEach(ta => {
-    const autoResize = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
-    autoResize();
-    ta.addEventListener('input', () => {
-      autoResize();
-      const all = loadBrief(ta.dataset.c);
-      if (ta.value.trim()) all[ta.dataset.iso] = ta.value;
-      else delete all[ta.dataset.iso];
-      saveBrief(ta.dataset.c, all);
+  col.querySelectorAll('.sched-drivelink').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const all = loadDriveLink(inp.dataset.c);
+      if (inp.value.trim()) all[inp.dataset.iso] = inp.value.trim();
+      else delete all[inp.dataset.iso];
+      saveDriveLink(inp.dataset.c, all);
     });
   });
   col.querySelectorAll('.sched-fmt-btn').forEach(btn => {
@@ -7639,8 +7634,8 @@ function refreshSched(cid) {
 function openDayDetailModal(cid, iso) {
   const client  = CLIENTS.find(c => c.id === cid) || { name: cid, color: '#7c5cfc' };
   const items   = (loadSched(cid))[iso]   || [];
-  const legend  = (loadLegend(cid))[iso]  || '';
-  const brief   = (loadBrief(cid))[iso]   || '';
+  const legend    = (loadLegend(cid))[iso]    || '';
+  const driveLink = (loadDriveLink(cid))[iso] || '';
   const fmtIdx  = (loadFormat(cid))[iso]  || 0;
   const state   = getSchedSt(cid, iso);
 
@@ -7691,11 +7686,11 @@ function openDayDetailModal(cid, iso) {
     html += `</div></div>`;
   }
 
-  // Pauta
+  // Link do Drive
   html += `<div>
-    <div class="sday-modal-section-lbl">Pauta</div>
-    ${brief ? `<div class="sday-modal-text brief">${escHtml(brief)}</div>`
-            : `<span class="sday-empty-text">Sem pauta registrada</span>`}
+    <div class="sday-modal-section-lbl">Link do Drive</div>
+    ${driveLink ? `<a class="sday-modal-text brief" href="${escHtml(driveLink)}" target="_blank" rel="noopener" style="text-decoration:underline;word-break:break-all">${escHtml(driveLink)}</a>`
+                : `<span class="sday-empty-text">Sem link registrado</span>`}
   </div>`;
 
   // Legenda
@@ -9210,14 +9205,14 @@ function getWeekIsos(){
 function genApprovalUrl(cid){
   const client=CLIENTS.find(c=>c.id===cid)||{name:cid,color:'#7c5cfc'};
   const isos=getWeekIsos();
-  const sched=lsGet(`mmsched_items__${cid}`)||{}, legends=lsGet(`mmlegend__${cid}`)||{}, briefs=lsGet(`mmbrief__${cid}`)||{}, fmts=lsGet(`mmformat__${cid}`)||{};
+  const sched=lsGet(`mmsched_items__${cid}`)||{}, legends=lsGet(`mmlegend__${cid}`)||{}, driveLinks=lsGet(`mmdrivelink__${cid}`)||{}, fmts=lsGet(`mmformat__${cid}`)||{};
   const FMTS=['','Foto','Carrossel','Reels','Story','CTA','Enquete'];
   const DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const MO=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   const posts=isos.map(iso=>{
     const d=new Date(iso+'T12:00:00');
-    if(!(sched[iso]?.length)&&!legends[iso]&&!briefs[iso])return null;
-    return{dateLabel:`${DAYS[d.getDay()]}, ${d.getDate()} ${MO[d.getMonth()]}`,format:FMTS[fmts[iso]]||'',legend:legends[iso]||'',brief:briefs[iso]||''};
+    if(!(sched[iso]?.length)&&!legends[iso]&&!driveLinks[iso])return null;
+    return{dateLabel:`${DAYS[d.getDay()]}, ${d.getDate()} ${MO[d.getMonth()]}`,format:FMTS[fmts[iso]]||'',legend:legends[iso]||'',driveLink:driveLinks[iso]||''};
   }).filter(Boolean);
   const d0=new Date(isos[0]+'T12:00:00'),d4=new Date(isos[4]+'T12:00:00');
   const week=`${d0.getDate()}/${d0.getMonth()+1} a ${d4.getDate()}/${d4.getMonth()+1}/${d4.getFullYear()}`;
@@ -9303,7 +9298,7 @@ function initApprovalMode(){
               <div class="apv-post-date">${escHtml(p.dateLabel)}</div>
               ${p.format?`<span class="apv-post-fmt" style="background:${FMT_CLR[p.format]||'#47556920'};color:${FMT_CLR[p.format]||'#94a3b8'}">${p.format}</span>`:''}
               ${p.legend?`<div class="apv-post-legend">${escHtml(p.legend)}</div>`:''}
-              ${p.brief?`<div class="apv-post-brief">📋 ${escHtml(p.brief)}</div>`:''}
+              ${p.driveLink?`<a class="apv-post-brief" href="${escHtml(p.driveLink)}" target="_blank" rel="noopener">🔗 ${escHtml(p.driveLink)}</a>`:''}
             </div>`).join(''):`<div class="apv-empty">Nenhum conteúdo programado para esta semana</div>`}
         </div>
         <div class="apv-actions" id="apvActions">
