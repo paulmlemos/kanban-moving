@@ -1799,6 +1799,8 @@
     .edit-item-files { display: flex; flex-wrap: wrap; gap: 3px; }
     .edit-send-cal-btn { background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.35); color: #22c55e; cursor: pointer; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; white-space: nowrap; font-family: inherit; transition: all .12s; }
     .edit-send-cal-btn:hover { background: rgba(34,197,94,.25); }
+    .edit-item-attach-btn { background: rgba(255,255,255,.05); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 8px; white-space: nowrap; font-family: inherit; transition: all .12s; }
+    .edit-item-attach-btn:hover { background: rgba(124,92,252,.15); border-color: rgba(124,92,252,.3); color: var(--text); }
     /* ── PIPELINE ── */
     .pipe-section { padding: 20px 24px 40px; }
     .pipe-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
@@ -6993,6 +6995,7 @@ function editColHtml(cid) {
             ${urgBadge}
             <button class="edit-badge-st ${st.cls}" data-eid="${it.id}" data-ec="${cid}" title="Clique para mudar status">${st.label}</button>
             ${fmtColor ? `<span class="edit-badge-fmt" style="background:${fmtColor}20;color:${fmtColor};border-color:${fmtColor}40">${escHtml(it.format)}</span>` : ''}
+            <button class="edit-item-attach-btn" data-action="attach-file" data-id="${it.id}" data-c="${cid}" title="Anexar material (foto/vídeo)">📎 Anexar</button>
             ${it.status === 'concluido' ? `<button class="edit-send-cal-btn" data-action="send-cal" data-id="${it.id}" data-c="${cid}" title="Escolher o dia e enviar pro calendário">📅 Calendário</button>` : ''}
             ${files.length ? `<div class="edit-item-files">${editFileChipsHtml(files)}</div>` : ''}
           </div>
@@ -7143,6 +7146,48 @@ function bindEdit(cid) {
   document.getElementById(`elist-${cid}`)?.querySelectorAll('[data-action="send-cal"]').forEach(b =>
     b.addEventListener('click', () => openSendToCalendarPicker(b.dataset.c, b.dataset.id))
   );
+
+  document.getElementById(`elist-${cid}`)?.querySelectorAll('[data-action="attach-file"]').forEach(b =>
+    b.addEventListener('click', () => openEditAttachPicker(b.dataset.c, b.dataset.id))
+  );
+}
+
+// Anexa material a um item que já existe na lista de Edição (diferente do anexo
+// feito na hora de criar, via pendingEditFiles) — pensado pro caso de a Priscila
+// marcar "Concluído" e só então ter o material final pronto pra subir.
+let _editAttachPending = null;
+
+function ensureEditAttachInput() {
+  let inp = document.getElementById('editAttachInput');
+  if (inp) return inp;
+  inp = document.createElement('input');
+  inp.type = 'file';
+  inp.id = 'editAttachInput';
+  inp.multiple = true;
+  inp.style.cssText = 'position:fixed; left:-9999px; top:-9999px; opacity:0;';
+  document.body.appendChild(inp);
+  inp.addEventListener('change', async () => {
+    if (!_editAttachPending || !inp.files.length) { _editAttachPending = null; return; }
+    const { cid, id } = _editAttachPending;
+    const newFiles = await Promise.all(Array.from(inp.files).map(f => new Promise(res => {
+      const r = new FileReader();
+      r.onload = ev => res({ name: f.name, type: f.type, data: ev.target.result });
+      r.readAsDataURL(f);
+    })));
+    saveEditFiles(id, loadEditFiles(id).concat(newFiles));
+    const list = loadEditItems(cid);
+    const it = list.find(x => x.id === id);
+    if (it && !it.hasFiles) { it.hasFiles = true; saveEditItems(cid, list); }
+    _editAttachPending = null;
+    inp.value = '';
+    refreshEdit(cid);
+  });
+  return inp;
+}
+
+function openEditAttachPicker(cid, id) {
+  _editAttachPending = { cid, id };
+  ensureEditAttachInput().click();
 }
 
 function refreshEdit(cid) {
