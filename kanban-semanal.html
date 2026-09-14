@@ -3666,6 +3666,7 @@
           <button class="tw-filter-btn" data-uid="paul">Paul</button>
         </div>
       </div>
+      <button class="btn" id="tvSyncExternoBtn" title="Busca agora as tarefas novas das planilhas Vento e Lyon, sem esperar o ciclo automatico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>Atualizar tarefas do Paul</button>
       <button class="tv-new-task-btn" id="tvNewTaskBtn">+ Nova tarefa</button>
     </div>
 
@@ -4164,7 +4165,7 @@ const _fsdb = firebase.firestore();
 
 let _syncTimer      = null;
 let _lastLocalWrite = 0;
-const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__', 'mmideaf__', 'mmeditf__', 'mmui']; // base64, senhas e estado de UI por navegador — só localStorage
+const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__', 'mmideaf__', 'mmeditf__', 'mmui', 'mmLastSyncExterno']; // base64, senhas, estado de UI e cooldown do import externo — só localStorage, nunca Firestore (senao o cooldown vaza entre navegadores)
 
 // Chaves incluidas no ultimo push (para detectar remocoes locais) e no ultimo
 // snapshot remoto (para detectar remocoes feitas por outro navegador).
@@ -9855,15 +9856,18 @@ function findLegacyLyonMatch(tasks, ext) {
   );
 }
 
-async function syncTarefasExternas() {
+async function syncTarefasExternas(force) {
   let data;
   try {
-    const res = await fetch(TAREFAS_CARTEIRA_API);
+    const url = force ? (TAREFAS_CARTEIRA_API + '?force=1') : TAREFAS_CARTEIRA_API;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     data = await res.json();
   } catch (err) {
     console.error('Sync tarefas externas:', err);
-    return { imported: 0, updated: 0, skipped: 0, migrated: 0 };
+    // ok:false distingue "falhou de verdade" de "rodou e nao tinha nada novo" —
+    // so quando ok:true o chamador pode gravar o cooldown com seguranca.
+    return { ok: false, imported: 0, updated: 0, skipped: 0, migrated: 0 };
   }
 
   let imported = 0, updated = 0, skipped = 0, migrated = 0;
@@ -9927,7 +9931,7 @@ async function syncTarefasExternas() {
     if (changed) saveTasks(cid, tasks);
   });
 
-  return { imported, updated, skipped, migrated };
+  return { ok: true, imported, updated, skipped, migrated };
 }
 
 function computeHojeForUser(userId) {
@@ -10391,12 +10395,18 @@ refreshSaudeCarteira();
 
 // Sync das tarefas externas (Vento/Lyon) — no máx a cada 15min por navegador,
 // mesmo TTL do cache do backend, pra não bater a API a cada reload de página.
-(function scheduleSyncTarefasExternas() {
+// Chamada só depois de _loadFromCloud() resolver (ver fim do arquivo) — nunca
+// aqui direto, senão corre em paralelo com o load da nuvem e pode publicar no
+// Firestore um estado local ainda desatualizado, apagando tarefa real de quem
+// ainda não tinha sincronizado neste navegador.
+function scheduleSyncTarefasExternas() {
   const SYNC_MIN_INTERVAL_MS = 15 * 60 * 1000;
   const lastSync = parseInt(localStorage.getItem('mmLastSyncExterno') || '0', 10);
   if (Date.now() - lastSync < SYNC_MIN_INTERVAL_MS) return;
   syncTarefasExternas().then(result => {
-    localStorage.setItem('mmLastSyncExterno', String(Date.now()));
+    // só grava o cooldown quando a busca realmente funcionou — uma falha
+    // (rede, API fora do ar) não pode travar 15min sem ter importado nada.
+    if (result.ok) localStorage.setItem('mmLastSyncExterno', String(Date.now()));
     if (result.imported || result.updated) {
       refreshHoje();
       refreshVisaoClientes();
@@ -10405,7 +10415,37 @@ refreshSaudeCarteira();
     }
     console.log('Sync tarefas externas:', result);
   });
-})();
+}
+
+// Botao manual (aba Gestao de Tarefas) — ignora o cooldown de 15min E manda
+// force=1 pro backend, que ignora o cache dele (900s) e le a planilha na hora.
+// E o caminho pra "editei a planilha agora, quero ver aqui ja" sem esperar
+// ciclo nenhum.
+document.getElementById('tvSyncExternoBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('tvSyncExternoBtn');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = 'Buscando...';
+  try {
+    const result = await syncTarefasExternas(true);
+    if (!result.ok) {
+      alert('Nao foi possivel buscar as tarefas agora (planilha/servidor fora do ar). Tente de novo em instantes.');
+      return;
+    }
+    localStorage.setItem('mmLastSyncExterno', String(Date.now()));
+    refreshWeeklyManager();
+    refreshVisaoClientes();
+    refreshSaudeCarteira();
+    updateGlobalTaskStats();
+    const total = result.imported + result.updated + result.migrated;
+    alert(total > 0
+      ? `Atualizado! ${result.imported} nova(s), ${result.updated} atualizada(s).`
+      : 'Buscado — nenhuma tarefa nova ou alterada na planilha desde a ultima vez.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+});
 
 // ── CÉUS ABERTOS ────────────────────────────────────────────────────────────
 
@@ -11021,7 +11061,10 @@ function renderCeusCanais() {
   }
 })();
 
-_loadFromCloud().then(changed => { if (changed) location.reload(); });
+_loadFromCloud().then(changed => {
+  if (changed) { location.reload(); return; } // recarrega com o dado da nuvem ja aplicado
+  scheduleSyncTarefasExternas(); // só roda com localStorage já refletindo a nuvem
+});
 _subscribeToChanges();
 </script>
 </body>
