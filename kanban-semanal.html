@@ -2254,9 +2254,24 @@
       margin-top: 3px;
       padding-top: 3px;
       border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
+    .sched-drivelink-open {
+      flex-shrink: 0;
+      color: rgba(124,92,252,0.75);
+      font-size: 10px;
+      text-decoration: none;
+      line-height: 1;
+      padding: 1px 2px;
+      border-radius: 3px;
+      transition: all .12s;
+    }
+    .sched-drivelink-open:hover { color: rgba(124,92,252,1); background: rgba(124,92,252,0.12); }
     .sched-drivelink {
-      width: 100%;
+      flex: 1;
+      min-width: 0;
       box-sizing: border-box;
       background: transparent;
       border: none;
@@ -7508,6 +7523,7 @@ function schedColHtml(cid) {
           <div class="sched-more-body">
             <div class="sched-drivelink-wrap">
               <input type="url" class="sched-drivelink" data-c="${cid}" data-iso="${iso}" placeholder="Link do Drive (mídia original)…" value="${driveVal}">
+              ${driveVal ? `<a class="sched-drivelink-open" href="${driveVal}" target="_blank" rel="noopener" title="Abrir no Drive" onclick="event.stopPropagation()">↗</a>` : ''}
             </div>
             <div class="sched-legend-wrap">
               <textarea class="sched-legend" data-c="${cid}" data-iso="${iso}" placeholder="Legenda…" rows="1">${legVal}</textarea>
@@ -7603,11 +7619,32 @@ function bindSched(cid) {
     });
   });
   col.querySelectorAll('.sched-drivelink').forEach(inp => {
+    const syncOpenLink = () => {
+      const wrap = inp.closest('.sched-drivelink-wrap');
+      let a = wrap.querySelector('.sched-drivelink-open');
+      const val = inp.value.trim();
+      if (val) {
+        if (!a) {
+          a = document.createElement('a');
+          a.className = 'sched-drivelink-open';
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.title = 'Abrir no Drive';
+          a.textContent = '↗';
+          a.addEventListener('click', e => e.stopPropagation());
+          wrap.appendChild(a);
+        }
+        a.href = val;
+      } else if (a) {
+        a.remove();
+      }
+    };
     inp.addEventListener('input', () => {
       const all = loadDriveLink(inp.dataset.c);
       if (inp.value.trim()) all[inp.dataset.iso] = inp.value.trim();
       else delete all[inp.dataset.iso];
       saveDriveLink(inp.dataset.c, all);
+      syncOpenLink();
     });
   });
   col.querySelectorAll('.sched-fmt-btn').forEach(btn => {
