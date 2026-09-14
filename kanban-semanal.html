@@ -5479,6 +5479,16 @@ buildTasksGrid();
     label.textContent = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
   }
   document.getElementById('twModalDate').addEventListener('input', refreshDateLabel);
+  // O input real fica transparente por cima do botao (ver .tw-meta-date no CSS);
+  // depender so do clique passar direto pro input e inconsistente entre
+  // navegadores/versoes. showPicker() abre o calendario nativo de forma explicita
+  // e confiavel — suportado em Chrome/Edge 99+.
+  document.getElementById('twModalDateBtn').addEventListener('click', () => {
+    const input = document.getElementById('twModalDate');
+    if (typeof input.showPicker === 'function') {
+      try { input.showPicker(); } catch (_) { /* navegador sem suporte ou sem foco valido — clique direto no input ja cobre esse caso */ }
+    }
+  });
 
   window.openTwNewTaskModal = function (iso) {
     _isNew = true; _taskId = null; _clientId = null; _modalDone = false;
