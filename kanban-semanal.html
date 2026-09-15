@@ -367,6 +367,8 @@
     .board-nopost-btn.active { background: var(--sand); border-color: var(--border-2); color: var(--text); }
     .client-card.no-post .platform-row { opacity: .35; pointer-events: none; }
     .client-card.no-post { background: var(--bg); }
+    .client-card.st-prog { background: rgba(251,191,36,0.08); }
+    .client-card.st-post { background: rgba(34,197,94,0.08); }
 
     /* ── PLATFORM ROW ───────────────────────────── */
     .platform-row {
@@ -4712,6 +4714,31 @@ function clearWeek(wk) {
     .forEach(k => mmRemove(k));
 }
 
+// Status agregado do card (mesma logica visual do calendario: verde = tudo postado, laranja = tem algo programado)
+function cardStatusClass(client, wk, dayIdx) {
+  let hasAnyType = false, allPosted = true, anyStarted = false;
+  client.platforms.forEach(plat => {
+    const types = ['feed', ...(plat.stories ? ['stories'] : [])];
+    types.forEach(type => {
+      hasAnyType = true;
+      const state = getState(wk, client.id, dayIdx, plat.id, type);
+      if (state !== 2) allPosted = false;
+      if (state >= 1) anyStarted = true;
+    });
+  });
+  if (!hasAnyType) return '';
+  if (allPosted) return 'st-post';
+  if (anyStarted) return 'st-prog';
+  return '';
+}
+
+function refreshCardStatus(card, client, wk, dayIdx) {
+  card.classList.remove('st-prog', 'st-post');
+  if (card.classList.contains('no-post')) return;
+  const cls = cardStatusClass(client, wk, dayIdx);
+  if (cls) card.classList.add(cls);
+}
+
 // ─── STATS ───────────────────────────────────────────────────────────────────
 
 function computeStats(wk) {
@@ -4771,6 +4798,10 @@ function render() {
       const card = document.createElement('div');
       card.className = 'client-card' + (isNoPost ? ' no-post' : '');
       card.style.setProperty('--client-color', client.color);
+      if (!isNoPost) {
+        const stCls = cardStatusClass(client, currentWk, di);
+        if (stCls) card.classList.add(stCls);
+      }
 
       const hdr = document.createElement('div');
       hdr.className = 'client-card-hdr';
@@ -4848,6 +4879,9 @@ function onToggleNoPost(e) {
   btn.classList.toggle('active', nowActive);
   btn.textContent = nowActive ? 'Sem post' : '—';
   btn.title = nowActive ? 'Retomar postagem' : 'Sem post neste dia';
+  const clientObj = CLIENTS.find(c => c.id === client);
+  const dayIdx = parseInt(card.querySelector('[data-day]')?.dataset.day ?? '0');
+  if (clientObj) refreshCardStatus(card, clientObj, currentWk, dayIdx);
   updateStats();
 }
 
@@ -4860,6 +4894,9 @@ function onToggle(e) {
   btn.dataset.state = next;
   btn.title = btn.title.replace(STATE_TITLES[cur], STATE_TITLES[next]);
   btn.innerHTML = `<span class="sbtn-icon">${STATE_ICONS[next]}</span>${btn.textContent.trim().replace(/^[○◐✓]\s*/, '')}`;
+  const clientObj = CLIENTS.find(c => c.id === client);
+  const card = btn.closest('.client-card');
+  if (clientObj && card) refreshCardStatus(card, clientObj, currentWk, parseInt(day));
   updateStats();
   // Sync: kanban IG feed → cronograma
   if (plat === 'ig' && type === 'feed') {
