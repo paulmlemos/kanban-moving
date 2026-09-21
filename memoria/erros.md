@@ -58,3 +58,24 @@ Prevencao:
 Qualquer teste automatizado (Playwright ou similar) que possa criar/editar/concluir dado precisa
 bloquear rede para `firestore.googleapis.com` e `firebaseio.com` antes de navegar. Testes manuais
 no navegador continuam sincronizando de verdade — usar prefixo `ZZZ_TESTE_` e apagar ao final.
+
+## Erro: tarefas Vento/Lyon param de entrar no Kanban — token do Google expirado (2026-09-21, em aberto)
+
+Impacto:
+A API do Hub que lê a planilha DRE Vento responde 502, então nenhuma tarefa das abas "Tarefas
+Vento" e "Tarefas Lyon" chega ao Kanban. Paul vinha inserindo tarefas na planilha e elas não
+apareciam no sistema.
+
+Causa:
+`invalid_grant: Token has been expired or revoked` ao renovar o token OAuth da conta
+`ventomarketingoficial@gmail.com`. Causa provável (não confirmada): app OAuth em modo "Em teste",
+com validade de 7 dias do refresh token. Agravante independente: o importador não usa o campo
+`responsavel` (grava `assignees: []`, sem filtro na aba Lyon) e `VENTO_CLIENTE_MAP` só mapeia
+"Fabi Eventos".
+
+Correcao:
+Em aberto. Ver `memoria/estado-atual.md`, atualização 2026-09-21, com a ordem de resolução.
+
+Prevencao:
+Publicar o app OAuth (Em produção) antes de regerar o token. Erro de 502 na API de tarefas deve
+ser checado no `journalctl -u moving-hub-api` antes de supor credencial ou aba renomeada.

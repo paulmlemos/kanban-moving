@@ -63,3 +63,58 @@ fluxo de fechamento testado ponta a ponta, conforme previsto no bloco acima.
   literalmente "dia 30" fixo; (2) ela ainda vai detalhar o conteúdo de Agenda do Dia além do que já
   foi construído (se houver mais campos), e o conteúdo de Gestão de Tráfego Pago (hoje só
   placeholder vazio).
+
+## Atualização 2026-09-21 — Claude (com Priscila): Agenda do Dia lista tarefas + diagnóstico do sync Vento/Lyon parado (NÃO resolvido)
+
+Origem: Claude (com Priscila). Feito para o Paul poder continuar deste repo, sem depender da máquina da Priscila.
+
+**Feito e no ar:** Agenda do Dia agora lista as tarefas pendentes dentro dos cards (antes só as
+pílulas de contagem). No card "Hoje" entram também as atrasadas (com a etiqueta "Atrasada");
+o círculo conclui a tarefa de verdade (`toggleTask`); clicar na linha abre o cliente. Commit
+`8a634b5`, deployado e conferido em produção (arquivo servido idêntico ao do repo).
+
+**Problema aberto — as tarefas das abas "Tarefas Vento" e "Tarefas Lyon" (planilha DRE Vento) não
+estão entrando no Kanban.** São dois problemas independentes:
+
+1. **Nenhuma tarefa entra: o token do Google do backend do Hub expirou.** `GET
+   https://hub.movingg.com.br/api/tarefas-carteira` responde 502 ("Nao foi possivel ler as tarefas
+   agora"). O log do `moving-hub-api` mostra `RefreshError: invalid_grant: Token has been expired
+   or revoked`, na renovação do token da conta `ventomarketingoficial@gmail.com` (escopos
+   `drive.readonly` + `spreadsheets`). Não é rename de aba, como em 13/09. Causa **provável, ainda
+   não confirmada**: o app OAuth (projeto Google Cloud `vento-marketing`) está em modo "Em teste",
+   em que o Google derruba o refresh token a cada 7 dias (o token foi gerado por volta de 11/09).
+   A Priscila confirma que o acesso não foi removido nem revogado manualmente. Provavelmente o
+   painel "DRE Vento" do Início (mesmo token) também está parado — não verificado.
+2. **O filtro por responsável nunca foi implementado no Kanban.** O backend já devolve o campo
+   `responsavel`, mas `syncTarefasExternas()` grava tudo com `assignees: []` e importa todas as
+   tarefas Lyon, de qualquer responsável. Não há registro de que essa regra tenha sido decidida
+   ou implementada antes. Além disso, `VENTO_CLIENTE_MAP` só conhece "Fabi Eventos": tarefa Vento
+   de outro cliente é descartada sem aviso (`skipped`).
+
+**Regra pedida pela Priscila (a implementar):** aba Vento → importar com o responsável certo
+(Paul ou Priscila); aba Lyon → importar só as tarefas com responsável Paul.
+
+**Ordem para resolver (nada disso foi feito ainda):**
+1. Google Cloud Console, projeto `vento-marketing` → Tela de consentimento OAuth: se "Em teste",
+   **Publicar app**. Publicar ANTES de gerar o token novo (token gerado em teste vence em 7 dias).
+2. Gerar token novo logando em `ventomarketingoficial@gmail.com` (mesmos escopos). Na máquina do
+   Paul existe `config/gerar_token_ventomarketingoficial.py` (não versionado). A credencial do
+   projeto é o `client_secret_...json` baixado em 11/09.
+3. Copiar o token para o arquivo de token do backend do Hub no servidor (backup antes) e
+   `systemctl restart moving-hub-api`. É produção: só com confirmação da Priscila. O caminho
+   exato está em `clientes/moving-hub/memoria/estado-atual.md` do vault, atualização 13/09.
+4. Conferir que `/api/tarefas-carteira` volta a responder 200; só então ler o retorno real e
+   fechar o mapeamento de clientes.
+5. Kanban (`syncTarefasExternas` e mapas de cliente): responsável → `assignees`; Lyon só Paul;
+   avisar na tela quando tarefa for descartada por cliente não mapeado. Testar local com a rede
+   do Firestore bloqueada, como sempre.
+
+**Decisões da Priscila ainda em aberto:** (a) tarefa Vento com Paul e Priscila juntos vai para os
+dois? (b) tarefa Vento sem responsável, ou com outro nome: entra sem dono ou é ignorada? (c) as
+54 tarefas Lyon já importadas, de todos os responsáveis, ficam ou saem depois do filtro? Sugestão:
+não apagar nada sozinho, listar para a Priscila decidir.
+
+- Cópia antiga `kanban-semanal-teste-hub.html` (12/08) fica só na máquina da Priscila, sem
+  versionar, de propósito.
+- **Próximo passo crítico:** publicar o app OAuth e regerar o token (itens 1 a 3 acima). Sem isso
+  nenhuma tarefa da planilha chega ao Kanban, independente de qualquer mudança no código.
