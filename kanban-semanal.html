@@ -3272,6 +3272,16 @@
     .agenda-item-who { font-size: 10px; font-weight: 700; color: var(--text-faint); flex-shrink: 0; white-space: nowrap; }
     .agenda-item-del { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 15px; flex-shrink: 0; line-height: 1; padding: 0 2px; }
     .agenda-item-del:hover { color: #dc2626; }
+    .agenda-day-tasks { display: flex; flex-direction: column; gap: 6px; }
+    .agenda-day-tasks:not(:empty) { margin-top: 14px; }
+    .agenda-tasks-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); padding: 2px 2px 0; }
+    .agenda-task { cursor: pointer; }
+    .agenda-task-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--client-color, var(--border-2)); flex-shrink: 0; }
+    .agenda-task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .agenda-task-text { font-size: 12px; color: var(--text); }
+    .agenda-task.done .agenda-task-text { text-decoration: line-through; }
+    .agenda-task-client { font-size: 10px; font-weight: 600; color: var(--text-faint); margin-top: 1px; }
+    .agenda-task-tag { font-size: 9px; font-weight: 700; color: #dc2626; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
     .agenda-day-addwrap { margin-top: 14px; }
     .agenda-add-toggle-btn {
       font-size: 11px; font-weight: 700; color: var(--accent); background: none;
@@ -10631,18 +10641,29 @@ function saveAgendaItems(iso, list) { mmSet(agendaKey(iso), JSON.stringify(list)
 // de cada cliente, campo `nextDate`) + compromissos/reuniões manuais.
 function computeAgendaDay(iso) {
   const ALL_CLI = [...CLIENTS, MOVING_CLIENT].filter(c => !c.isPersonal);
+  const todayISO = isoFromDate(new Date());
   const tasksByUser = { priscila: [], paul: [] };
+  // Lista única para exibir no card: tarefa com 2 responsáveis aparece 1 vez.
+  // No card de hoje entram também as atrasadas pendentes (mesma regra do card
+  // "Hoje" do Início); as pílulas de contagem continuam só com o que vence no dia.
+  const tasks = [];
   ALL_CLI.forEach(c => {
     loadTasks(c.id).forEach(t => {
-      if (t.dueDate !== iso) return;
-      (t.assignees || []).forEach(uid => {
-        if (tasksByUser[uid]) tasksByUser[uid].push({ client: c, task: t });
-      });
+      if (!t.dueDate) return;
+      const sameDay = t.dueDate === iso;
+      const overdue = iso === todayISO && t.dueDate < todayISO && !t.done;
+      if (!sameDay && !overdue) return;
+      const owners = (t.assignees || []).filter(uid => tasksByUser[uid]);
+      if (!owners.length) return;
+      if (sameDay) owners.forEach(uid => tasksByUser[uid].push({ client: c, task: t }));
+      tasks.push({ client: c, task: t, overdue, owners });
     });
   });
+  tasks.sort((a, b) =>
+    (b.overdue - a.overdue) || (a.task.done - b.task.done) || a.client.name.localeCompare(b.client.name));
   const captacoes = CLIENTS.filter(c => loadCap(c.id).nextDate === iso);
   const items = loadAgendaItems(iso);
-  return { iso, tasksByUser, captacoes, items };
+  return { iso, tasksByUser, tasks, captacoes, items };
 }
 
 // Dias que faltam da semana atual (seg-sex, mesma janela de getWeekDates).
@@ -10675,6 +10696,18 @@ function agendaItemRowHtml(it, iso) {
     </div>`;
 }
 
+function agendaTaskRowHtml({ client, task, overdue, owners }) {
+  const who = owners.map(uid => USERS.find(u => u.id === uid)?.name || uid).join(' + ');
+  return `
+    <div class="agenda-item agenda-task${task.done?' done':''}${overdue?' overdue':''}" style="--client-color:${client.color}" data-c="${client.id}">
+      <button class="agenda-item-cb${task.done?' done':''}" data-action="agenda-task-toggle" data-c="${client.id}" data-id="${task.id}">${task.done?'✓':''}</button>
+      <span class="agenda-task-dot"></span>
+      <div class="agenda-task-main"><span class="agenda-task-text">${escHtml(task.text)}</span><span class="agenda-task-client">${escHtml(client.name)}</span></div>
+      ${overdue ? '<span class="agenda-task-tag">Atrasada</span>' : ''}
+      <span class="agenda-item-who">${escHtml(who)}</span>
+    </div>`;
+}
+
 function agendaDayCardHtml(date, expanded) {
   const iso = isoFromDate(date);
   return `
@@ -10688,6 +10721,7 @@ function agendaDayCardHtml(date, expanded) {
       </div>
       <div class="agenda-day-cap" data-agenda="cap"></div>
       <div class="agenda-day-items" data-agenda="items"></div>
+      <div class="agenda-day-tasks" data-agenda="tasks"></div>
       <div class="agenda-day-addwrap">
         <button class="agenda-add-toggle-btn" data-action="agenda-add-toggle">+ Adicionar compromisso/reunião</button>
         <div class="agenda-add-form" data-agenda="form">
@@ -10722,7 +10756,21 @@ function refreshAgendaDayCard(iso) {
   const itemsWrap = card.querySelector('[data-agenda="items"]');
   itemsWrap.innerHTML = data.items.length
     ? data.items.map(it => agendaItemRowHtml(it, iso)).join('')
-    : `<div class="agenda-empty">Nada cadastrado ainda.</div>`;
+    : (data.tasks.length ? '' : `<div class="agenda-empty">Nada cadastrado ainda.</div>`);
+
+  const tasksWrap = card.querySelector('[data-agenda="tasks"]');
+  tasksWrap.innerHTML = data.tasks.length
+    ? `<div class="agenda-tasks-label">Tarefas</div>${data.tasks.map(agendaTaskRowHtml).join('')}`
+    : '';
+  tasksWrap.querySelectorAll('.agenda-task').forEach(row => row.addEventListener('click', (e) => {
+    if (e.target.closest('.agenda-item-cb')) return;
+    selectClient(row.dataset.c);
+  }));
+  tasksWrap.querySelectorAll('[data-action="agenda-task-toggle"]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleTask(b.dataset.c, b.dataset.id);
+    refreshAgendaPage();
+  }));
 
   itemsWrap.querySelectorAll('[data-action="agenda-toggle"]').forEach(b => b.addEventListener('click', () => {
     const list = loadAgendaItems(iso);
