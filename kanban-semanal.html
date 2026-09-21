@@ -4815,6 +4815,7 @@ const CLIENTS = [
   { id: 'lyon-capital-precatorio',   name: 'Capital Precatório',    color: '#f97316', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
   { id: 'lyon-connect-mais-sul',     name: 'Connect Mais Sul',      color: '#06b6d4', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
   { id: 'lyon-precamax',             name: 'Precamax',              color: '#8b5cf6', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
+  { id: 'lyon-precatorio-simples',   name: 'Precatório Simples',    color: '#f43f5e', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
   { id: 'lyon-proposito-precatorios',name: 'Propósito Precatórios', color: '#d946ef', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
   { id: 'lyon-agregvalor',           name: 'Agregvalor',            color: '#eab308', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
   { id: 'lyon-almega-ativos',        name: 'Almega Ativos',         color: '#22c55e', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
@@ -10335,6 +10336,7 @@ const LYON_CLIENTE_MAP = {
   'capital precatório': 'lyon-capital-precatorio',
   'connect mais sul': 'lyon-connect-mais-sul',
   'precamax': 'lyon-precamax',
+  'precatório simples': 'lyon-precatorio-simples',
   'propósito precatórios': 'lyon-proposito-precatorios',
   'agregvalor': 'lyon-agregvalor',
   'almega ativos': 'lyon-almega-ativos',
@@ -10352,6 +10354,23 @@ const LYON_CLIENTE_MAP = {
 const VENTO_CLIENTE_MAP = {
   'fabi eventos': 'fabi',
 };
+
+// A planilha pode trazer o nome completo ou curto. O Kanban usa os IDs fixos
+// de USERS; responsáveis sem usuário correspondente não entram no Kanban.
+function resolveResponsavelExterno(nomePlanilha) {
+  const key = (nomePlanilha || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (key === 'paul' || key === 'paul lemos') return 'paul';
+  if (key === 'priscila' || key === 'priscila becker') return 'priscila';
+  return null;
+}
+
+function statusExternoConcluido(status) {
+  const key = (status || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\s-]+/g, '_');
+  return key === 'concluido' || key === 'feito';
+}
 
 function resolveClienteExterno(nomePlanilha) {
   const key = (nomePlanilha || '').trim().toLowerCase();
@@ -10397,6 +10416,9 @@ async function syncTarefasExternas(force) {
   data.tarefas.forEach(t => {
     const cid = resolveClienteExterno(t.cliente);
     if (!cid) { skipped++; return; }
+    const assignee = resolveResponsavelExterno(t.responsavel);
+    if (!assignee) { skipped++; return; }
+    t._kanbanAssignee = assignee;
     (porCliente[cid] = porCliente[cid] || []).push(t);
   });
 
@@ -10419,13 +10441,15 @@ async function syncTarefasExternas(force) {
       }
 
       const dueDate = parseDataBR(ext.prazo);
-      const done = ext.status === 'concluido';
+      const done = statusExternoConcluido(ext.status);
 
       if (existing) {
-        if (existing.text !== ext.tarefa || existing.dueDate !== dueDate || existing.done !== done) {
+        const assignees = [ext._kanbanAssignee];
+        if (existing.text !== ext.tarefa || existing.dueDate !== dueDate || existing.done !== done || JSON.stringify(existing.assignees || []) !== JSON.stringify(assignees)) {
           existing.text = ext.tarefa;
           existing.dueDate = dueDate;
           existing.done = done;
+          existing.assignees = assignees;
           changed = true;
           updated++;
         }
@@ -10436,7 +10460,7 @@ async function syncTarefasExternas(force) {
           desc: ext.observacao || '',
           done,
           dueDate,
-          assignees: [],
+          assignees: [ext._kanbanAssignee],
           recurrence: '',
           recurrenceDays: [],
           urgency: '',
