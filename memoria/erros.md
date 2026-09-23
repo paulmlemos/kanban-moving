@@ -79,3 +79,30 @@ Em aberto. Ver `memoria/estado-atual.md`, atualização 2026-09-21, com a ordem 
 Prevencao:
 Publicar o app OAuth (Em produção) antes de regerar o token. Erro de 502 na API de tarefas deve
 ser checado no `journalctl -u moving-hub-api` antes de supor credencial ou aba renomeada.
+
+## Erro: dias do mês seguinte no Cronograma travados + campo expandido escondido (2026-09-23, resolvido)
+
+Impacto:
+Na última linha do calendário mensal (Gestão de Postagens → Cronograma por cliente), os dias de
+"sobra" do mês seguinte (ex.: 1 e 2 de outubro aparecendo junto com 28-30 de setembro) não deixavam
+escrever link/legenda. Reportado pela Priscila com print.
+
+Causa:
+Dois bugs distintos, achados em sequência:
+1. `.sched-day.other-month` tinha `pointer-events: none` no CSS — bloqueava qualquer clique nesses
+   dias (não só o campo de link/legenda, tudo).
+2. Depois de corrigir o item 1, o campo abria mas parecia "cortado" — na verdade `.sched-grid` tem
+   scroll interno próprio (`max-height: 900px; overflow-y: auto`), separado da rolagem da página, e
+   nada levava o scroll até o campo recém-aberto quando o dia expandido ficava no fim da lista.
+
+Correcao:
+(1) Removido `pointer-events: none`, opacidade ajustada de 0.3 para 0.55 (`kanban-semanal.html`
+linha ~1993). (2) Toggle `.sched-more-toggle` agora chama `scrollIntoView({block:'nearest',
+behavior:'smooth'})` no `.sched-more-body` ao abrir. Commits `56862f0` e `910519b`.
+
+Prevencao:
+Em calendários com dias de "sobra" de outro mês, não usar `pointer-events: none` para desabilitar
+edição — se os dados são salvos por data ISO (não por mês exibido, como é o caso aqui), esses dias
+são datas reais e editáveis, só precisam de sinalização visual (opacidade), não bloqueio de clique.
+Qualquer accordion/toggle dentro de um container com scroll próprio (`overflow-y: auto` + `max-
+height`) deve chamar `scrollIntoView` no conteúdo revelado, especialmente perto do fim da lista.
