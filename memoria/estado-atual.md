@@ -118,3 +118,21 @@ não apagar nada sozinho, listar para a Priscila decidir.
   versionar, de propósito.
 - **Próximo passo crítico:** publicar o app OAuth e regerar o token (itens 1 a 3 acima). Sem isso
   nenhuma tarefa da planilha chega ao Kanban, independente de qualquer mudança no código.
+
+## Atualização 2026-09-23 — Claude (com Priscila): dias do mês seguinte no Cronograma estavam travados
+
+Origem: Claude (com Priscila), a partir de print mostrando a última linha do calendário mensal
+(Gestão de Postagens → Cronograma por cliente).
+
+- **Bug:** dias de "sobra" do mês seguinte, exibidos na última linha do calendário para completar
+  a grade (ex.: dias 1 e 2 de outubro aparecendo junto com 28-30 de setembro), tinham
+  `pointer-events: none` no CSS (`.sched-day.other-month`) — ficavam 100% travados, sem conseguir
+  abrir "Link e legenda" nem nada mais. Não era falta de espaço visual, era clique bloqueado.
+- **Correção:** removido o `pointer-events: none`; opacidade ajustada de 0.3 para 0.55 (ainda dá
+  pra diferenciar visualmente do mês corrente, mas agora é editável). Como os dados desses dias são
+  salvos por data ISO (`loadSched`/`loadLegend`/etc. são só por cliente, sem recorte de mês), editar
+  pelo dia "outro mês" grava certinho no mesmo lugar que editar depois de navegar pro mês seguinte —
+  sem risco de duplicar ou perder dado.
+- Testado local (servidor Node em `localhost:8765`, `python -m http.server` não funciona nesta
+  máquina — stub quebrado da Microsoft Store). Aprovado pela Priscila.
+- **Próximo passo crítico:** nenhum pendente desta frente.
