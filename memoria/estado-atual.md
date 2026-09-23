@@ -134,5 +134,12 @@ Origem: Claude (com Priscila), a partir de print mostrando a última linha do ca
   pelo dia "outro mês" grava certinho no mesmo lugar que editar depois de navegar pro mês seguinte —
   sem risco de duplicar ou perder dado.
 - Testado local (servidor Node em `localhost:8765`, `python -m http.server` não funciona nesta
-  máquina — stub quebrado da Microsoft Store). Aprovado pela Priscila.
+  máquina — stub quebrado da Microsoft Store).
+- **Complemento (mesma sessão):** depois do primeiro deploy, a Priscila reportou que o campo de
+  link/legenda desses dias "abre, mas os campos ficam cortados/sem espaço". Causa: `.sched-grid`
+  tem rolagem própria (`max-height: 900px; overflow-y: auto`), separada da rolagem da página. Ao
+  expandir um dia no fim da lista, o campo novo nasce dentro dessa área rolável sem nada levar o
+  scroll até ele — parecia cortado, mas só estava fora da área visível. Corrigido: o clique no
+  toggle agora chama `scrollIntoView({block:'nearest', behavior:'smooth'})` no `.sched-more-body`
+  recém-aberto. Testado local e aprovado pela Priscila.
 - **Próximo passo crítico:** nenhum pendente desta frente.

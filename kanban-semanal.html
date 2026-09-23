@@ -7870,7 +7870,16 @@ function bindSched(cid) {
   );
   col.querySelectorAll('.sched-more-toggle').forEach(b =>
     b.addEventListener('click', () => {
-      b.closest('.sched-day').classList.toggle('expanded');
+      const day = b.closest('.sched-day');
+      const opening = day.classList.toggle('expanded');
+      if (opening) {
+        // .sched-grid rola por dentro (max-height própria); sem isso, o campo
+        // recém-aberto no fim da lista fica fora da área visível sem indicação.
+        requestAnimationFrame(() => {
+          const body = day.querySelector('.sched-more-body');
+          (body || day).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        });
+      }
     })
   );
   col.querySelectorAll('.sched-legend').forEach(ta => {
