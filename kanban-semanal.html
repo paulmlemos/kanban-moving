@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -4498,6 +4499,29 @@ const _fbConfig = {
 };
 firebase.initializeApp(_fbConfig);
 const _fsdb = firebase.firestore();
+const _fsstorage = firebase.storage();
+
+// Converte um data-URL (base64) de miniatura em arquivo no Firebase Storage e
+// devolve a URL publica — em vez de guardar ~15-40KB de base64 por imagem dentro
+// do documento unico do Firestore (o que fez o documento bater no limite de 1MB
+// e travar o sync de TODOS os clientes). Se o upload falhar por qualquer motivo,
+// devolve o data-URL original como fallback (a imagem nao se perde, so nao
+// desincha o documento — melhor que travar o fluxo do usuario).
+async function _uploadThumbToStorage(dataUrl, cid) {
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    const path = `thumbs/${cid}/${Date.now().toString(36)}${Math.random().toString(36).slice(2)}.jpg`;
+    const ref  = _fsstorage.ref(path);
+    // put() do SDK do Storage tenta de novo sozinho por muito tempo (as vezes nunca
+    // rejeita) quando a rede cai no meio — sem timeout aqui, o picker fica travado em
+    // "Enviando..." pra sempre. _withTimeout garante que sempre cai no fallback.
+    await _withTimeout(ref.put(blob, { contentType: 'image/jpeg' }), 15000);
+    return await _withTimeout(ref.getDownloadURL(), 15000);
+  } catch (e) {
+    console.warn('[Storage] upload de miniatura falhou, mantendo base64 local', e);
+    return dataUrl;
+  }
+}
 
 let _syncTimer      = null;
 let _lastLocalWrite = 0;
@@ -4553,10 +4577,11 @@ async function _pushToCloud() {
   } catch (e) {
     if (e && e.code === 'not-found') {
       try { await docRef.set({ data: snap, ts: Date.now() }); }
-      catch (e2) { console.warn('[Firebase] push error', e2); return false; }
-    } else { console.warn('[Firebase] push error', e); return false; }
+      catch (e2) { console.warn('[Firebase] push error', e2); _showSyncFailBanner(e2); return false; }
+    } else { console.warn('[Firebase] push error', e); _showSyncFailBanner(e); return false; }
   }
   _lastPushedKeys = currentKeys;
+  _hideSyncFailBanner();
   return true;
 }
 
@@ -4667,6 +4692,31 @@ function _showSyncBanner() {
     document.body.appendChild(b);
   }
   b.style.display = 'block';
+}
+
+// Alerta visivel quando o envio pra nuvem falha (ex.: documento perto do limite de
+// tamanho do Firestore) — antes falhava em silencio (so console.warn) e um reload
+// depois apagava o trabalho nao sincronizado sem ninguem perceber.
+function _showSyncFailBanner(err) {
+  const tooBig = err && /longer than|exceeds|too large|maximum.*size/i.test(err.message || '');
+  let b = document.getElementById('_syncFailBanner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = '_syncFailBanner';
+    b.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#dc2626;color:#fff;font-size:12px;font-family:inherit;padding:10px 16px;border-radius:10px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.4);max-width:min(92vw,520px);display:flex;align-items:center;gap:10px;line-height:1.4;';
+    document.body.appendChild(b);
+  }
+  b.innerHTML = `
+    <span>⚠️ Não foi possível salvar na nuvem${tooBig ? ' (banco de dados cheio)' : ''} —
+    <b>não atualize a página</b> até resolver. Clique em ⬇ Backup no topo pra guardar seu
+    trabalho agora.</span>
+    <button style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:3px 9px;cursor:pointer;font-family:inherit;font-size:11px;flex-shrink:0;" onclick="this.parentElement.style.display='none'">Entendi</button>
+  `;
+  b.style.display = 'flex';
+}
+function _hideSyncFailBanner() {
+  const b = document.getElementById('_syncFailBanner');
+  if (b) b.style.display = 'none';
 }
 
 // ─── CLIENTS ────────────────────────────────────────────────────────────────
@@ -8263,18 +8313,38 @@ function closePicker() {
   pickerCid=null; pickerIso=null; pickerSel=[];
 }
 
-function confirmPicker() {
+async function confirmPicker() {
   if (!pickerCid || !pickerIso || !pickerSel.length) { closePicker(); return; }
-  const mats  = loadMats(pickerCid);
-  const sched = loadSched(pickerCid);
-  if (!sched[pickerIso]) sched[pickerIso] = [];
-  pickerSel.forEach(id => {
-    const m = mats.find(x=>x.id===id); if (!m) return;
-    if (!sched[pickerIso].find(x=>x.id===id))
-      sched[pickerIso].push({ id, name:m.name, thumbnail:m.thumbnail, mimeType:m.mimeType });
+  const cid = pickerCid, iso = pickerIso;
+  const mats = loadMats(cid);
+  const toAdd = pickerSel.map(id => mats.find(x => x.id === id)).filter(Boolean);
+
+  const btn = document.getElementById('pickerConfirm');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  // Miniaturas do picker sao base64 local (mmmat__, nunca sincroniza — ok ficar grande).
+  // Ao entrar no calendario (mmsched_items__, ESSE sincroniza), sobe pro Storage e
+  // guarda so a URL, senao o documento compartilhado do Firestore incha e trava o sync
+  // de todos os clientes.
+  const uploaded = await Promise.all(toAdd.map(async m => ({
+    id: m.id, name: m.name, mimeType: m.mimeType,
+    thumbnail: m.thumbnail && m.thumbnail.startsWith('data:')
+      ? await _uploadThumbToStorage(m.thumbnail, cid)
+      : m.thumbnail
+  })));
+
+  const sched = loadSched(cid);
+  if (!sched[iso]) sched[iso] = [];
+  uploaded.forEach(item => {
+    if (!sched[iso].find(x => x.id === item.id)) sched[iso].push(item);
   });
-  saveSched(pickerCid, sched);
-  refreshSched(pickerCid);
+  saveSched(cid, sched);
+  refreshSched(cid);
+
+  btn.disabled = false;
+  btn.textContent = original;
   closePicker();
 }
 
