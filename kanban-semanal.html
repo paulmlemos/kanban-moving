@@ -4527,10 +4527,26 @@ let _syncTimer      = null;
 let _lastLocalWrite = 0;
 const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__', 'mmideaf__', 'mmeditf__', 'mmui', 'mmLastSyncExterno']; // base64, senhas, estado de UI e cooldown do import externo — só localStorage, nunca Firestore (senao o cooldown vaza entre navegadores)
 
-// Chaves incluidas no ultimo push (para detectar remocoes locais) e no ultimo
-// snapshot remoto (para detectar remocoes feitas por outro navegador).
-let _lastPushedKeys  = new Set();
-let _knownRemoteKeys = new Set();
+// Um documento por cliente em vez de 1 documento unico pra todos (2026-09-29):
+// os 24 clientes brigando pelo mesmo limite de 1MB do Firestore fez o documento
+// bater no teto (Lios sozinha ja usava 585KB), o que passou a falhar em silencio
+// e apagar trabalho nao sincronizado no reload seguinte (incidente Localize).
+// Cada cliente agora tem seu proprio documento, com seu proprio limite de 1MB.
+// Chave sem dono reconhecido (estado global, cliente descontinuado etc.) cai no
+// documento "_global".
+let _COLLECTION = 'kanban_clients'; // let (nao const) so pra poder ser trocado em teste isolado
+function _ownerOf(key) {
+  for (const c of [...CLIENTS, MOVING_CLIENT]) {
+    if (key.endsWith('__' + c.id) || key.includes('__' + c.id + '__')) return c.id;
+  }
+  return '_global';
+}
+
+// Chaves incluidas no ultimo push por dono (pra detectar remocoes locais) e
+// todas as chaves remotas conhecidas juntas, de todos os documentos (pra
+// detectar remocao feita por outro navegador).
+let _lastPushedKeysByOwner = new Map();
+let _knownRemoteKeys       = new Set();
 
 function mmGet(key)       { return localStorage.getItem(key); }
 function mmSet(key, val)  {
@@ -4556,31 +4572,64 @@ function _syncableSnapshot() {
   return snap;
 }
 
+function _snapshotByOwner() {
+  const byOwner = {};
+  Object.entries(_syncableSnapshot()).forEach(([k, v]) => {
+    (byOwner[_ownerOf(k)] = byOwner[_ownerOf(k)] || {})[k] = v;
+  });
+  return byOwner;
+}
+
 // Faz merge campo a campo no Firestore (nunca sobrescreve o documento inteiro),
 // para que o que outro navegador ainda nao recebeu nao seja apagado por engano.
+// Um unico batch atomico cobre todos os documentos (clientes) que tiverem
+// mudanca nesta rodada.
 async function _pushToCloud() {
-  const snap        = _syncableSnapshot();
-  const currentKeys = new Set(Object.keys(snap));
-  const docRef      = _fsdb.collection('kanban').doc('state');
-  const args        = [];
+  const byOwner = _snapshotByOwner();
+  const owners  = new Set([...Object.keys(byOwner), ..._lastPushedKeysByOwner.keys()]);
+  const touched = [];
 
-  Object.entries(snap).forEach(([k, v]) => {
-    args.push(new firebase.firestore.FieldPath('data', k), v);
+  owners.forEach(owner => {
+    const current      = byOwner[owner] || {};
+    const currentKeys  = new Set(Object.keys(current));
+    const previousKeys = _lastPushedKeysByOwner.get(owner) || new Set();
+    const removed      = [...previousKeys].filter(k => !currentKeys.has(k));
+    if (!currentKeys.size && !removed.length) return; // nada mudou pra esse dono
+    touched.push({ owner, current, currentKeys, removed });
   });
-  _lastPushedKeys.forEach(k => {
-    if (!currentKeys.has(k)) args.push(new firebase.firestore.FieldPath('data', k), firebase.firestore.FieldValue.delete());
+  if (!touched.length) return true;
+
+  const batch = _fsdb.batch();
+  touched.forEach(({ owner, current, removed }) => {
+    const docRef = _fsdb.collection(_COLLECTION).doc(owner);
+    const args   = [];
+    Object.entries(current).forEach(([k, v]) => args.push(new firebase.firestore.FieldPath('data', k), v));
+    removed.forEach(k => args.push(new firebase.firestore.FieldPath('data', k), firebase.firestore.FieldValue.delete()));
+    args.push('ts', Date.now());
+    batch.update(docRef, ...args);
   });
-  args.push('ts', Date.now());
 
   try {
-    await docRef.update(...args);
+    // Sem rede (offline real ou bloqueada), o SDK do Firestore enfileira a
+    // escrita e a Promise de commit() as vezes so resolve quando a conexao
+    // volta — pode nunca rejeitar sozinha. _withTimeout garante que o alerta
+    // de falha (_showSyncFailBanner) sempre dispara em vez de ficar pendurado.
+    await _withTimeout(batch.commit(), 10000);
   } catch (e) {
     if (e && e.code === 'not-found') {
-      try { await docRef.set({ data: snap, ts: Date.now() }); }
-      catch (e2) { console.warn('[Firebase] push error', e2); _showSyncFailBanner(e2); return false; }
+      // pelo menos um documento de cliente ainda nao existe (cliente novo) —
+      // cria de uma vez, com o estado local completo, todos os tocados nesta rodada.
+      try {
+        const createBatch = _fsdb.batch();
+        touched.forEach(({ owner, current }) => {
+          createBatch.set(_fsdb.collection(_COLLECTION).doc(owner), { data: current, ts: Date.now() });
+        });
+        await _withTimeout(createBatch.commit(), 10000);
+      } catch (e2) { console.warn('[Firebase] push error (criacao)', e2); _showSyncFailBanner(e2); return false; }
     } else { console.warn('[Firebase] push error', e); _showSyncFailBanner(e); return false; }
   }
-  _lastPushedKeys = currentKeys;
+
+  touched.forEach(({ owner, currentKeys }) => _lastPushedKeysByOwner.set(owner, currentKeys));
   _hideSyncFailBanner();
   return true;
 }
@@ -4600,23 +4649,28 @@ function _applyRemoteData(data) {
 
 async function _loadFromCloud() {
   try {
-    const doc = await _fsdb.collection('kanban').doc('state').get();
-    if (doc.exists) {
-      const { data } = doc.data();
-      return _applyRemoteData(data || {});
-    }
+    const snap   = await _fsdb.collection(_COLLECTION).get();
+    const merged = {};
+    snap.forEach(doc => Object.assign(merged, (doc.data() || {}).data || {}));
+    return _applyRemoteData(merged);
   } catch(e) { console.warn('[Firebase] load error', e); }
   return false;
 }
 
 function _subscribeToChanges() {
-  let _firstSnap = true;
-  _fsdb.collection('kanban').doc('state').onSnapshot(snap => {
-    if (!snap.exists) return;
-    const { data } = snap.data();
-    if (_firstSnap) { _firstSnap = false; _knownRemoteKeys = new Set(Object.keys(data || {})); return; }
+  let _firstSnap  = true;
+  const _byDocId  = new Map(); // ownerId -> {data} mais recente, pra poder remontar o merge a cada evento
+  _fsdb.collection(_COLLECTION).onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === 'removed') _byDocId.delete(change.doc.id);
+      else _byDocId.set(change.doc.id, (change.doc.data() || {}).data || {});
+    });
+    const merged = {};
+    _byDocId.forEach(data => Object.assign(merged, data));
+
+    if (_firstSnap) { _firstSnap = false; _knownRemoteKeys = new Set(Object.keys(merged)); return; }
     if (Date.now() - _lastLocalWrite < 4000) return;
-    const changed = _applyRemoteData(data || {});
+    const changed = _applyRemoteData(merged);
     if (changed) {
       _showSyncBanner();
       setTimeout(() => location.reload(), 1500);
