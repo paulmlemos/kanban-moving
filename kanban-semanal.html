@@ -2356,6 +2356,78 @@
     .sched-drivelink::placeholder { color: rgba(124,92,252,0.25); font-style: italic; }
     .sched-drivelink:focus { color: rgba(124,92,252,0.9); }
 
+    /* BOTAO GERAR PREVIA DO FEED (fim do calendario) */
+    .sched-preview-btn {
+      margin: 10px 12px 12px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit; font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .sched-preview-btn:hover { background: var(--accent-dim); border-color: var(--accent); }
+    .sched-preview-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    /* PREVIA DO FEED — grade estilo Instagram, ordem cronologica invertida (post mais recente primeiro) */
+    .feed-preview-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(6px);
+      z-index: 8100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .feed-preview-overlay.open { display: flex; }
+    .feed-preview-modal {
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      width: 470px; max-width: 100%;
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-pop);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #262626;
+    }
+    .feed-preview-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 14px 16px; border-bottom: 1px solid #eee; flex-shrink: 0;
+    }
+    .feed-preview-profile { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .feed-preview-avatar {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 14px; font-weight: 700; text-transform: uppercase;
+      background: var(--client-color, #122A1E);
+    }
+    .feed-preview-handle { font-size: 13px; font-weight: 700; }
+    .feed-preview-month { font-size: 11px; color: #8e8e8e; margin-top: 1px; }
+    .feed-preview-close { background: none; border: none; color: #262626; font-size: 20px; cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0; }
+    .feed-preview-close:hover { opacity: .6; }
+    .feed-preview-body { overflow-y: auto; }
+    .feed-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .feed-preview-cell {
+      position: relative; aspect-ratio: 1/1; background: #fafafa; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .feed-preview-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .feed-preview-reel-badge {
+      position: absolute; top: 6px; right: 6px; color: #fff; font-size: 12px;
+      text-shadow: 0 1px 3px rgba(0,0,0,.6);
+    }
+    .feed-preview-cell-date {
+      position: absolute; left: 4px; bottom: 4px; font-size: 8px; font-weight: 700;
+      color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7);
+      opacity: 0; transition: opacity .12s; pointer-events: none;
+    }
+    .feed-preview-cell:hover .feed-preview-cell-date { opacity: 1; }
+    .feed-preview-empty { padding: 40px 20px; text-align: center; font-size: 12px; color: #8e8e8e; }
+
     /* ══════════════════════════════════════════════
        FICHAS DOS CLIENTES
     ══════════════════════════════════════════════ */
@@ -4309,6 +4381,22 @@
 <div class="sched-lightbox-overlay" id="schedLightbox">
   <button class="sched-lightbox-close" id="schedLightboxClose">×</button>
   <div class="ig-post" id="schedLightboxPost"></div>
+</div>
+
+<div class="feed-preview-overlay" id="feedPreviewModal">
+  <div class="feed-preview-modal">
+    <div class="feed-preview-header">
+      <div class="feed-preview-profile">
+        <div class="feed-preview-avatar" id="feedPreviewAvatar"></div>
+        <div>
+          <div class="feed-preview-handle" id="feedPreviewHandle"></div>
+          <div class="feed-preview-month" id="feedPreviewMonth"></div>
+        </div>
+      </div>
+      <button class="feed-preview-close" id="feedPreviewClose">×</button>
+    </div>
+    <div class="feed-preview-body" id="feedPreviewBody"></div>
+  </div>
 </div>
 
 <div class="tw-modal-overlay" id="twTaskModal">
@@ -7709,7 +7797,58 @@ document.getElementById('schedLightbox').addEventListener('click', e => {
   if (e.target.id === 'schedLightbox') closeSchedLightbox();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeSchedLightbox();
+  if (e.key === 'Escape') { closeSchedLightbox(); closeFeedPreview(); }
+});
+
+// ── PREVIA DO FEED — grade do mes inteiro, como apareceria no perfil do Instagram ──
+function openFeedPreview(cid) {
+  const client  = [...CLIENTS, MOVING_CLIENT].find(c => c.id === cid) || { name: cid, color: 'var(--accent)' };
+  const handle  = (loadFicha(cid).handle || client.name).replace(/^@/, '');
+  const { y, m } = getSchedMonth(cid);
+  const items   = loadSched(cid);
+  const legends = loadLegend(cid);
+
+  // percorre o mes em ordem cronologica (dia 1 -> ultimo dia) e depois inverte,
+  // porque no feed do Instagram o post mais recente aparece primeiro (topo-esquerda)
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const posts = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    (items[iso] || []).forEach(it => posts.push({ ...it, iso }));
+  }
+  posts.reverse();
+
+  const avatar = document.getElementById('feedPreviewAvatar');
+  avatar.textContent = igInitials(client.name);
+  avatar.style.setProperty('--client-color', client.color);
+  document.getElementById('feedPreviewHandle').textContent = '@' + handle;
+  document.getElementById('feedPreviewMonth').textContent =
+    `${MONTH_PT[m]} ${y} · ${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`;
+
+  const body = document.getElementById('feedPreviewBody');
+  body.innerHTML = !posts.length
+    ? `<div class="feed-preview-empty">Nenhum conteúdo agendado em ${MONTH_PT[m]}.</div>`
+    : `<div class="feed-preview-grid">${posts.map(it => {
+        const d = new Date(it.iso + 'T00:00:00');
+        const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+        const cap = (legends[it.iso] || '').trim();
+        const isVid = isVidFile(it.name);
+        return `
+          <div class="feed-preview-cell" title="${dateStr}${cap ? ' — ' + escHtml(cap) : ''}">
+            ${it.thumbnail ? `<img src="${it.thumbnail}">` : `<div>${isVid ? '🎬' : '📄'}</div>`}
+            ${isVid ? '<div class="feed-preview-reel-badge">▶</div>' : ''}
+            <div class="feed-preview-cell-date">${dateStr}</div>
+          </div>`;
+      }).join('')}</div>`;
+
+  document.getElementById('feedPreviewModal').classList.add('open');
+}
+function closeFeedPreview() {
+  document.getElementById('feedPreviewModal').classList.remove('open');
+}
+document.getElementById('feedPreviewClose').addEventListener('click', closeFeedPreview);
+document.getElementById('feedPreviewModal').addEventListener('click', e => {
+  if (e.target.id === 'feedPreviewModal') closeFeedPreview();
 });
 
 function getWeeksForMonth(y, m) {
@@ -7808,7 +7947,11 @@ function schedColHtml(cid) {
       <button class="sched-nav" data-c="${cid}" data-dir="1">›</button>
     </div>
     <div class="sched-wdays">${['Seg','Ter','Qua','Qui','Sex'].map(d=>`<div class="sched-wd">${d}</div>`).join('')}</div>
-    <div class="sched-grid" id="sgrid-${cid}">${weeksHtml}</div>`;
+    <div class="sched-grid" id="sgrid-${cid}">${weeksHtml}</div>
+    <button class="sched-preview-btn" data-c="${cid}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Gerar prévia
+    </button>`;
 }
 
 function bindNoteDel(btn, inp) {
@@ -7881,6 +8024,9 @@ function bindSched(cid) {
         });
       }
     })
+  );
+  col.querySelectorAll('.sched-preview-btn').forEach(b =>
+    b.addEventListener('click', () => openFeedPreview(b.dataset.c))
   );
   col.querySelectorAll('.sched-legend').forEach(ta => {
     ta.addEventListener('input', () => {
