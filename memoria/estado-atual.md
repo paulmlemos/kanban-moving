@@ -143,3 +143,35 @@ Origem: Claude (com Priscila), a partir de print mostrando a última linha do ca
   toggle agora chama `scrollIntoView({block:'nearest', behavior:'smooth'})` no `.sched-more-body`
   recém-aberto. Testado local e aprovado pela Priscila.
 - **Próximo passo crítico:** nenhum pendente desta frente.
+
+## Atualização 2026-09-29 — Claude (com Priscila): cor de legenda + prévia de feed + correção estrutural do sync (documento por cliente) após perda real de dados da Localize
+
+Origem: Claude (com Priscila)
+
+- **Fix simples:** texto da legenda de post, depois de preenchido, usava cor clara residual de
+  tema escuro antigo (`rgba(232,227,220,0.7)`), quase invisível no tema claro atual. Trocado por
+  `var(--text)`, igual aos outros campos. Commit `99a57f2`.
+- **Feature nova:** botão "Gerar prévia" no fim de cada calendário mensal por cliente — abre modal
+  simulando o grid do perfil do Instagram (avatar, @handle, mês, grid 3 colunas com os posts do mês
+  em ordem cronológica invertida — mais recente primeiro, como o feed real). Hover mostra
+  data+legenda; vídeo/reels ganha selo de play. Commit `897bf01`.
+- 🔴 **Incidente real, causa raiz corrigida:** Priscila reportou "preenchi o calendário inteiro da
+  Localize, atualizei a página, sumiu tudo". Investigação revelou problema estrutural grave — ver
+  `erros.md` e `decisoes.md` para o detalhe completo. Resumo: documento único do Firestore
+  compartilhado por 24 clientes bateu no limite de 1MB (Lios sozinha = 585KB de imagens acumuladas
+  desde junho), sync passou a falhar em silêncio, reload seguinte sobrescrevia o navegador com o
+  último estado sincronizado. Corrigido com: (1) alerta visível de falha de sync (commit
+  `11aef98`); (2) documento por cliente no Firestore em vez do único compartilhado, com migração
+  dos 1.603 campos verificada célula a célula, zero divergência (commit `7a5d4ca`); (3) regras do
+  Firestore atualizadas no Console pela própria Priscila.
+- **Dados da Localize não recuperados:** legenda, link do Drive e foto dos dias 07 a 30/10 nunca
+  chegaram a sincronizar — só existiam no navegador da Priscila, sobrescritos antes desta sessão.
+  Notas curtas (título) sobreviveram para todos os dias. Priscila vai reenviar manualmente;
+  confirmado a ela que a causa raiz está corrigida e o alerta visível previne repetição silenciosa.
+- Testado extensivamente em localhost (Playwright, rede do Firestore bloqueada) antes de cada
+  deploy, seguindo a regra do `CLAUDE.md`. Migração de dados real rodada com backup prévio e
+  verificação byte a byte (zero divergência em 43 documentos novos).
+- **Próximo passo crítico:** nenhum bloqueante. Se o volume de imagens crescer muito de novo (Lios
+  já usa 630KB do 1MB dela sozinha), reabrir a conversa sobre Firebase Storage (hoje bloqueado por
+  custo, ver `decisoes.md`) ou arquivar meses antigos. `kanban-semanal-teste-hub.html` (untracked,
+  máquina da Priscila) segue fora do Git de propósito, não tocado nesta sessão.

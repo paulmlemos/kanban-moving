@@ -106,3 +106,54 @@ edição — se os dados são salvos por data ISO (não por mês exibido, como �
 são datas reais e editáveis, só precisam de sinalização visual (opacidade), não bloqueio de clique.
 Qualquer accordion/toggle dentro de um container com scroll próprio (`overflow-y: auto` + `max-
 height`) deve chamar `scrollIntoView` no conteúdo revelado, especialmente perto do fim da lista.
+
+## Erro: perda real de dados da Localize — documento único do Firestore bateu no limite de 1MB, sync falhava em silêncio (2026-09-29, causa raiz corrigida)
+
+Impacto:
+Priscila preencheu o calendário de outubro inteiro da Localize Store (legendas, links de Drive,
+fotos) ao longo de horas. Ao atualizar a página, quase tudo sumiu. Investigação confirmou, campo a
+campo: fotos só sobreviveram até 05/10, links do Drive até 05/10, legendas completas até 07/10, e
+notas curtas (bem menores) até 30/10. **Dias 07 a 30/10 perderam legenda, link e foto — sem
+caminho de recuperação** (nunca chegaram a ser salvos na nuvem; só existiam no navegador da
+Priscila, sobrescritos por um reload anterior a esta sessão; sem outra aba/dispositivo aberto com
+o estado antigo).
+
+Causa:
+Todos os 24 clientes dividiam **um único documento** do Firestore (`kanban/state`), limite rígido
+de 1MB (1.048.576 bytes). O documento já estava em ~989KB de conteúdo puro — `mmsched_items__lios`
+sozinho tinha 585KB de miniaturas base64 acumuladas desde junho, nunca arquivadas. Perto do
+limite, `_pushToCloud()` passou a falhar de forma **intermitente e silenciosa** (só
+`console.warn`, sem alerta visível na tela): writes grandes (fotos, ~15-40KB em base64) falhavam
+primeiro, depois os médios (links), por último os pequenos (legendas, notas). Qualquer reload
+seguinte rodava `_loadFromCloud()`, que sempre tratava a nuvem como autoridade e sobrescrevia o
+navegador local com o último estado que tinha conseguido sincronizar — apagando tudo que só
+existia localmente, sem aviso.
+
+Correcao:
+1. Alerta visível (banner vermelho, `_showSyncFailBanner`/`_hideSyncFailBanner`) quando qualquer
+   push falhar — instrui a não atualizar a página e usar o botão Backup. Commit `11aef98`.
+2. Correção estrutural definitiva: documento único substituído por **um documento por cliente**
+   (`kanban_clients/{clientId}`, coleção nova) + um documento `_global` para chaves sem dono
+   reconhecido. Cada cliente ganha seu próprio limite de 1MB — Lios (maior consumidora) passa a
+   usar 630KB de 1MB só dela, em vez de dividir 1MB com outros 23. `_ownerOf(key)` classifica cada
+   chave pelo id do cliente. `_pushToCloud`/`_loadFromCloud`/`_subscribeToChanges` reescritos pra
+   operar em vários documentos via batch atômico, mantendo o merge campo a campo (nunca sobrescreve
+   documento inteiro). Timeout de 10s no commit do batch — sem rede, o SDK as vezes enfileira a
+   escrita sem nunca rejeitar sozinho. Commit `7a5d4ca`.
+3. Regras do Firestore atualizadas no Console (fora do repo, feito pela Priscila) pra liberar
+   `kanban_clients/{clientId}`, mantendo a regra antiga de `kanban/state` intacta.
+4. Migração real: os 1.603 campos do documento antigo foram copiados pros 43 documentos novos (1
+   por cliente + `_global`), verificados campo a campo após a escrita — zero divergência. Documento
+   antigo (`kanban/state`) mantido intacto, sem leitura nem escrita pelo código novo, como rede de
+   segurança/histórico.
+5. Cogitado e descartado: mover miniaturas pro Firebase Storage (eliminaria o crescimento do
+   documento de vez, solução mais "correta"). Bloqueado por custo — ver `decisoes.md`.
+
+Prevencao:
+Nunca deixar múltiplos clientes/entidades dividirem um único documento do Firestore quando o
+conteúdo inclui mídia (base64 cresce rápido e sem teto natural). Qualquer sync local-first com
+merge "nuvem sempre vence" precisa de alerta visível em caso de falha de push — falha silenciosa
+nesse padrão sempre vira perda de dado real no próximo reload, cedo ou tarde, mesmo que o usuário
+não tenha feito nada "rápido demais". Ao investigar um caso de "sumiu tudo", checar timestamp de
+última sincronização e tamanho do documento **antes** de qualquer outra hipótese (rede, cache,
+etc.) — foi o que revelou a causa real aqui.
