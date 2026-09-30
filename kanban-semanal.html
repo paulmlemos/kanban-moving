@@ -4833,7 +4833,8 @@ const CLIENTS = [
     color: '#f43f5e',
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
-    ]
+    ],
+    hideFromBoard: true
   },
   {
     id: 'davi',
@@ -11156,7 +11157,7 @@ function refreshAgendaPage() {
 // ── CALENDÁRIOS — gestão antecipada do calendário do mês seguinte ─────────────
 // Regra combinada com a Priscila em 18/09/2026: até o último dia do mês atual
 // (ex.: 30/09), o calendário do MÊS SEGUINTE (ex.: outubro) precisa estar 100%
-// pronto pra todo cliente do Gestão de Postagens (exceto Rochele). "Pronto" =
+// pronto pra todo cliente do Gestão de Postagens. "Pronto" =
 // dia útil com mídia (loadSched) E link do Drive (loadDriveLink) preenchidos —
 // os dois campos que já existem no calendário do cliente (Conteúdos > Cronograma).
 // Meta mensal = dias úteis do mês alvo × (posts/semana do cliente ÷ 5), já que

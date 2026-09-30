@@ -9,6 +9,16 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-09-30 — Claude (com Priscila): Rochele removida do Gestão de Postagens
+
+Origem: Claude (com Priscila)
+
+- Rochele ganhou `hideFromBoard: true` no array `CLIENTS` (mesmo padrão da Essência Gastronomia).
+  Ela some do quadro semanal (`Gestão de Postagens`), mas continua normal em Clientes/Calendário —
+  já estava fora do cálculo de meta mensal (`CALENDARIO_METAS`) desde antes, por pedido da Priscila.
+- Verificado programaticamente (`inBoard(rochele) === false`) antes do deploy.
+- Próximo passo crítico: nenhum pendente desta frente.
+
 ## Atualização 2026-09-18 — Claude (com Priscila): estrutura de memória própria criada
 
 Origem: Claude (com Priscila)
