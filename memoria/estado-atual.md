@@ -9,6 +9,47 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-10-01 (parte 3) — Claude (com Priscila): limpeza de mídia antiga no Firestore (Lios perto do limite de 1MB de novo)
+
+Origem: Claude (com Priscila)
+
+- Priscila reportou "acabou a memória" pra anexar mídia nos calendários. Medição (leitura, via
+  REST público do Firestore) confirmou: `kanban_clients/lios` estava em 616KB de 1MB, sendo 533KB
+  (22 fotos/vídeos, 34 itens) só de mídia anexada **antes de 01/10/2026**. Mesmo padrão do
+  incidente de 2026-09-29 (ver `erros.md`), mas desta vez pego antes de travar o sync.
+- **Backup completo da coleção `kanban_clients` (43 documentos) feito ANTES de qualquer escrita**,
+  salvo em `C:\Users\prisc\Documents\kanban-backups\kanban_clients-backup-2026-10-01-pre-limpeza-midia.json`
+  (fora do Git — repo é público, não pode versionar dado de cliente). Script de leitura usado:
+  REST `GET` paginado, sem SDK, sem autenticação (mesmo acesso que o próprio app usa).
+- **Escopo confirmado com a Priscila antes de escrever:** remover só o campo `thumbnail` (base64)
+  dos itens de `mmsched_items__{cid}` com data anterior a 01/10/2026, mantendo `name`/`mimeType`/
+  `id` (metadado leve) e sem tocar em `mmlegend__`/`mmdrivelink__`/`mmformat__` (legenda, link do
+  Drive e status do dia continuam intactos). Em todos os clientes, não só Lios.
+- **Execução:** script Node com `https` puro (sem dependência nova), um `PATCH` REST por cliente,
+  `updateMask.fieldPaths=data.mmsched_items__{cid}` — escreve **só esse campo**, igual ao padrão de
+  merge campo-a-campo que o próprio app usa (`_pushToCloud`), pra não colidir com sync de outro
+  navegador aberto. Testado escrever/apagar um campo descartável (`_global.ZZZ_TESTE_WRITE_ACCESS`)
+  antes de tocar em dado real, seguindo o padrão de teste já registrado em `erros.md`.
+  Resultado, verificado por releitura depois (mídia de out/2026+ confirmada intacta nos 3):
+  - `lios`: 22 mídias removidas, 2 mantidas (out/2026+) — documento 616KB → 85,5KB.
+  - `davi`: 5 mídias removidas, 13 mantidas — documento 538,5KB → 415,9KB.
+  - `localize`: 4 mídias removidas, 12 mantidas — documento 376,6KB → 284,1KB.
+  - `_global` (chave residual `mmsched_items__zion`, cliente descontinuado): 1 mídia removida —
+    25,5KB → 14,5KB.
+  - Total liberado: ~757KB. Demais clientes já não tinham mídia anterior a outubro (nada a apagar).
+- Ação técnica real com efeito em produção (escrita direta no Firestore, fora do fluxo normal do
+  app) — bloqueada automaticamente pelo classificador de permissão do Claude Code na primeira
+  tentativa ("Modify Shared Resources"); Priscila aprovou explicitamente antes de eu repetir o
+  comando. Registrar aqui porque é precedente: operação futura equivalente também vai pedir
+  aprovação explícita, mesmo com backup e escopo já confirmados.
+- Se o navegador da Priscila ou do Paul estiver com o Kanban aberto numa aba antiga durante essa
+  janela, `_subscribeToChanges` deve detectar a mudança remota e recarregar sozinho (mesmo
+  mecanismo que já existe pra qualquer sync entre navegadores) — não precisa ação manual, só
+  checar se algo parecer desatualizado.
+- Próximo passo crítico: nenhum pendente desta frente. Se o padrão de acúmulo voltar (Lios já foi
+  a maior consumidora duas vezes), vale considerar um lembrete recorrente de "arquivar/limpar mídia
+  de mês fechado" em vez de esperar o limite avisar sozinho.
+
 ## Atualização 2026-10-01 (parte 2) — Claude (com Priscila): Calendários agora mostra mês atual + próximo mês
 
 Origem: Claude (com Priscila)
