@@ -9,6 +9,23 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-10-01 (parte 4) — Claude (com Priscila): prévia de feed tratava cada foto do carrossel como um post separado
+
+Origem: Claude (com Priscila), a partir de print mostrando um dia do Cronograma com 4 fotos.
+
+- **Bug:** `openFeedPreview()` (modal "Gerar prévia") colocava cada item de `mmsched_items__{cid}[iso]`
+  como uma célula própria na grade. Um dia com 4 fotos (carrossel) virava 4 posts separados na
+  prévia, em vez de 1 — no Instagram real só a capa (1ª mídia) do carrossel aparece na grade do
+  feed, o resto só é visto dentro do post.
+- **Correção:** só o primeiro item de cada dia vira uma célula (`dayItems[0]`); dias com mais de 1
+  item marcam `isCarousel: true`. Célula ganha um ícone de carrossel (SVG, canto superior direito —
+  mesmo lugar/estilo do ícone de reels já existente) quando `isCarousel`, mutuamente exclusivo com o
+  ícone de vídeo (um post não é as duas coisas). `kanban-semanal.html` função `openFeedPreview`.
+- Testado localmente (Playwright, rede do Firestore bloqueada): 3 dias simulados (1 carrossel de 4
+  fotos, 1 vídeo, 1 foto única) → prévia mostrou exatamente 3 células, 1 badge de carrossel, 1 badge
+  de play. Confirmado visualmente por screenshot. Zero erro de JS novo no console.
+- Próximo passo crítico: nenhum pendente desta frente.
+
 ## Atualização 2026-10-01 (parte 3) — Claude (com Priscila): limpeza de mídia antiga no Firestore (Lios perto do limite de 1MB de novo)
 
 Origem: Claude (com Priscila)

@@ -7921,12 +7921,16 @@ function openFeedPreview(cid) {
   const legends = loadLegend(cid);
 
   // percorre o mes em ordem cronologica (dia 1 -> ultimo dia) e depois inverte,
-  // porque no feed do Instagram o post mais recente aparece primeiro (topo-esquerda)
+  // porque no feed do Instagram o post mais recente aparece primeiro (topo-esquerda).
+  // Mais de uma midia no mesmo dia = carrossel: no feed real só a capa (1º item)
+  // aparece na grade, o resto só é visto dentro do post — por isso só o primeiro
+  // item de cada dia vira uma celula, nunca um por midia.
   const daysInMonth = new Date(y, m + 1, 0).getDate();
   const posts = [];
   for (let day = 1; day <= daysInMonth; day++) {
     const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    (items[iso] || []).forEach(it => posts.push({ ...it, iso }));
+    const dayItems = items[iso] || [];
+    if (dayItems.length) posts.push({ ...dayItems[0], iso, isCarousel: dayItems.length > 1 });
   }
   posts.reverse();
 
@@ -7948,7 +7952,11 @@ function openFeedPreview(cid) {
         return `
           <div class="feed-preview-cell" title="${dateStr}${cap ? ' — ' + escHtml(cap) : ''}">
             ${it.thumbnail ? `<img src="${it.thumbnail}">` : `<div>${isVid ? '🎬' : '📄'}</div>`}
-            ${isVid ? '<div class="feed-preview-reel-badge">▶</div>' : ''}
+            ${isVid
+              ? '<div class="feed-preview-reel-badge">▶</div>'
+              : it.isCarousel
+                ? '<div class="feed-preview-reel-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="14" height="14" rx="3"/><path d="M22 7.5V19a3 3 0 0 1-3 3H7.5"/></svg></div>'
+                : ''}
             <div class="feed-preview-cell-date">${dateStr}</div>
           </div>`;
       }).join('')}</div>`;
