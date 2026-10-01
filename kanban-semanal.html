@@ -3399,6 +3399,12 @@
       cursor: pointer; white-space: nowrap; flex-shrink: 0; font-family: inherit;
     }
     .calcli-go:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .cal-month-tag {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+      text-transform: uppercase; color: var(--text-faint); background: var(--bg);
+      border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px;
+      margin-left: 8px; vertical-align: middle;
+    }
     @media (max-width: 700px) {
       .calcli-row { flex-wrap: wrap; }
       .calcli-name { width: auto; }
@@ -11182,11 +11188,11 @@ function weekdaysInMonth(y, m) {
 function getCalendarioCycle() {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const curY = today.getFullYear(), curM = today.getMonth();
-  const targetM = (curM + 1) % 12;
-  const targetY = curM === 11 ? curY + 1 : curY;
+  const nextM = (curM + 1) % 12;
+  const nextY = curM === 11 ? curY + 1 : curY;
   const deadline = new Date(curY, curM + 1, 0); // último dia do mês atual
   const daysLeft = Math.max(0, Math.round((deadline - today) / 86400000));
-  return { targetY, targetM, deadline, daysLeft };
+  return { curY, curM, nextY, nextM, deadline, daysLeft };
 }
 
 function countReadyDaysInMonth(cid, y, m) {
@@ -11206,8 +11212,7 @@ function countReadyDaysInMonth(cid, y, m) {
   return ready;
 }
 
-function computeCalendarioDashboard() {
-  const { targetY, targetM, deadline, daysLeft } = getCalendarioCycle();
+function computeCalendarioDashboard(targetY, targetM) {
   const wdays = weekdaysInMonth(targetY, targetM);
   const perClient = Object.keys(CALENDARIO_METAS).map(cid => {
     const client = CLIENTS.find(c => c.id === cid);
@@ -11222,10 +11227,14 @@ function computeCalendarioDashboard() {
   const totalReady  = perClient.reduce((s, x) => s + Math.min(x.ready, x.needed), 0);
   const pctGeral = totalNeeded ? Math.round((totalReady / totalNeeded) * 100) : 0;
 
-  return { targetY, targetM, deadline, daysLeft, perClient, totalNeeded, totalReady, pctGeral };
+  return { targetY, targetM, perClient, totalNeeded, totalReady, pctGeral };
 }
 
-function goToClientCalendar(cid) {
+function goToClientCalendar(cid, targetY, targetM) {
+  if (targetY != null && targetM != null) {
+    schedMonths[cid] = { y: targetY, m: targetM };
+    refreshSched(cid);
+  }
   selectClient(cid);
   requestAnimationFrame(() => {
     const sec = document.getElementById(`sec-cli-${cid}`);
@@ -11234,16 +11243,13 @@ function goToClientCalendar(cid) {
   });
 }
 
-function refreshCalendarioPage() {
-  const wrap = document.getElementById('main-calendarios');
-  if (!wrap) return;
-  const d = computeCalendarioDashboard();
-  const deadlineLbl = `${String(d.deadline.getDate()).padStart(2,'0')}/${String(d.deadline.getMonth()+1).padStart(2,'0')}`;
-
-  wrap.innerHTML = `
-    <div class="agenda-section-hdr"><h2>Calendário de ${MONTH_PT[d.targetM]} ${d.targetY}</h2></div>
+// Renderiza um bloco (KPIs + lista por cliente) para um mês-alvo. idSuffix identifica
+// o container da lista ('cur' = mês atual, 'next' = próximo mês) pra não colidir ids.
+function calendarioBlockHtml(d, idSuffix, tagLbl, daysLeft, prazoSub) {
+  return `
+    <div class="agenda-section-hdr"><h2>Calendário de ${MONTH_PT[d.targetM]} ${d.targetY}<span class="cal-month-tag">${tagLbl}</span></h2></div>
     <div class="dash-grid" style="padding:0 24px 8px;">
-      <div class="dash-card ${d.pctGeral>=100?'ok':d.daysLeft<=5?'alert':'warn'}">
+      <div class="dash-card ${d.pctGeral>=100?'ok':daysLeft<=5?'alert':'warn'}">
         <div class="dash-card-hdr"><div>
           <p class="dash-card-title">Concluído</p>
           <h3 class="dash-card-val">${d.pctGeral}%</h3>
@@ -11257,19 +11263,22 @@ function refreshCalendarioPage() {
           <p class="dash-card-sub">faltam ${Math.max(0, d.totalNeeded - d.totalReady)}</p>
         </div></div>
       </div>
-      <div class="dash-card ${d.daysLeft<=5?'alert':d.daysLeft<=10?'warn':''}">
+      <div class="dash-card ${daysLeft<=5?'alert':daysLeft<=10?'warn':''}">
         <div class="dash-card-hdr"><div>
           <p class="dash-card-title">Prazo</p>
-          <h3 class="dash-card-val">${d.daysLeft}d</h3>
-          <p class="dash-card-sub">até ${deadlineLbl} (fim do mês atual)</p>
+          <h3 class="dash-card-val">${daysLeft}d</h3>
+          <p class="dash-card-sub">${prazoSub}</p>
         </div></div>
       </div>
     </div>
     <div class="agenda-section-hdr"><h2>Por cliente</h2></div>
-    <div class="calcli-list" id="calcliList"></div>
+    <div class="calcli-list" id="calcliList-${idSuffix}"></div>
   `;
+}
 
-  const list = document.getElementById('calcliList');
+function fillCalendarioList(d, idSuffix) {
+  const list = document.getElementById(`calcliList-${idSuffix}`);
+  if (!list) return;
   list.innerHTML = d.perClient.map(x => `
     <div class="calcli-row">
       <span class="calcli-dot" style="background:${x.client.color}"></span>
@@ -11280,7 +11289,24 @@ function refreshCalendarioPage() {
       <button class="calcli-go" data-cid="${x.client.id}" title="Ir para o calendário de ${escHtml(x.client.name)}">Ver calendário →</button>
     </div>`).join('');
 
-  list.querySelectorAll('.calcli-go').forEach(b => b.addEventListener('click', () => goToClientCalendar(b.dataset.cid)));
+  list.querySelectorAll('.calcli-go').forEach(b => b.addEventListener('click', () => goToClientCalendar(b.dataset.cid, d.targetY, d.targetM)));
+}
+
+function refreshCalendarioPage() {
+  const wrap = document.getElementById('main-calendarios');
+  if (!wrap) return;
+  const { curY, curM, nextY, nextM, deadline, daysLeft } = getCalendarioCycle();
+  const deadlineLbl = `${String(deadline.getDate()).padStart(2,'0')}/${String(deadline.getMonth()+1).padStart(2,'0')}`;
+
+  const dCur  = computeCalendarioDashboard(curY, curM);
+  const dNext = computeCalendarioDashboard(nextY, nextM);
+
+  wrap.innerHTML =
+    calendarioBlockHtml(dCur,  'cur',  'mês atual',   daysLeft, `até ${deadlineLbl} (fim deste mês)`) +
+    calendarioBlockHtml(dNext, 'next', 'próximo mês', daysLeft, `até ${deadlineLbl} (fim do mês atual)`);
+
+  fillCalendarioList(dCur, 'cur');
+  fillCalendarioList(dNext, 'next');
 }
 
 // ── SAÚDE DA CARTEIRA — placar consolidado por cliente ────────────────────────

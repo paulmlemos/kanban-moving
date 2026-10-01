@@ -9,6 +9,33 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-10-01 (parte 2) — Claude (com Priscila): Calendários agora mostra mês atual + próximo mês
+
+Origem: Claude (com Priscila)
+
+- Pedido da Priscila: a aba `Calendários` só mostrava o mês seguinte (gestão antecipada); ela
+  também quer ver o mês atual pra acompanhar se está correndo tudo certo durante o mês, sem deixar
+  de já adiantar o próximo.
+- `computeCalendarioDashboard()` generalizada para aceitar `(targetY, targetM)` em vez de só
+  calcular o mês seguinte internamente. `getCalendarioCycle()` agora devolve `curY/curM` (mês
+  atual) e `nextY/nextM` (mês seguinte), além do `deadline`/`daysLeft` (continuam sendo os mesmos
+  pros dois blocos — o prazo de ambos é o fim do mês atual).
+  `refreshCalendarioPage()` reescrita pra renderizar dois blocos completos (KPIs + lista por
+  cliente), com ids separados (`calcliList-cur` / `calcliList-next`) pra não colidir.
+- **Botão "Ver calendário →" agora abre o cronograma do cliente já no mês certo** — antes sempre
+  abria no mês que estivesse em `schedMonths[cid]` (geralmente o atual, por padrão). Agora
+  `goToClientCalendar(cid, targetY, targetM)` seta `schedMonths[cid]` e chama `refreshSched(cid)`
+  antes de trocar de aba, então o botão do bloco de outubro abre outubro e o de novembro abre
+  novembro. Testado e confirmado via Playwright (ver abaixo).
+- Testado localmente (Playwright, rede do Firestore bloqueada, servidor Node em `localhost:8766`
+  — `python`/`python3` continuam stubs quebrados nesta máquina): os dois cabeçalhos renderizam
+  corretamente ("Calendário de Outubro 2026 · mês atual" / "Calendário de Novembro 2026 · próximo
+  mês"), as duas listas têm os 7 clientes de `CALENDARIO_METAS` (sem Fabi Eventos Kids, já
+  removida), e o clique em "Ver calendário →" de cada bloco abriu o mês correto no cronograma do
+  cliente testado (Lios). Zero erro de JS no console (só o ruído esperado de Firestore bloqueado).
+  Print aprovado pela Priscila antes do deploy.
+- Próximo passo crítico: nenhum pendente desta frente após o deploy.
+
 ## Atualização 2026-10-01 — Claude (com Priscila): Fabi Eventos Kids removida do Gestão de Postagens e de Calendários
 
 Origem: Claude (com Priscila)
