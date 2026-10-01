@@ -9,6 +9,21 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-10-01 — Claude (com Priscila): Fabi Eventos Kids removida do Gestão de Postagens e de Calendários
+
+Origem: Claude (com Priscila)
+
+- Fabi Eventos Kids (`fabi-kids`) ganhou `hideFromBoard: true` no array `CLIENTS` — mesmo padrão
+  já usado para Essência Gastronomia e Rochele. Some do quadro semanal (`Gestão de Postagens`),
+  continua normal em Clientes/Cronograma.
+- Removida a entrada `'fabi-kids': 2` de `CALENDARIO_METAS` — sai do dashboard de `Calendários`
+  (gestão antecipada do mês seguinte) e da meta mensal consolidada.
+- Verificado programaticamente (`inBoard(fabi-kids) === false`, `CALENDARIO_METAS` sem a chave,
+  46 clientes intactos) antes do commit. Não testado com Playwright/localhost visual — mudança é
+  só flag estático, sem interação de dado nem rede do Firestore envolvida.
+- Próximo passo crítico: aguardando confirmação da Priscila para `scp` em produção (regra do
+  `CLAUDE.md` — nunca deploy sem autorização explícita).
+
 ## Atualização 2026-09-30 — Claude (com Priscila): Rochele removida do Gestão de Postagens
 
 Origem: Claude (com Priscila)
