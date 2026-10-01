@@ -19,6 +19,34 @@ Origem: Claude (com Priscila)
 - Verificado programaticamente (`inBoard(rochele) === false`) antes do deploy.
 - Próximo passo crítico: nenhum pendente desta frente.
 
+## Complemento 2026-09-30 — Claude (com Priscila): banner de falha de sync no Davi Mello — recorrência do padrão conhecido
+
+Origem: Claude (com Priscila)
+
+- Priscila viu o banner vermelho "Não foi possível salvar na nuvem" enquanto preenchia o
+  calendário de outubro do Davi Mello. Prioridade imediata: backup local via
+  `document.getElementById('btnBackup').click()` no console (ela não achava o botão na tela),
+  confirmado o `.json` baixado antes de qualquer outra ação.
+- Diagnóstico (leitura direta da API REST do Firestore, só leitura, sem alterar nada): os erros de
+  CORS/`firebasestorage.googleapis.com` no console são ruído esperado, não a causa — confirmado de
+  novo que o bucket do Storage **não existe** (`storage.googleapis.com` responde 404 "specified
+  bucket does not exist"), mesma causa raiz documentada em `decisoes.md` (29/09, custo do plano
+  Blaze recusado). `mmsched_items__davi` já estava em ~455KB de 1MB só de miniaturas base64 —
+  mesma trajetória que causou o incidente da Localize em 29/09, ainda sem bater o teto.
+- A falha em si foi pontual: clicar em **Sincronizar agora** (`btnForceSync`) resolveu — confirmado
+  escrita nova no Firestore ~37s depois do clique. Nenhuma alteração de código feita; nenhum dado
+  perdido (o reload só foi autorizado depois da escrita confirmada na nuvem).
+- Enquanto investigava, Priscila reportou contagem de "prontos" divergente no dashboard de
+  Calendários (10/13 na tela vs. ela acreditando ter preenchido 12-13). Não é bug: `countReadyDaysInMonth`
+  exige mídia **e** link do Drive preenchidos juntos (regra combinada 18/09). Conferido campo a campo
+  em outubro do Davi: dia 26 foi completado durante a sessão (confirmado via leitura nova); **dia 21
+  segue só com foto, sem o link do Drive** — é o único pendente para a contagem bater.
+- Próximo passo crítico: nenhuma ação de código pendente. Fica como pendência operacional da
+  Priscila preencher o link do dia 21 no calendário do Davi Mello. Se o padrão de bloat em
+  `mmsched_items__*` continuar (Davi, Lios e outros clientes de foto pesada), vale reabrir a
+  conversa sobre Storage ou sobre arquivar miniaturas antigas antes que outro cliente bata no
+  limite de 1MB — não é urgente agora.
+
 ## Atualização 2026-09-18 — Claude (com Priscila): estrutura de memória própria criada
 
 Origem: Claude (com Priscila)
