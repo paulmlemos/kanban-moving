@@ -9,6 +9,20 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-10-05 — Claude (com Priscila): Calendários conta o dia como feito só com o link do Drive
+
+Origem: Claude (com Priscila)
+
+- **Mudança de regra pedida pela Priscila:** na aba Calendários (Gestão de Redes Sociais), o dia útil
+  passa a contar como pronto apenas com o link do Drive preenchido (). Antes exigia
+  link E mídia no cronograma ().  em ;
+  o percentual por cliente, o "Concluído" geral e "Posts prontos" derivam dela e recalculam ao abrir a aba.
+- Comentário-regra acima de  atualizado (regra original de 18/09 exigia os dois campos).
+- Validado só por checagem de sintaxe dos scripts. **Não testado no navegador e NÃO deployado** —
+  mudança só local; falta teste em localhost (Firestore bloqueado) e o OK da Priscila para .
+- Arquivo não rastreado  já existia antes da sessão; não tocado.
+- **Próximo passo crítico:** testar em localhost e, com o sim da Priscila, commit + push + scp.
+
 ## Atualização 2026-10-01 (parte 4) — Claude (com Priscila): prévia de feed tratava cada foto do carrossel como um post separado
 
 Origem: Claude (com Priscila), a partir de print mostrando um dia do Cronograma com 4 fotos.

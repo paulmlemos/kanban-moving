@@ -11173,8 +11173,8 @@ function refreshAgendaPage() {
 // Regra combinada com a Priscila em 18/09/2026: até o último dia do mês atual
 // (ex.: 30/09), o calendário do MÊS SEGUINTE (ex.: outubro) precisa estar 100%
 // pronto pra todo cliente do Gestão de Postagens. "Pronto" =
-// dia útil com mídia (loadSched) E link do Drive (loadDriveLink) preenchidos —
-// os dois campos que já existem no calendário do cliente (Conteúdos > Cronograma).
+// dia útil com link do Drive (loadDriveLink) preenchido — só o link já conta como
+// feito (regra da Priscila, 05/10/2026; antes exigia também mídia no dia).
 // Meta mensal = dias úteis do mês alvo × (posts/semana do cliente ÷ 5), já que
 // o próprio calendário só tem colunas de Seg a Sex.
 
@@ -11204,7 +11204,6 @@ function getCalendarioCycle() {
 }
 
 function countReadyDaysInMonth(cid, y, m) {
-  const items = loadSched(cid);
   const driveLinks = loadDriveLink(cid);
   const last = new Date(y, m + 1, 0).getDate();
   let ready = 0;
@@ -11213,9 +11212,7 @@ function countReadyDaysInMonth(cid, y, m) {
     const wd = date.getDay();
     if (wd === 0 || wd === 6) continue;
     const iso = isoFromDate(date);
-    const hasMedia = (items[iso] || []).length > 0;
-    const hasLink  = !!(driveLinks[iso] || '').trim();
-    if (hasMedia && hasLink) ready++;
+    if ((driveLinks[iso] || '').trim()) ready++;
   }
   return ready;
 }
