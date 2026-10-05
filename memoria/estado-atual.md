@@ -14,13 +14,14 @@ repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deplo
 Origem: Claude (com Priscila)
 
 - **Mudança de regra pedida pela Priscila:** na aba Calendários (Gestão de Redes Sociais), o dia útil
-  passa a contar como pronto apenas com o link do Drive preenchido (). Antes exigia
-  link E mídia no cronograma ().  em ;
-  o percentual por cliente, o "Concluído" geral e "Posts prontos" derivam dela e recalculam ao abrir a aba.
-- Comentário-regra acima de  atualizado (regra original de 18/09 exigia os dois campos).
+  passa a contar como pronto apenas com o link do Drive preenchido (`loadDriveLink`). Antes exigia
+  link E mídia no cronograma (`loadSched`). A mudança está em `countReadyDaysInMonth()` no
+  `kanban-semanal.html`; o percentual por cliente, o "Concluído" geral e "Posts prontos" derivam dela e
+  recalculam ao abrir a aba.
+- Comentário-regra acima de `CALENDARIO_METAS` atualizado (a regra original de 18/09 exigia os dois campos).
 - Validado só por checagem de sintaxe dos scripts. **Não testado no navegador e NÃO deployado** —
-  mudança só local; falta teste em localhost (Firestore bloqueado) e o OK da Priscila para .
-- Arquivo não rastreado  já existia antes da sessão; não tocado.
+  mudança só local; falta teste em localhost (Firestore bloqueado) e o OK da Priscila para o `scp`.
+- Arquivo não rastreado `kanban-semanal-teste-hub.html` já existia antes da sessão; não foi tocado.
 - **Próximo passo crítico:** testar em localhost e, com o sim da Priscila, commit + push + scp.
 
 ## Atualização 2026-10-01 (parte 4) — Claude (com Priscila): prévia de feed tratava cada foto do carrossel como um post separado
