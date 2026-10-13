@@ -13,10 +13,10 @@ repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deplo
 
 Origem: Claude (com Priscila)
 
-- Priscila reportou que o calendário da Lios não contabilizava post feito só com o link. Causa: a regra de 05/10 (, só ) estava commitada mas **nunca deployada**; produção ainda exigia link + mídia.
+- Priscila reportou que o calendário da Lios não contabilizava post feito só com o link. Causa: a regra de 05/10 (`countReadyDaysInMonth()`, só `loadDriveLink`) estava commitada mas **nunca deployada**; produção ainda exigia link + mídia.
 - Testado em localhost (Playwright, Firestore bloqueado): 3 links do Drive na Lios sem mídia -> contagem 0 -> 3, sem erro de JS. Não testada a tela visual da aba.
-- Deploy feito com OK da Priscila: o  foi bloqueado pelo classificador na 1ª tentativa e a Priscila repassou o comando; rodou na 2ª. Produção confirmada servindo a versão nova. Vale para todos os clientes da aba Calendários.
-- Próximo passo crítico: nenhum pendente desta frente. Arquivo  segue não rastreado (anterior à sessão).
+- Deploy feito com OK da Priscila: o `scp` foi bloqueado pelo classificador na 1ª tentativa e a Priscila repassou o comando; rodou na 2ª. Produção confirmada servindo a versão nova. Vale para todos os clientes da aba Calendários.
+- Próximo passo crítico: nenhum pendente desta frente. Arquivo `kanban-semanal-teste-hub.html` segue não rastreado (anterior à sessão).
 
 ## Atualização 2026-10-05 — Claude (com Priscila): Calendários conta o dia como feito só com o link do Drive
 
