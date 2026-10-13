@@ -13,11 +13,11 @@ repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deplo
 
 Origem: Claude (com Priscila)
 
-- **Céus Abertos retirado do quadro semanal** da Gestão de Postagens ( no cliente). Só sai do quadro; tarefas, Calendários e demais abas dele seguem como estavam ( ainda tem ).
-- **Vento Marketing e Priscila Becker adicionados ao fim do quadro**, abaixo do separador "Perfis próprios" (IG Feed + Stories), para controlar as postagens dos dois prefixos. Implementado com  + , reaproveitando os ids  e  — não mexe em /. **Não entram** nas estatísticas nem na barra de progresso da semana (só clientes); pode virar decisão se a Priscila quiser que contem.
+- **Céus Abertos retirado do quadro semanal** da Gestão de Postagens (`hideFromBoard: true` no cliente). Só sai do quadro; tarefas, Calendários e demais abas dele seguem como estavam (`CALENDARIO_METAS` ainda tem `ceus-abertos`).
+- **Vento Marketing e Priscila Becker adicionados ao fim do quadro**, abaixo do separador "Perfis próprios" (IG Feed + Stories), para controlar as postagens dos dois prefixos. Implementado com `OWN_BOARD` + `boardClientById()`, reaproveitando os ids `moving` e `priscila-becker` — não mexe em `noKanban`/`isPersonal`. **Não entram** nas estatísticas nem na barra de progresso da semana (só clientes); pode virar decisão se a Priscila quiser que contem.
 - Testado em localhost com Firestore bloqueado (Playwright): sem erro de JS, toggle de estado funcionando. A tela de Calendários não foi revisada.
-- Deploy com OK da Priscila: commit  + push + scp (o classificador bloqueou a 1ª tentativa; ela repassou o comando). Produção confirmada servindo .
-- **Próximo passo crítico:** nenhum pendente.  segue não rastreado (anterior à sessão).
+- Deploy com OK da Priscila: commit `2037f8a` + push + scp (o classificador bloqueou a 1ª tentativa; ela repassou o comando). Produção confirmada servindo `OWN_BOARD`.
+- **Próximo passo crítico:** nenhum pendente. `kanban-semanal-teste-hub.html` segue não rastreado (anterior à sessão).
 
 ## Atualização 2026-10-12 — Claude (com Priscila): regra "só o link do Drive conta" deployada
 
