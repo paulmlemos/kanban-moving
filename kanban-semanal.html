@@ -332,6 +332,11 @@
     }
 
     /* ── CLIENT CARD ────────────────────────────── */
+    .board-own-sep {
+      margin-top: 10px; padding-top: 12px; border-top: 1px dashed var(--border-2);
+      font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
     .client-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -4893,7 +4898,8 @@ const CLIENTS = [
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: null }
     ],
-    noFinanceiro: true
+    noFinanceiro: true,
+    hideFromBoard: true
   },
   // ── Clientes sem kanban ──────────────────────────────────
   {
@@ -5033,6 +5039,15 @@ const USERS = [
 ];
 
 const MOVING_CLIENT = { id: 'moving', name: 'Vento Marketing', color: '#122A1E', isInternal: true };
+
+// Perfis próprios (Priscila Becker e Vento Marketing): aparecem no fim do quadro semanal,
+// separados dos clientes, só para controlar as postagens desses dois prefixos. Não entram
+// nas estatísticas/progresso dos clientes. Reaproveitam os ids existentes (priscila-becker, moving).
+const OWN_BOARD = [
+  { ...MOVING_CLIENT, platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }] },
+  { id: 'priscila-becker', name: 'Priscila Becker', color: '#f472b6', platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }] },
+];
+function boardClientById(id) { return OWN_BOARD.find(c => c.id === id) || CLIENTS.find(c => c.id === id); }
 
 // Cliente aparece no Gestor de Postagens (quadro semanal) só se não for noKanban,
 // não estiver na pasta Inativos e não tiver sido retirado individualmente do quadro.
@@ -5211,7 +5226,14 @@ function render() {
     const body = document.createElement('div');
     body.className = 'col-body';
 
-    CLIENTS.filter(inBoard).forEach(client => {
+    [...CLIENTS.filter(inBoard), 'SEP', ...OWN_BOARD].forEach(client => {
+      if (client === 'SEP') {
+        const sep = document.createElement('div');
+        sep.className = 'board-own-sep';
+        sep.textContent = 'Perfis próprios';
+        body.appendChild(sep);
+        return;
+      }
       const iso = kanbanDayToISO(currentWk, di);
       const nopostData = loadNoPost(client.id);
       const isNoPost = !!nopostData[iso];
@@ -5300,7 +5322,7 @@ function onToggleNoPost(e) {
   btn.classList.toggle('active', nowActive);
   btn.textContent = nowActive ? 'Sem post' : '—';
   btn.title = nowActive ? 'Retomar postagem' : 'Sem post neste dia';
-  const clientObj = CLIENTS.find(c => c.id === client);
+  const clientObj = boardClientById(client);
   const dayIdx = parseInt(card.querySelector('[data-day]')?.dataset.day ?? '0');
   if (clientObj) refreshCardStatus(card, clientObj, currentWk, dayIdx);
   updateStats();
@@ -5315,7 +5337,7 @@ function onToggle(e) {
   btn.dataset.state = next;
   btn.title = btn.title.replace(STATE_TITLES[cur], STATE_TITLES[next]);
   btn.innerHTML = `<span class="sbtn-icon">${STATE_ICONS[next]}</span>${btn.textContent.trim().replace(/^[○◐✓]\s*/, '')}`;
-  const clientObj = CLIENTS.find(c => c.id === client);
+  const clientObj = boardClientById(client);
   const card = btn.closest('.client-card');
   if (clientObj && card) refreshCardStatus(card, clientObj, currentWk, parseInt(day));
   updateStats();
