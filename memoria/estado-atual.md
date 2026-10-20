@@ -9,6 +9,16 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-10-20 — Claude (com Priscila): SC Conecta entra na Gestão de Postagens e nos Calendários
+
+Origem: Claude (com Priscila)
+
+- `sc-conecta` perdeu o `noKanban` e ganhou plataforma IG (Feed + Stories): aparece no quadro semanal da Gestão de Postagens e na lista de clientes ao criar tarefa no Gerenciador Semanal. `noFinanceiro` mantido.
+- `CALENDARIO_METAS` ganhou `'sc-conecta': 3` (3 posts/semana, do plano de Instagram no vault; número assumido, não confirmado pela Priscila).
+- Testado em localhost com Firestore bloqueado (Playwright): card no quadro, presença na aba Calendários (meta 13 em nov/2026), sem erro de JS. Visual da aba Calendários não revisado.
+- Deploy com OK da Priscila: commit `0e338de` + push + scp (o classificador bloqueou a tentativa; ela repassou o comando). Produção confirmada servindo `'sc-conecta': 3`.
+- **Próximo passo crítico:** confirmar com a Priscila se 3 posts/semana está certo.
+
 ## Atualização 2026-10-13 — Claude (com Priscila): Gestão de Postagens sem Céus Abertos + perfis próprios no fim do quadro
 
 Origem: Claude (com Priscila)
