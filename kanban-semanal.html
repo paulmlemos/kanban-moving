@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -331,6 +332,11 @@
     }
 
     /* ── CLIENT CARD ────────────────────────────── */
+    .board-own-sep {
+      margin-top: 10px; padding-top: 12px; border-top: 1px dashed var(--border-2);
+      font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
     .client-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1990,7 +1996,7 @@
     .sched-day:last-child { border-right: none; }
     .sched-day:hover { background: rgba(255,255,255,0.02); }
     .sched-day.is-today { background: rgba(124,92,252,0.07); }
-    .sched-day.other-month { opacity: 0.3; pointer-events: none; }
+    .sched-day.other-month { opacity: 0.55; }
     .sched-day.st-prog { background: rgba(251,191,36,0.08); }
     .sched-day.st-post { background: rgba(34,197,94,0.08); }
     .sched-day.no-post { background: rgba(255,255,255,.012); }
@@ -2124,9 +2130,9 @@
       min-height: 14px;
       transition: color 0.12s;
     }
-    .sched-legend::placeholder { color: rgba(232,227,220,0.18); font-style: italic; }
+    .sched-legend::placeholder { color: var(--text-faint); font-style: italic; }
     .sched-legend:focus { color: var(--text); }
-    .sched-legend:not(:placeholder-shown) { color: rgba(232,227,220,0.7); }
+    .sched-legend:not(:placeholder-shown) { color: var(--text); }
     .sched-legend-more-btn {
       display: block;
       font-size: 8px;
@@ -2355,6 +2361,78 @@
     }
     .sched-drivelink::placeholder { color: rgba(124,92,252,0.25); font-style: italic; }
     .sched-drivelink:focus { color: rgba(124,92,252,0.9); }
+
+    /* BOTAO GERAR PREVIA DO FEED (fim do calendario) */
+    .sched-preview-btn {
+      margin: 10px 12px 12px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit; font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .sched-preview-btn:hover { background: var(--accent-dim); border-color: var(--accent); }
+    .sched-preview-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    /* PREVIA DO FEED — grade estilo Instagram, ordem cronologica invertida (post mais recente primeiro) */
+    .feed-preview-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(6px);
+      z-index: 8100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .feed-preview-overlay.open { display: flex; }
+    .feed-preview-modal {
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      width: 470px; max-width: 100%;
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-pop);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #262626;
+    }
+    .feed-preview-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 14px 16px; border-bottom: 1px solid #eee; flex-shrink: 0;
+    }
+    .feed-preview-profile { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .feed-preview-avatar {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 14px; font-weight: 700; text-transform: uppercase;
+      background: var(--client-color, #122A1E);
+    }
+    .feed-preview-handle { font-size: 13px; font-weight: 700; }
+    .feed-preview-month { font-size: 11px; color: #8e8e8e; margin-top: 1px; }
+    .feed-preview-close { background: none; border: none; color: #262626; font-size: 20px; cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0; }
+    .feed-preview-close:hover { opacity: .6; }
+    .feed-preview-body { overflow-y: auto; }
+    .feed-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .feed-preview-cell {
+      position: relative; aspect-ratio: 1/1; background: #fafafa; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .feed-preview-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .feed-preview-reel-badge {
+      position: absolute; top: 6px; right: 6px; color: #fff; font-size: 12px;
+      text-shadow: 0 1px 3px rgba(0,0,0,.6);
+    }
+    .feed-preview-cell-date {
+      position: absolute; left: 4px; bottom: 4px; font-size: 8px; font-weight: 700;
+      color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7);
+      opacity: 0; transition: opacity .12s; pointer-events: none;
+    }
+    .feed-preview-cell:hover .feed-preview-cell-date { opacity: 1; }
+    .feed-preview-empty { padding: 40px 20px; text-align: center; font-size: 12px; color: #8e8e8e; }
 
     /* ══════════════════════════════════════════════
        FICHAS DOS CLIENTES
@@ -3326,6 +3404,12 @@
       cursor: pointer; white-space: nowrap; flex-shrink: 0; font-family: inherit;
     }
     .calcli-go:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .cal-month-tag {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+      text-transform: uppercase; color: var(--text-faint); background: var(--bg);
+      border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px;
+      margin-left: 8px; vertical-align: middle;
+    }
     @media (max-width: 700px) {
       .calcli-row { flex-wrap: wrap; }
       .calcli-name { width: auto; }
@@ -4311,6 +4395,22 @@
   <div class="ig-post" id="schedLightboxPost"></div>
 </div>
 
+<div class="feed-preview-overlay" id="feedPreviewModal">
+  <div class="feed-preview-modal">
+    <div class="feed-preview-header">
+      <div class="feed-preview-profile">
+        <div class="feed-preview-avatar" id="feedPreviewAvatar"></div>
+        <div>
+          <div class="feed-preview-handle" id="feedPreviewHandle"></div>
+          <div class="feed-preview-month" id="feedPreviewMonth"></div>
+        </div>
+      </div>
+      <button class="feed-preview-close" id="feedPreviewClose">×</button>
+    </div>
+    <div class="feed-preview-body" id="feedPreviewBody"></div>
+  </div>
+</div>
+
 <div class="tw-modal-overlay" id="twTaskModal">
   <div class="tw-modal">
     <div class="tw-modal-glow" aria-hidden="true"></div>
@@ -4410,15 +4510,54 @@ const _fbConfig = {
 };
 firebase.initializeApp(_fbConfig);
 const _fsdb = firebase.firestore();
+const _fsstorage = firebase.storage();
+
+// Converte um data-URL (base64) de miniatura em arquivo no Firebase Storage e
+// devolve a URL publica — em vez de guardar ~15-40KB de base64 por imagem dentro
+// do documento unico do Firestore (o que fez o documento bater no limite de 1MB
+// e travar o sync de TODOS os clientes). Se o upload falhar por qualquer motivo,
+// devolve o data-URL original como fallback (a imagem nao se perde, so nao
+// desincha o documento — melhor que travar o fluxo do usuario).
+async function _uploadThumbToStorage(dataUrl, cid) {
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    const path = `thumbs/${cid}/${Date.now().toString(36)}${Math.random().toString(36).slice(2)}.jpg`;
+    const ref  = _fsstorage.ref(path);
+    // put() do SDK do Storage tenta de novo sozinho por muito tempo (as vezes nunca
+    // rejeita) quando a rede cai no meio — sem timeout aqui, o picker fica travado em
+    // "Enviando..." pra sempre. _withTimeout garante que sempre cai no fallback.
+    await _withTimeout(ref.put(blob, { contentType: 'image/jpeg' }), 15000);
+    return await _withTimeout(ref.getDownloadURL(), 15000);
+  } catch (e) {
+    console.warn('[Storage] upload de miniatura falhou, mantendo base64 local', e);
+    return dataUrl;
+  }
+}
 
 let _syncTimer      = null;
 let _lastLocalWrite = 0;
 const _SKIP_SYNC    = ['mmmat__', 'mmtaskf__', 'mmacesso__', 'mmideaf__', 'mmeditf__', 'mmui', 'mmLastSyncExterno']; // base64, senhas, estado de UI e cooldown do import externo — só localStorage, nunca Firestore (senao o cooldown vaza entre navegadores)
 
-// Chaves incluidas no ultimo push (para detectar remocoes locais) e no ultimo
-// snapshot remoto (para detectar remocoes feitas por outro navegador).
-let _lastPushedKeys  = new Set();
-let _knownRemoteKeys = new Set();
+// Um documento por cliente em vez de 1 documento unico pra todos (2026-09-29):
+// os 24 clientes brigando pelo mesmo limite de 1MB do Firestore fez o documento
+// bater no teto (Lios sozinha ja usava 585KB), o que passou a falhar em silencio
+// e apagar trabalho nao sincronizado no reload seguinte (incidente Localize).
+// Cada cliente agora tem seu proprio documento, com seu proprio limite de 1MB.
+// Chave sem dono reconhecido (estado global, cliente descontinuado etc.) cai no
+// documento "_global".
+let _COLLECTION = 'kanban_clients'; // let (nao const) so pra poder ser trocado em teste isolado
+function _ownerOf(key) {
+  for (const c of [...CLIENTS, MOVING_CLIENT]) {
+    if (key.endsWith('__' + c.id) || key.includes('__' + c.id + '__')) return c.id;
+  }
+  return '_global';
+}
+
+// Chaves incluidas no ultimo push por dono (pra detectar remocoes locais) e
+// todas as chaves remotas conhecidas juntas, de todos os documentos (pra
+// detectar remocao feita por outro navegador).
+let _lastPushedKeysByOwner = new Map();
+let _knownRemoteKeys       = new Set();
 
 function mmGet(key)       { return localStorage.getItem(key); }
 function mmSet(key, val)  {
@@ -4444,31 +4583,65 @@ function _syncableSnapshot() {
   return snap;
 }
 
+function _snapshotByOwner() {
+  const byOwner = {};
+  Object.entries(_syncableSnapshot()).forEach(([k, v]) => {
+    (byOwner[_ownerOf(k)] = byOwner[_ownerOf(k)] || {})[k] = v;
+  });
+  return byOwner;
+}
+
 // Faz merge campo a campo no Firestore (nunca sobrescreve o documento inteiro),
 // para que o que outro navegador ainda nao recebeu nao seja apagado por engano.
+// Um unico batch atomico cobre todos os documentos (clientes) que tiverem
+// mudanca nesta rodada.
 async function _pushToCloud() {
-  const snap        = _syncableSnapshot();
-  const currentKeys = new Set(Object.keys(snap));
-  const docRef      = _fsdb.collection('kanban').doc('state');
-  const args        = [];
+  const byOwner = _snapshotByOwner();
+  const owners  = new Set([...Object.keys(byOwner), ..._lastPushedKeysByOwner.keys()]);
+  const touched = [];
 
-  Object.entries(snap).forEach(([k, v]) => {
-    args.push(new firebase.firestore.FieldPath('data', k), v);
+  owners.forEach(owner => {
+    const current      = byOwner[owner] || {};
+    const currentKeys  = new Set(Object.keys(current));
+    const previousKeys = _lastPushedKeysByOwner.get(owner) || new Set();
+    const removed      = [...previousKeys].filter(k => !currentKeys.has(k));
+    if (!currentKeys.size && !removed.length) return; // nada mudou pra esse dono
+    touched.push({ owner, current, currentKeys, removed });
   });
-  _lastPushedKeys.forEach(k => {
-    if (!currentKeys.has(k)) args.push(new firebase.firestore.FieldPath('data', k), firebase.firestore.FieldValue.delete());
+  if (!touched.length) return true;
+
+  const batch = _fsdb.batch();
+  touched.forEach(({ owner, current, removed }) => {
+    const docRef = _fsdb.collection(_COLLECTION).doc(owner);
+    const args   = [];
+    Object.entries(current).forEach(([k, v]) => args.push(new firebase.firestore.FieldPath('data', k), v));
+    removed.forEach(k => args.push(new firebase.firestore.FieldPath('data', k), firebase.firestore.FieldValue.delete()));
+    args.push('ts', Date.now());
+    batch.update(docRef, ...args);
   });
-  args.push('ts', Date.now());
 
   try {
-    await docRef.update(...args);
+    // Sem rede (offline real ou bloqueada), o SDK do Firestore enfileira a
+    // escrita e a Promise de commit() as vezes so resolve quando a conexao
+    // volta — pode nunca rejeitar sozinha. _withTimeout garante que o alerta
+    // de falha (_showSyncFailBanner) sempre dispara em vez de ficar pendurado.
+    await _withTimeout(batch.commit(), 10000);
   } catch (e) {
     if (e && e.code === 'not-found') {
-      try { await docRef.set({ data: snap, ts: Date.now() }); }
-      catch (e2) { console.warn('[Firebase] push error', e2); return false; }
-    } else { console.warn('[Firebase] push error', e); return false; }
+      // pelo menos um documento de cliente ainda nao existe (cliente novo) —
+      // cria de uma vez, com o estado local completo, todos os tocados nesta rodada.
+      try {
+        const createBatch = _fsdb.batch();
+        touched.forEach(({ owner, current }) => {
+          createBatch.set(_fsdb.collection(_COLLECTION).doc(owner), { data: current, ts: Date.now() });
+        });
+        await _withTimeout(createBatch.commit(), 10000);
+      } catch (e2) { console.warn('[Firebase] push error (criacao)', e2); _showSyncFailBanner(e2); return false; }
+    } else { console.warn('[Firebase] push error', e); _showSyncFailBanner(e); return false; }
   }
-  _lastPushedKeys = currentKeys;
+
+  touched.forEach(({ owner, currentKeys }) => _lastPushedKeysByOwner.set(owner, currentKeys));
+  _hideSyncFailBanner();
   return true;
 }
 
@@ -4487,23 +4660,28 @@ function _applyRemoteData(data) {
 
 async function _loadFromCloud() {
   try {
-    const doc = await _fsdb.collection('kanban').doc('state').get();
-    if (doc.exists) {
-      const { data } = doc.data();
-      return _applyRemoteData(data || {});
-    }
+    const snap   = await _fsdb.collection(_COLLECTION).get();
+    const merged = {};
+    snap.forEach(doc => Object.assign(merged, (doc.data() || {}).data || {}));
+    return _applyRemoteData(merged);
   } catch(e) { console.warn('[Firebase] load error', e); }
   return false;
 }
 
 function _subscribeToChanges() {
-  let _firstSnap = true;
-  _fsdb.collection('kanban').doc('state').onSnapshot(snap => {
-    if (!snap.exists) return;
-    const { data } = snap.data();
-    if (_firstSnap) { _firstSnap = false; _knownRemoteKeys = new Set(Object.keys(data || {})); return; }
+  let _firstSnap  = true;
+  const _byDocId  = new Map(); // ownerId -> {data} mais recente, pra poder remontar o merge a cada evento
+  _fsdb.collection(_COLLECTION).onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === 'removed') _byDocId.delete(change.doc.id);
+      else _byDocId.set(change.doc.id, (change.doc.data() || {}).data || {});
+    });
+    const merged = {};
+    _byDocId.forEach(data => Object.assign(merged, data));
+
+    if (_firstSnap) { _firstSnap = false; _knownRemoteKeys = new Set(Object.keys(merged)); return; }
     if (Date.now() - _lastLocalWrite < 4000) return;
-    const changed = _applyRemoteData(data || {});
+    const changed = _applyRemoteData(merged);
     if (changed) {
       _showSyncBanner();
       setTimeout(() => location.reload(), 1500);
@@ -4581,6 +4759,31 @@ function _showSyncBanner() {
   b.style.display = 'block';
 }
 
+// Alerta visivel quando o envio pra nuvem falha (ex.: documento perto do limite de
+// tamanho do Firestore) — antes falhava em silencio (so console.warn) e um reload
+// depois apagava o trabalho nao sincronizado sem ninguem perceber.
+function _showSyncFailBanner(err) {
+  const tooBig = err && /longer than|exceeds|too large|maximum.*size/i.test(err.message || '');
+  let b = document.getElementById('_syncFailBanner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = '_syncFailBanner';
+    b.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#dc2626;color:#fff;font-size:12px;font-family:inherit;padding:10px 16px;border-radius:10px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.4);max-width:min(92vw,520px);display:flex;align-items:center;gap:10px;line-height:1.4;';
+    document.body.appendChild(b);
+  }
+  b.innerHTML = `
+    <span>⚠️ Não foi possível salvar na nuvem${tooBig ? ' (banco de dados cheio)' : ''} —
+    <b>não atualize a página</b> até resolver. Clique em ⬇ Backup no topo pra guardar seu
+    trabalho agora.</span>
+    <button style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:3px 9px;cursor:pointer;font-family:inherit;font-size:11px;flex-shrink:0;" onclick="this.parentElement.style.display='none'">Entendi</button>
+  `;
+  b.style.display = 'flex';
+}
+function _hideSyncFailBanner() {
+  const b = document.getElementById('_syncFailBanner');
+  if (b) b.style.display = 'none';
+}
+
 // ─── CLIENTS ────────────────────────────────────────────────────────────────
 
 const CLIENTS = [
@@ -4606,7 +4809,8 @@ const CLIENTS = [
     color: '#f59e0b',
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
-    ]
+    ],
+    hideFromBoard: true
   },
   {
     id: 'localize',
@@ -4641,7 +4845,8 @@ const CLIENTS = [
     color: '#f43f5e',
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
-    ]
+    ],
+    hideFromBoard: true
   },
   {
     id: 'davi',
@@ -4693,7 +4898,8 @@ const CLIENTS = [
     platforms: [
       { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: null }
     ],
-    noFinanceiro: true
+    noFinanceiro: true,
+    hideFromBoard: true
   },
   // ── Clientes sem kanban ──────────────────────────────────
   {
@@ -4728,8 +4934,9 @@ const CLIENTS = [
     id: 'sc-conecta',
     name: 'SC Conecta',
     color: '#d946ef',
-    platforms: [],
-    noKanban: true,
+    platforms: [
+      { id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }
+    ],
     noFinanceiro: true
   },
   {
@@ -4833,6 +5040,15 @@ const USERS = [
 ];
 
 const MOVING_CLIENT = { id: 'moving', name: 'Vento Marketing', color: '#122A1E', isInternal: true };
+
+// Perfis próprios (Priscila Becker e Vento Marketing): aparecem no fim do quadro semanal,
+// separados dos clientes, só para controlar as postagens desses dois prefixos. Não entram
+// nas estatísticas/progresso dos clientes. Reaproveitam os ids existentes (priscila-becker, moving).
+const OWN_BOARD = [
+  { ...MOVING_CLIENT, platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }] },
+  { id: 'priscila-becker', name: 'Priscila Becker', color: '#f472b6', platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }] },
+];
+function boardClientById(id) { return OWN_BOARD.find(c => c.id === id) || CLIENTS.find(c => c.id === id); }
 
 // Cliente aparece no Gestor de Postagens (quadro semanal) só se não for noKanban,
 // não estiver na pasta Inativos e não tiver sido retirado individualmente do quadro.
@@ -5011,7 +5227,14 @@ function render() {
     const body = document.createElement('div');
     body.className = 'col-body';
 
-    CLIENTS.filter(inBoard).forEach(client => {
+    [...CLIENTS.filter(inBoard), 'SEP', ...OWN_BOARD].forEach(client => {
+      if (client === 'SEP') {
+        const sep = document.createElement('div');
+        sep.className = 'board-own-sep';
+        sep.textContent = 'Perfis próprios';
+        body.appendChild(sep);
+        return;
+      }
       const iso = kanbanDayToISO(currentWk, di);
       const nopostData = loadNoPost(client.id);
       const isNoPost = !!nopostData[iso];
@@ -5100,7 +5323,7 @@ function onToggleNoPost(e) {
   btn.classList.toggle('active', nowActive);
   btn.textContent = nowActive ? 'Sem post' : '—';
   btn.title = nowActive ? 'Retomar postagem' : 'Sem post neste dia';
-  const clientObj = CLIENTS.find(c => c.id === client);
+  const clientObj = boardClientById(client);
   const dayIdx = parseInt(card.querySelector('[data-day]')?.dataset.day ?? '0');
   if (clientObj) refreshCardStatus(card, clientObj, currentWk, dayIdx);
   updateStats();
@@ -5115,7 +5338,7 @@ function onToggle(e) {
   btn.dataset.state = next;
   btn.title = btn.title.replace(STATE_TITLES[cur], STATE_TITLES[next]);
   btn.innerHTML = `<span class="sbtn-icon">${STATE_ICONS[next]}</span>${btn.textContent.trim().replace(/^[○◐✓]\s*/, '')}`;
-  const clientObj = CLIENTS.find(c => c.id === client);
+  const clientObj = boardClientById(client);
   const card = btn.closest('.client-card');
   if (clientObj && card) refreshCardStatus(card, clientObj, currentWk, parseInt(day));
   updateStats();
@@ -7709,7 +7932,66 @@ document.getElementById('schedLightbox').addEventListener('click', e => {
   if (e.target.id === 'schedLightbox') closeSchedLightbox();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeSchedLightbox();
+  if (e.key === 'Escape') { closeSchedLightbox(); closeFeedPreview(); }
+});
+
+// ── PREVIA DO FEED — grade do mes inteiro, como apareceria no perfil do Instagram ──
+function openFeedPreview(cid) {
+  const client  = [...CLIENTS, MOVING_CLIENT].find(c => c.id === cid) || { name: cid, color: 'var(--accent)' };
+  const handle  = (loadFicha(cid).handle || client.name).replace(/^@/, '');
+  const { y, m } = getSchedMonth(cid);
+  const items   = loadSched(cid);
+  const legends = loadLegend(cid);
+
+  // percorre o mes em ordem cronologica (dia 1 -> ultimo dia) e depois inverte,
+  // porque no feed do Instagram o post mais recente aparece primeiro (topo-esquerda).
+  // Mais de uma midia no mesmo dia = carrossel: no feed real só a capa (1º item)
+  // aparece na grade, o resto só é visto dentro do post — por isso só o primeiro
+  // item de cada dia vira uma celula, nunca um por midia.
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const posts = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dayItems = items[iso] || [];
+    if (dayItems.length) posts.push({ ...dayItems[0], iso, isCarousel: dayItems.length > 1 });
+  }
+  posts.reverse();
+
+  const avatar = document.getElementById('feedPreviewAvatar');
+  avatar.textContent = igInitials(client.name);
+  avatar.style.setProperty('--client-color', client.color);
+  document.getElementById('feedPreviewHandle').textContent = '@' + handle;
+  document.getElementById('feedPreviewMonth').textContent =
+    `${MONTH_PT[m]} ${y} · ${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`;
+
+  const body = document.getElementById('feedPreviewBody');
+  body.innerHTML = !posts.length
+    ? `<div class="feed-preview-empty">Nenhum conteúdo agendado em ${MONTH_PT[m]}.</div>`
+    : `<div class="feed-preview-grid">${posts.map(it => {
+        const d = new Date(it.iso + 'T00:00:00');
+        const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+        const cap = (legends[it.iso] || '').trim();
+        const isVid = isVidFile(it.name);
+        return `
+          <div class="feed-preview-cell" title="${dateStr}${cap ? ' — ' + escHtml(cap) : ''}">
+            ${it.thumbnail ? `<img src="${it.thumbnail}">` : `<div>${isVid ? '🎬' : '📄'}</div>`}
+            ${isVid
+              ? '<div class="feed-preview-reel-badge">▶</div>'
+              : it.isCarousel
+                ? '<div class="feed-preview-reel-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="14" height="14" rx="3"/><path d="M22 7.5V19a3 3 0 0 1-3 3H7.5"/></svg></div>'
+                : ''}
+            <div class="feed-preview-cell-date">${dateStr}</div>
+          </div>`;
+      }).join('')}</div>`;
+
+  document.getElementById('feedPreviewModal').classList.add('open');
+}
+function closeFeedPreview() {
+  document.getElementById('feedPreviewModal').classList.remove('open');
+}
+document.getElementById('feedPreviewClose').addEventListener('click', closeFeedPreview);
+document.getElementById('feedPreviewModal').addEventListener('click', e => {
+  if (e.target.id === 'feedPreviewModal') closeFeedPreview();
 });
 
 function getWeeksForMonth(y, m) {
@@ -7808,7 +8090,11 @@ function schedColHtml(cid) {
       <button class="sched-nav" data-c="${cid}" data-dir="1">›</button>
     </div>
     <div class="sched-wdays">${['Seg','Ter','Qua','Qui','Sex'].map(d=>`<div class="sched-wd">${d}</div>`).join('')}</div>
-    <div class="sched-grid" id="sgrid-${cid}">${weeksHtml}</div>`;
+    <div class="sched-grid" id="sgrid-${cid}">${weeksHtml}</div>
+    <button class="sched-preview-btn" data-c="${cid}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Gerar prévia
+    </button>`;
 }
 
 function bindNoteDel(btn, inp) {
@@ -7870,8 +8156,20 @@ function bindSched(cid) {
   );
   col.querySelectorAll('.sched-more-toggle').forEach(b =>
     b.addEventListener('click', () => {
-      b.closest('.sched-day').classList.toggle('expanded');
+      const day = b.closest('.sched-day');
+      const opening = day.classList.toggle('expanded');
+      if (opening) {
+        // .sched-grid rola por dentro (max-height própria); sem isso, o campo
+        // recém-aberto no fim da lista fica fora da área visível sem indicação.
+        requestAnimationFrame(() => {
+          const body = day.querySelector('.sched-more-body');
+          (body || day).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        });
+      }
     })
+  );
+  col.querySelectorAll('.sched-preview-btn').forEach(b =>
+    b.addEventListener('click', () => openFeedPreview(b.dataset.c))
   );
   col.querySelectorAll('.sched-legend').forEach(ta => {
     ta.addEventListener('input', () => {
@@ -8108,18 +8406,38 @@ function closePicker() {
   pickerCid=null; pickerIso=null; pickerSel=[];
 }
 
-function confirmPicker() {
+async function confirmPicker() {
   if (!pickerCid || !pickerIso || !pickerSel.length) { closePicker(); return; }
-  const mats  = loadMats(pickerCid);
-  const sched = loadSched(pickerCid);
-  if (!sched[pickerIso]) sched[pickerIso] = [];
-  pickerSel.forEach(id => {
-    const m = mats.find(x=>x.id===id); if (!m) return;
-    if (!sched[pickerIso].find(x=>x.id===id))
-      sched[pickerIso].push({ id, name:m.name, thumbnail:m.thumbnail, mimeType:m.mimeType });
+  const cid = pickerCid, iso = pickerIso;
+  const mats = loadMats(cid);
+  const toAdd = pickerSel.map(id => mats.find(x => x.id === id)).filter(Boolean);
+
+  const btn = document.getElementById('pickerConfirm');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  // Miniaturas do picker sao base64 local (mmmat__, nunca sincroniza — ok ficar grande).
+  // Ao entrar no calendario (mmsched_items__, ESSE sincroniza), sobe pro Storage e
+  // guarda so a URL, senao o documento compartilhado do Firestore incha e trava o sync
+  // de todos os clientes.
+  const uploaded = await Promise.all(toAdd.map(async m => ({
+    id: m.id, name: m.name, mimeType: m.mimeType,
+    thumbnail: m.thumbnail && m.thumbnail.startsWith('data:')
+      ? await _uploadThumbToStorage(m.thumbnail, cid)
+      : m.thumbnail
+  })));
+
+  const sched = loadSched(cid);
+  if (!sched[iso]) sched[iso] = [];
+  uploaded.forEach(item => {
+    if (!sched[iso].find(x => x.id === item.id)) sched[iso].push(item);
   });
-  saveSched(pickerCid, sched);
-  refreshSched(pickerCid);
+  saveSched(cid, sched);
+  refreshSched(cid);
+
+  btn.disabled = false;
+  btn.textContent = original;
   closePicker();
 }
 
@@ -10880,15 +11198,15 @@ function refreshAgendaPage() {
 // ── CALENDÁRIOS — gestão antecipada do calendário do mês seguinte ─────────────
 // Regra combinada com a Priscila em 18/09/2026: até o último dia do mês atual
 // (ex.: 30/09), o calendário do MÊS SEGUINTE (ex.: outubro) precisa estar 100%
-// pronto pra todo cliente do Gestão de Postagens (exceto Rochele). "Pronto" =
-// dia útil com mídia (loadSched) E link do Drive (loadDriveLink) preenchidos —
-// os dois campos que já existem no calendário do cliente (Conteúdos > Cronograma).
+// pronto pra todo cliente do Gestão de Postagens. "Pronto" =
+// dia útil com link do Drive (loadDriveLink) preenchido — só o link já conta como
+// feito (regra da Priscila, 05/10/2026; antes exigia também mídia no dia).
 // Meta mensal = dias úteis do mês alvo × (posts/semana do cliente ÷ 5), já que
 // o próprio calendário só tem colunas de Seg a Sex.
 
 const CALENDARIO_METAS = {
-  'lios': 5, 'fabi': 5, 'fabi-kids': 2, 'localize': 3,
-  'davi': 3, 'keli': 3, 'dna-movement': 3, 'ceus-abertos': 4,
+  'lios': 5, 'fabi': 5, 'localize': 3,
+  'davi': 3, 'keli': 3, 'dna-movement': 3, 'ceus-abertos': 4, 'sc-conecta': 3,
 };
 
 function weekdaysInMonth(y, m) {
@@ -10904,15 +11222,14 @@ function weekdaysInMonth(y, m) {
 function getCalendarioCycle() {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const curY = today.getFullYear(), curM = today.getMonth();
-  const targetM = (curM + 1) % 12;
-  const targetY = curM === 11 ? curY + 1 : curY;
+  const nextM = (curM + 1) % 12;
+  const nextY = curM === 11 ? curY + 1 : curY;
   const deadline = new Date(curY, curM + 1, 0); // último dia do mês atual
   const daysLeft = Math.max(0, Math.round((deadline - today) / 86400000));
-  return { targetY, targetM, deadline, daysLeft };
+  return { curY, curM, nextY, nextM, deadline, daysLeft };
 }
 
 function countReadyDaysInMonth(cid, y, m) {
-  const items = loadSched(cid);
   const driveLinks = loadDriveLink(cid);
   const last = new Date(y, m + 1, 0).getDate();
   let ready = 0;
@@ -10921,15 +11238,12 @@ function countReadyDaysInMonth(cid, y, m) {
     const wd = date.getDay();
     if (wd === 0 || wd === 6) continue;
     const iso = isoFromDate(date);
-    const hasMedia = (items[iso] || []).length > 0;
-    const hasLink  = !!(driveLinks[iso] || '').trim();
-    if (hasMedia && hasLink) ready++;
+    if ((driveLinks[iso] || '').trim()) ready++;
   }
   return ready;
 }
 
-function computeCalendarioDashboard() {
-  const { targetY, targetM, deadline, daysLeft } = getCalendarioCycle();
+function computeCalendarioDashboard(targetY, targetM) {
   const wdays = weekdaysInMonth(targetY, targetM);
   const perClient = Object.keys(CALENDARIO_METAS).map(cid => {
     const client = CLIENTS.find(c => c.id === cid);
@@ -10944,10 +11258,14 @@ function computeCalendarioDashboard() {
   const totalReady  = perClient.reduce((s, x) => s + Math.min(x.ready, x.needed), 0);
   const pctGeral = totalNeeded ? Math.round((totalReady / totalNeeded) * 100) : 0;
 
-  return { targetY, targetM, deadline, daysLeft, perClient, totalNeeded, totalReady, pctGeral };
+  return { targetY, targetM, perClient, totalNeeded, totalReady, pctGeral };
 }
 
-function goToClientCalendar(cid) {
+function goToClientCalendar(cid, targetY, targetM) {
+  if (targetY != null && targetM != null) {
+    schedMonths[cid] = { y: targetY, m: targetM };
+    refreshSched(cid);
+  }
   selectClient(cid);
   requestAnimationFrame(() => {
     const sec = document.getElementById(`sec-cli-${cid}`);
@@ -10956,16 +11274,13 @@ function goToClientCalendar(cid) {
   });
 }
 
-function refreshCalendarioPage() {
-  const wrap = document.getElementById('main-calendarios');
-  if (!wrap) return;
-  const d = computeCalendarioDashboard();
-  const deadlineLbl = `${String(d.deadline.getDate()).padStart(2,'0')}/${String(d.deadline.getMonth()+1).padStart(2,'0')}`;
-
-  wrap.innerHTML = `
-    <div class="agenda-section-hdr"><h2>Calendário de ${MONTH_PT[d.targetM]} ${d.targetY}</h2></div>
+// Renderiza um bloco (KPIs + lista por cliente) para um mês-alvo. idSuffix identifica
+// o container da lista ('cur' = mês atual, 'next' = próximo mês) pra não colidir ids.
+function calendarioBlockHtml(d, idSuffix, tagLbl, daysLeft, prazoSub) {
+  return `
+    <div class="agenda-section-hdr"><h2>Calendário de ${MONTH_PT[d.targetM]} ${d.targetY}<span class="cal-month-tag">${tagLbl}</span></h2></div>
     <div class="dash-grid" style="padding:0 24px 8px;">
-      <div class="dash-card ${d.pctGeral>=100?'ok':d.daysLeft<=5?'alert':'warn'}">
+      <div class="dash-card ${d.pctGeral>=100?'ok':daysLeft<=5?'alert':'warn'}">
         <div class="dash-card-hdr"><div>
           <p class="dash-card-title">Concluído</p>
           <h3 class="dash-card-val">${d.pctGeral}%</h3>
@@ -10979,19 +11294,22 @@ function refreshCalendarioPage() {
           <p class="dash-card-sub">faltam ${Math.max(0, d.totalNeeded - d.totalReady)}</p>
         </div></div>
       </div>
-      <div class="dash-card ${d.daysLeft<=5?'alert':d.daysLeft<=10?'warn':''}">
+      <div class="dash-card ${daysLeft<=5?'alert':daysLeft<=10?'warn':''}">
         <div class="dash-card-hdr"><div>
           <p class="dash-card-title">Prazo</p>
-          <h3 class="dash-card-val">${d.daysLeft}d</h3>
-          <p class="dash-card-sub">até ${deadlineLbl} (fim do mês atual)</p>
+          <h3 class="dash-card-val">${daysLeft}d</h3>
+          <p class="dash-card-sub">${prazoSub}</p>
         </div></div>
       </div>
     </div>
     <div class="agenda-section-hdr"><h2>Por cliente</h2></div>
-    <div class="calcli-list" id="calcliList"></div>
+    <div class="calcli-list" id="calcliList-${idSuffix}"></div>
   `;
+}
 
-  const list = document.getElementById('calcliList');
+function fillCalendarioList(d, idSuffix) {
+  const list = document.getElementById(`calcliList-${idSuffix}`);
+  if (!list) return;
   list.innerHTML = d.perClient.map(x => `
     <div class="calcli-row">
       <span class="calcli-dot" style="background:${x.client.color}"></span>
@@ -11002,7 +11320,24 @@ function refreshCalendarioPage() {
       <button class="calcli-go" data-cid="${x.client.id}" title="Ir para o calendário de ${escHtml(x.client.name)}">Ver calendário →</button>
     </div>`).join('');
 
-  list.querySelectorAll('.calcli-go').forEach(b => b.addEventListener('click', () => goToClientCalendar(b.dataset.cid)));
+  list.querySelectorAll('.calcli-go').forEach(b => b.addEventListener('click', () => goToClientCalendar(b.dataset.cid, d.targetY, d.targetM)));
+}
+
+function refreshCalendarioPage() {
+  const wrap = document.getElementById('main-calendarios');
+  if (!wrap) return;
+  const { curY, curM, nextY, nextM, deadline, daysLeft } = getCalendarioCycle();
+  const deadlineLbl = `${String(deadline.getDate()).padStart(2,'0')}/${String(deadline.getMonth()+1).padStart(2,'0')}`;
+
+  const dCur  = computeCalendarioDashboard(curY, curM);
+  const dNext = computeCalendarioDashboard(nextY, nextM);
+
+  wrap.innerHTML =
+    calendarioBlockHtml(dCur,  'cur',  'mês atual',   daysLeft, `até ${deadlineLbl} (fim deste mês)`) +
+    calendarioBlockHtml(dNext, 'next', 'próximo mês', daysLeft, `até ${deadlineLbl} (fim do mês atual)`);
+
+  fillCalendarioList(dCur, 'cur');
+  fillCalendarioList(dNext, 'next');
 }
 
 // ── SAÚDE DA CARTEIRA — placar consolidado por cliente ────────────────────────
