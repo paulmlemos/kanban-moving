@@ -9,6 +9,18 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-11-17 (parte 2) — Claude (com Priscila): Chat Interno por cliente, em tempo real
+
+Origem: Claude (com Priscila)
+
+- **Nova aba "Chat Interno" na sidebar** (antes de Administrativo), com contador vermelho de salas com mensagem não lida. Uma sala por cliente ativo (43 hoje, + Vento Marketing); a lista sai do array `CLIENTS` toda vez que a aba abre, então **cliente novo entra sozinho**. Entradas `lyon-*` aparecem como "(Lyon)" porque repetem o nome de clientes diretos (Sublime Capital, Valor Jurídico). Busca por cliente, ordenação por atividade recente, Enter envia / Shift+Enter quebra linha, texto sempre via `textContent` (sem HTML), layout mobile com botão "← Clientes".
+- **Onde os dados moram:** documentos `chat__AAAAMM__{clienteId}` **dentro de `kanban_clients`**, campo `msgs` (array de `{id, from, text, ts}`), escrita com `arrayUnion`. Um documento por sala por mês mantém cada um longe do limite de 1MB. A sala mostra o mês atual + o anterior. Mais antigo que isso não aparece ainda.
+- **Por que dentro de `kanban_clients`:** o teste real mostrou que as regras do Firestore só liberam documentos diretamente nessa coleção. Coleção nova (`kanban_chat`) e subcoleção deram 403 (sondagem por REST, com documentos ZZZ apagados na hora). Sem ajuste de regras no Console, não havia outra posição.
+- **Camada 1 não foi tocada.** O sync só lê o campo `data` de cada doc; os docs de chat não têm `data`, então ele os ignora (o listener do sync ainda acorda a cada mensagem, mas o merge não muda e o guarda de 4s contra edição local continua valendo). Estado de leitura em `mmui_chatread` (prefixo `mmui`, nunca sincroniza).
+- **Teste real em produção (autorizado pela Priscila):** 2 navegadores (Paul e Priscila), sala `zzz_teste`: mensagem chega ao outro em tempo real nos dois sentidos, histórico persiste após recarregar, contador de não lidos aparece com a aba fechada e some ao abrir a sala. Achado e corrigido no teste: a sala continuava marcando como lida com a aba fechada. Documento de teste apagado; os 44 docs de clientes ficaram idênticos (foto antes/depois por REST, só leitura).
+- **Limites conhecidos:** o horário da mensagem é o relógio de quem enviou (arrayUnion não aceita `serverTimestamp`); sem apagar/editar mensagem; sem anexos; histórico além de 2 meses não aparece na tela.
+- **Próximo passo crítico:** ver se o uso real pede paginar meses antigos, apagar mensagem ou notificação sonora/do navegador.
+
 ## Atualização 2026-11-17 — Claude (com Priscila): login de acesso (Paul e Priscila)
 
 Origem: Claude (com Priscila)

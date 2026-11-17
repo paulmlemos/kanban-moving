@@ -20,6 +20,14 @@ Decisões anteriores a 2026-09-18 estão registradas dentro de `memoria/historic
 
 ---
 
+## Decisao: chat interno guardado em documentos chat__AAAAMM__cliente dentro de kanban_clients, 2026-11-17
+
+Motivo:
+O chat precisa de tempo real entre Paul e Priscila, uma sala por cliente. As regras do Firestore (geridas no Console, fora do repo) só liberam documentos diretamente em kanban_clients: coleção nova e subcoleção dão 403, confirmado por teste real. Priscila escolheu seguir sem mexer no Console.
+
+Impacto:
+Um documento por sala por mês (limite de 1MB longe), campo msgs sem o campo data, que é o único que o sync lê. O listener do sync acorda a cada mensagem, mas o merge não muda. Se um dia as regras liberarem uma coleção própria (ex.: kanban_chat), mover o chat para lá isola de vez do sync; é só trocar COL/PREFIX e a forma do documento no script CHAT INTERNO.
+
 ## Decisao: login por tela de bloqueio no HTML (não Firebase Auth), 2026-11-17
 
 Motivo:

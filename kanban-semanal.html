@@ -3882,6 +3882,55 @@
     try { if (!localStorage.getItem('mmui_auth')) document.documentElement.classList.add('mm-locked'); }
     catch (e) { document.documentElement.classList.add('mm-locked'); }
   </script>
+  <style>
+    /* ── CHAT INTERNO ─────────────────────────────────────────── */
+    .sb-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #b42318; color: #fff; font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center; }
+    .sb-badge.on { display: inline-flex; }
+    .chat-wrap { display: grid; grid-template-columns: 300px 1fr; height: calc(100vh - 24px); margin: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); overflow: hidden; }
+    .chat-list { display: flex; flex-direction: column; border-right: 1px solid var(--border); min-height: 0; }
+    .chat-list-hdr { padding: 16px 16px 10px; font: 700 15px 'Syne', 'Inter', sans-serif; color: var(--text); }
+    .chat-search { margin: 0 12px 10px; border: 1px solid var(--border-2); border-radius: var(--radius-sm); padding: 8px 10px; font: 500 12px 'Inter', sans-serif; background: var(--bg); color: var(--text); outline: none; }
+    .chat-search:focus { border-color: var(--accent); }
+    .chat-clients { flex: 1; overflow-y: auto; padding: 0 6px 8px; }
+    .chat-cli { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; text-align: left; padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; color: var(--text); }
+    .chat-cli:hover { background: var(--bg); }
+    .chat-cli.active { background: var(--sand); }
+    .chat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .chat-cli-body { flex: 1; min-width: 0; }
+    .chat-cli-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chat-cli-last { font-size: 11px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+    .chat-cli-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .chat-cli-time { font-size: 10px; color: var(--text-faint); }
+    .chat-unread { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+    .chat-room { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+    .chat-room-hdr { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--border); font: 700 15px 'Syne', 'Inter', sans-serif; color: var(--text); }
+    .chat-back { display: none; border: 1px solid var(--border-2); background: none; border-radius: var(--radius-sm); padding: 4px 10px; font: 600 12px 'Inter', sans-serif; color: var(--text-dim); cursor: pointer; }
+    .chat-err { display: none; padding: 8px 18px; background: #fef3f2; color: #b42318; font-size: 12px; border-bottom: 1px solid #fecdca; }
+    .chat-err.on { display: block; }
+    .chat-msgs { flex: 1; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; background: var(--bg); min-height: 0; }
+    .chat-empty { margin: auto; text-align: center; color: var(--text-dim); font-size: 13px; max-width: 280px; }
+    .chat-day { align-self: center; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); margin: 10px 0 4px; }
+    .chat-msg { max-width: 72%; padding: 8px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); align-self: flex-start; font-size: 13px; line-height: 1.4; color: var(--text); word-break: break-word; white-space: pre-wrap; }
+    .chat-msg.mine { align-self: flex-end; background: var(--accent); color: #fff; border-color: var(--accent); }
+    .chat-msg-who { font-size: 10px; font-weight: 700; color: var(--text-dim); margin-bottom: 2px; white-space: normal; }
+    .chat-msg-time { display: block; text-align: right; font-size: 10px; opacity: .6; margin-top: 2px; white-space: normal; }
+    .chat-msg.pending { opacity: .6; }
+    .chat-form { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--border); background: var(--surface); }
+    .chat-input { flex: 1; resize: none; max-height: 120px; border: 1px solid var(--border-2); border-radius: var(--radius-md); padding: 10px 12px; font: 500 13px 'Inter', sans-serif; color: var(--text); background: var(--bg); outline: none; }
+    .chat-input:focus { border-color: var(--accent); }
+    .chat-send { border: 0; background: var(--accent); color: #fff; border-radius: var(--radius-md); padding: 0 18px; font: 700 13px 'Inter', sans-serif; cursor: pointer; }
+    .chat-send:hover { background: var(--accent-hover); }
+    .chat-send:disabled, .chat-input:disabled { opacity: .5; cursor: not-allowed; }
+    .chat-placeholder { margin: auto; color: var(--text-dim); font-size: 13px; }
+    @media (max-width: 900px) {
+      .chat-wrap { grid-template-columns: 1fr; height: calc(100vh - 80px); margin: 8px; }
+      .chat-wrap .chat-room { display: none; }
+      .chat-wrap.in-room .chat-list { display: none; }
+      .chat-wrap.in-room .chat-room { display: flex; }
+      .chat-back { display: inline-block; }
+      .chat-msg { max-width: 86%; }
+    }
+  </style>
 </head>
 <body>
 
@@ -4001,6 +4050,7 @@
     <div class="sb-cli-list" id="sbCliList"></div>
     <button class="sb-tab" data-main-tab="ideias"><svg class="sb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.5.4.8 1 .9 1.6l.1.7h6l.1-.7c.1-.6.4-1.2.9-1.6A7 7 0 0 0 12 2z"/></svg><span>Ideias</span></button>
     <button class="sb-tab" data-main-tab="projetos"><svg class="sb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>Projetos</span></button>
+    <button class="sb-tab" data-main-tab="chat"><svg class="sb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Chat Interno</span><span class="sb-badge" id="chatSbBadge"></span></button>
     <button class="sb-tab" data-main-tab="admin"><svg class="sb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Administrativo</span></button>
   </nav>
   <div class="sb-user" id="sbUser"><span class="sb-user-name" id="sbUserName">—</span><button class="sb-user-out" type="button" onclick="mmLogout()">Sair</button></div>
@@ -4302,6 +4352,26 @@
 </div>
 
 <!-- TAB: ADMINISTRATIVO -->
+<!-- TAB: CHAT INTERNO — uma sala por cliente (documentos chat__AAAAMM__cliente em kanban_clients, ver script CHAT INTERNO) -->
+<div class="main-tab" id="main-chat">
+  <div class="chat-wrap" id="chatWrap">
+    <aside class="chat-list">
+      <div class="chat-list-hdr">Chat Interno</div>
+      <input class="chat-search" id="chatSearch" type="search" placeholder="Buscar cliente" autocomplete="off">
+      <div class="chat-clients" id="chatClients"></div>
+    </aside>
+    <section class="chat-room">
+      <div class="chat-room-hdr"><button class="chat-back" id="chatBack" type="button">&larr; Clientes</button><span class="chat-dot" id="chatRoomDot" style="display:none"></span><span id="chatRoomName">Selecione um cliente</span></div>
+      <div class="chat-err" id="chatErr"></div>
+      <div class="chat-msgs" id="chatMsgs"><div class="chat-placeholder">Escolha um cliente na lista para abrir a conversa.</div></div>
+      <form class="chat-form" id="chatForm" autocomplete="off">
+        <textarea class="chat-input" id="chatInput" rows="1" maxlength="2000" placeholder="Escreva uma mensagem…" title="Enter envia, Shift+Enter quebra linha" disabled></textarea>
+        <button class="chat-send" id="chatSend" type="submit" disabled>Enviar</button>
+      </form>
+    </section>
+  </div>
+</div>
+
 <div class="main-tab" id="main-admin">
   <div class="dre-section sec-anchor" id="sec-dre-vento-carteira">
     <div class="dre-section-header">
@@ -10575,6 +10645,7 @@ function switchMainTab(tab) {
   if (tab === 'tarefas') { refreshHoje(); renderActiveTaskView(); }
   if (tab === 'agenda') { refreshAgendaPage(); }
   if (tab === 'calendarios') { refreshCalendarioPage(); }
+  if (tab === 'chat' && typeof chatOpen === 'function') { chatOpen(); }
   if (tab === 'clientes') {
     // mostra cards, esconde seções individuais
     restoreCliGrids();
@@ -12446,6 +12517,175 @@ _loadFromCloud().then(changed => {
   scheduleSyncTarefasExternas(); // só roda com localStorage já refletindo a nuvem
 });
 _subscribeToChanges();
+</script>
+<script>
+// ── CHAT INTERNO ──────────────────────────────────────────────────────────
+// Uma sala por cliente. As regras do Firestore só liberam documentos diretamente em kanban_clients
+// (subcoleção e coleção nova dão 403), então cada sala é um documento NESSA coleção:
+//   chat__AAAAMM__{clienteId}  ->  { msgs: [ {id, from, text, ts}, ... ] }
+// Um documento por sala por mês mantém cada um longe do limite de 1MB. O doc não tem o campo "data",
+// que é o único que o motor de sync (Camada 1) lê — então o sync ignora o chat. Escrita com arrayUnion
+// (atômica, sem ler antes, sem sobrescrever a mensagem do outro). Estado de leitura em mmui_chatread
+// (prefixo mmui: nunca sincroniza). Usa só o _fsdb já inicializado.
+(function () {
+  var COL = 'kanban_clients', PREFIX = 'chat__', MAXLEN = 2000;
+  var meta = {}, cur = null, unsubRoom = [], unsubMeta = null, metaYm = '', firstLoad = true, parts = {};
+  var $ = function (id) { return document.getElementById(id); };
+
+  function me() { return window.mmCurrentUser ? window.mmCurrentUser() : null; }
+  // Entradas lyon-* (carteira da parceria Lyon) repetem o nome de clientes diretos: rotula pra não confundir.
+  function rooms() {
+    return [].concat(CLIENTS, [MOVING_CLIENT]).filter(function (c) { return !c.isPersonal && !c.inactive; }).map(function (c) {
+      return { id: c.id, color: c.color, name: String(c.id).indexOf('lyon-') === 0 ? c.name + ' (Lyon)' : c.name };
+    });
+  }
+  function roomById(id) { return rooms().filter(function (c) { return c.id === id; })[0]; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function ymOf(d) { return d.getFullYear() + pad(d.getMonth() + 1); }
+  function curYm() { return ymOf(new Date()); }
+  function prevYm() { var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return ymOf(d); }
+  function docId(ym, cid) { return PREFIX + ym + '__' + cid; }
+  function readMap() { try { return JSON.parse(localStorage.getItem('mmui_chatread') || '{}'); } catch (e) { return {}; } }
+  function chatVisible() { var t = document.getElementById('main-chat'); return !!(t && t.classList.contains('active')); }
+  function setRead(cid, ms) { try { var m = readMap(); if (!m[cid] || ms > m[cid]) { m[cid] = ms; localStorage.setItem('mmui_chatread', JSON.stringify(m)); } } catch (e) {} }
+  function unread(cid) { var m = meta[cid]; return !!(m && m.lastTs && m.lastFrom !== me() && m.lastTs > (readMap()[cid] || 0)); }
+  function hhmm(ms) { var d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function dayKey(ms) { var d = new Date(ms); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function dayLabel(ms) {
+    var now = Date.now(), k = dayKey(ms);
+    if (k === dayKey(now)) return 'Hoje';
+    if (k === dayKey(now - 86400000)) return 'Ontem';
+    var d = new Date(ms); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+  }
+  function listTime(ms) { var d = new Date(ms); return dayKey(ms) === dayKey(Date.now()) ? hhmm(ms) : pad(d.getDate()) + '/' + pad(d.getMonth() + 1); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function clean(arr) {
+    return (Array.isArray(arr) ? arr : []).filter(function (m) { return m && typeof m.text === 'string' && typeof m.ts === 'number'; });
+  }
+
+  function setErr(e) {
+    var box = $('chatErr'); if (!box) return;
+    if (!e) { box.className = 'chat-err'; box.textContent = ''; return; }
+    box.className = 'chat-err on';
+    box.textContent = (e.code === 'permission-denied')
+      ? 'Sem permissão para o chat: as regras do Firestore recusaram a leitura/escrita.'
+      : 'Não foi possível falar com o servidor agora (' + (e.code || 'erro') + '). O chat volta sozinho quando a conexão voltar.';
+  }
+
+  function updateSbBadge() {
+    var n = rooms().filter(function (c) { return unread(c.id); }).length, b = $('chatSbBadge');
+    if (!b) return; b.textContent = n > 9 ? '9+' : String(n); b.classList.toggle('on', n > 0);
+  }
+
+  function renderList() {
+    var box = $('chatClients'); if (!box) return;
+    var q = ($('chatSearch').value || '').trim().toLowerCase();
+    var list = rooms().filter(function (c) { return !q || c.name.toLowerCase().indexOf(q) >= 0; });
+    list.sort(function (a, b) {
+      var ta = (meta[a.id] && meta[a.id].lastTs) || 0, tb = (meta[b.id] && meta[b.id].lastTs) || 0;
+      return tb - ta || a.name.localeCompare(b.name, 'pt-BR');
+    });
+    box.textContent = '';
+    list.forEach(function (c) {
+      var m = meta[c.id], b = el('button', 'chat-cli' + (c.id === cur ? ' active' : '')); b.type = 'button';
+      var dot = el('span', 'chat-dot'); dot.style.background = c.color || '#94a3b8'; b.appendChild(dot);
+      var body = el('div', 'chat-cli-body'); body.appendChild(el('div', 'chat-cli-name', c.name));
+      body.appendChild(el('div', 'chat-cli-last', m && m.lastText ? (m.lastFrom ? m.lastFrom.split(' ')[0] + ': ' : '') + m.lastText : 'Sem mensagens'));
+      b.appendChild(body);
+      var side = el('div', 'chat-cli-meta');
+      if (m && m.lastTs) side.appendChild(el('span', 'chat-cli-time', listTime(m.lastTs)));
+      if (unread(c.id)) side.appendChild(el('span', 'chat-unread', '●'));
+      b.appendChild(side);
+      b.onclick = function () { openRoom(c.id); };
+      box.appendChild(b);
+    });
+    if (!list.length) box.appendChild(el('div', 'chat-placeholder', 'Nenhum cliente encontrado.'));
+  }
+
+  function renderMsgs() {
+    var box = $('chatMsgs'), me_ = me();
+    var docs = [].concat(parts.prev || [], parts.cur || []).sort(function (a, b) { return a.ts - b.ts; });
+    var nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80 || firstLoad;
+    box.textContent = '';
+    if (!docs.length) { box.appendChild(el('div', 'chat-empty', 'Nenhuma mensagem ainda. Escreva a primeira para começar a conversa deste cliente.')); return docs; }
+    var lastDay = '';
+    docs.forEach(function (m, i) {
+      var k = dayKey(m.ts); if (k !== lastDay) { box.appendChild(el('div', 'chat-day', dayLabel(m.ts))); lastDay = k; }
+      var mine = m.from === me_, pending = parts.pending && i === docs.length - 1;
+      var b = el('div', 'chat-msg' + (mine ? ' mine' : '') + (pending ? ' pending' : ''));
+      if (!mine) b.appendChild(el('div', 'chat-msg-who', m.from || '—'));
+      b.appendChild(document.createTextNode(m.text));
+      b.appendChild(el('span', 'chat-msg-time', hhmm(m.ts)));
+      box.appendChild(b);
+    });
+    if (nearBottom) box.scrollTop = box.scrollHeight;
+    return docs;
+  }
+
+  function onRoomData(cid, key, snap) {
+    if (cur !== cid) return;
+    parts[key] = snap.exists ? clean((snap.data() || {}).msgs) : [];
+    if (key === 'cur') parts.pending = snap.metadata.hasPendingWrites;
+    setErr(null);
+    var docs = renderMsgs(); firstLoad = false;
+    var last = docs.length ? docs[docs.length - 1].ts : 0;
+    if (last) { if (chatVisible()) setRead(cid, last); renderList(); updateSbBadge(); }
+  }
+
+  function openRoom(cid) {
+    var c = roomById(cid); if (!c) return;
+    unsubRoom.forEach(function (u) { u(); }); unsubRoom = [];
+    cur = cid; firstLoad = true; parts = {}; setErr(null);
+    $('chatRoomName').textContent = c.name;
+    var dot = $('chatRoomDot'); dot.style.display = ''; dot.style.background = c.color || '#94a3b8';
+    $('chatInput').disabled = false; $('chatSend').disabled = false;
+    $('chatWrap').classList.add('in-room');
+    $('chatMsgs').textContent = ''; $('chatMsgs').appendChild(el('div', 'chat-placeholder', 'Carregando…'));
+    renderList();
+    [['cur', curYm()], ['prev', prevYm()]].forEach(function (p) {
+      unsubRoom.push(_fsdb.collection(COL).doc(docId(p[1], cid)).onSnapshot({ includeMetadataChanges: false }, function (s) { onRoomData(cid, p[0], s); }, function (e) { setErr(e); }));
+    });
+    if (window.innerWidth > 900) $('chatInput').focus();
+  }
+
+  function send() {
+    var inp = $('chatInput'), text = inp.value.trim(), who = me();
+    if (!text || !cur || !who) return;
+    inp.value = ''; inp.style.height = 'auto';
+    var m = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), from: who, text: text.slice(0, MAXLEN), ts: Date.now() };
+    _fsdb.collection(COL).doc(docId(curYm(), cur)).set({ msgs: firebase.firestore.FieldValue.arrayUnion(m) }, { merge: true })
+      .catch(function (e) { setErr(e); inp.value = text; });
+  }
+
+  function startMeta() {
+    if (!me()) return;
+    var ym = curYm();
+    if (unsubMeta && metaYm === ym) return;
+    if (unsubMeta) { unsubMeta(); unsubMeta = null; }
+    metaYm = ym;
+    var pfx = PREFIX + ym + '__', fid = firebase.firestore.FieldPath.documentId();
+    // só os documentos de chat do mês corrente (um por sala) — não baixa os documentos de dados dos clientes
+    unsubMeta = _fsdb.collection(COL).where(fid, '>=', pfx).where(fid, '<', pfx + '').onSnapshot(function (snap) {
+      snap.docChanges().forEach(function (ch) {
+        var cid = ch.doc.id.slice(pfx.length), arr = clean((ch.doc.data() || {}).msgs), l = arr[arr.length - 1];
+        if (ch.type === 'removed' || !l) { delete meta[cid]; return; }
+        meta[cid] = { lastTs: l.ts, lastFrom: l.from || '', lastText: String(l.text).slice(0, 80) };
+      });
+      if (cur && chatVisible() && meta[cur] && meta[cur].lastTs) setRead(cur, meta[cur].lastTs);
+      renderList(); updateSbBadge();
+    }, function (e) { setErr(e); });
+  }
+
+  window.chatOpen = function () { startMeta(); if (cur && meta[cur] && meta[cur].lastTs) setRead(cur, meta[cur].lastTs); renderList(); updateSbBadge(); };
+
+  $('chatForm').addEventListener('submit', function (ev) { ev.preventDefault(); send(); });
+  $('chatInput').addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); send(); } });
+  $('chatInput').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
+  $('chatSearch').addEventListener('input', renderList);
+  $('chatBack').addEventListener('click', function () { $('chatWrap').classList.remove('in-room'); });
+
+  renderList(); startMeta();
+})();
 </script>
 </body>
 </html>
