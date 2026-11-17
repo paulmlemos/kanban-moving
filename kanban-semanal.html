@@ -3861,8 +3861,8 @@
     #mmLogin { display: none; position: fixed; inset: 0; z-index: 99999; background: var(--bg); align-items: center; justify-content: center; padding: 16px; font-family: 'Inter', sans-serif; }
     html.mm-locked #mmLogin { display: flex; }
     .mm-login-card { width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-pop); padding: 32px 28px; text-align: center; }
-    .mm-login-card img { height: 40px; max-width: 80%; object-fit: contain; margin-bottom: 8px; }
-    .mm-login-tag { font-size: 11px; color: var(--text-dim); margin-bottom: 24px; }
+    .mm-login-card img { height: 40px; max-width: 80%; object-fit: contain; margin-bottom: 24px; }
+    .mm-login-tag { font: 700 16px 'Syne', 'Inter', sans-serif; color: var(--text); margin-bottom: 14px; }
     .mm-login-users { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
     .mm-login-user { border: 1px solid var(--border-2); background: var(--surface); color: var(--text); border-radius: var(--radius-md); padding: 11px 14px; font: 600 13px 'Inter', sans-serif; cursor: pointer; transition: all .15s; }
     .mm-login-user:hover { background: var(--accent-dim); }
@@ -3888,8 +3888,8 @@
 <!-- LOGIN -->
 <div id="mmLogin" role="dialog" aria-label="Entrar">
   <form class="mm-login-card" id="mmLoginForm" autocomplete="off">
+    <div class="mm-login-tag">Vento Marketing</div>
     <img src="logo-vento-horizontal.png" alt="Vento Marketing" onerror="this.style.display='none'">
-    <div class="mm-login-tag">Sistema da Agência</div>
     <div class="mm-login-users" id="mmLoginUsers"></div>
     <input class="mm-login-pass" id="mmLoginPass" type="password" inputmode="numeric" placeholder="Senha" autocomplete="current-password">
     <button class="mm-login-go" id="mmLoginGo" type="submit">Entrar</button>
