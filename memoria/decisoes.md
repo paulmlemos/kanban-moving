@@ -20,6 +20,14 @@ Decisões anteriores a 2026-09-18 estão registradas dentro de `memoria/historic
 
 ---
 
+## Decisao: login por tela de bloqueio no HTML (não Firebase Auth), 2026-11-17
+
+Motivo:
+Priscila pediu acesso de usuários (Paul e Priscila) antes de abrir o sistema e queria fazer tudo pelo Claude Code. Firebase Auth exige ativar o provedor e criar contas no Console, fora do alcance da sessão; a tela de bloqueio no HTML cabe inteira no repo.
+
+Impacto:
+Só barra quem abre o sistema pelo navegador. Firestore continua público (regras no Console), então não protege os dados de quem chamar a API direto. Não mexe no sync. Se a proteção real virar necessidade, o caminho é Firebase Auth + regras do Firestore.
+
 ## Decisao: memoria e protocolo de sessao proprios, dentro deste repo
 
 Motivo:

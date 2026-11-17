@@ -9,6 +9,16 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-11-17 — Claude (com Priscila): login de acesso (Paul e Priscila)
+
+Origem: Claude (com Priscila)
+
+- **Tela de login antes de abrir o sistema**, com 2 usuários: Paul Lemos e Priscila Becker Lemos. Escolhe o nome, digita a senha. Fica logado no navegador até clicar em Sair (rodapé da sidebar, com o nome do usuário logado).
+- Implementação 100% na Camada 3 (CSS + HTML + script próprio logo após `<body>`). **Camada 1 (sync Firebase) não foi tocada.** Senha conferida com PBKDF2-SHA-256 (150 mil iterações, salt por usuário) via `crypto.subtle`; só hash e salt ficam no código. Marca de sessão em `localStorage` na chave `mmui_auth` (prefixo `mmui` já está em `_SKIP_SYNC`: nunca vai pro Firestore nem pro backup).
+- Testado com Playwright (Firestore bloqueado), 10 cenários OK e zero erro de JS: abre bloqueado, senha errada, sem usuário, senha cruzada, login do Paul, persistência após reload, token forjado rejeitado, login da Priscila, Sair. Bug meu achado no teste e corrigido antes do commit: hash gerado com salt como texto em vez de bytes.
+- **Limite conhecido:** é portão visual. O Firestore segue com leitura/escrita públicas, então quem usar a API REST ainda lê os dados. Senhas de 4 dígitos + hash em repo público = descobríveis por força bruta (10 mil combinações); Priscila escolheu assim.
+- **Próximo passo crítico:** (1) trocar por senhas mais longas se quiser dificultar; (2) proteção real = Firebase Auth + regras do Firestore exigindo login (feito no Console, fora do repo).
+
 ## Atualização 2026-10-20 — Claude (com Priscila): SC Conecta entra na Gestão de Postagens e nos Calendários
 
 Origem: Claude (com Priscila)

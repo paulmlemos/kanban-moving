@@ -3855,8 +3855,87 @@
     .ceus-canal-saved.show { display: block; }
 
   </style>
+  <!-- LOGIN: tela de bloqueio (portao visual, ver memoria/decisoes.md). Chave mmui_auth e local, nunca sincroniza. -->
+  <style>
+    html.mm-locked body > *:not(#mmLogin) { display: none !important; }
+    #mmLogin { display: none; position: fixed; inset: 0; z-index: 99999; background: var(--bg); align-items: center; justify-content: center; padding: 16px; font-family: 'Inter', sans-serif; }
+    html.mm-locked #mmLogin { display: flex; }
+    .mm-login-card { width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-pop); padding: 32px 28px; text-align: center; }
+    .mm-login-card img { height: 40px; max-width: 80%; object-fit: contain; margin-bottom: 8px; }
+    .mm-login-tag { font-size: 11px; color: var(--text-dim); margin-bottom: 24px; }
+    .mm-login-users { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .mm-login-user { border: 1px solid var(--border-2); background: var(--surface); color: var(--text); border-radius: var(--radius-md); padding: 11px 14px; font: 600 13px 'Inter', sans-serif; cursor: pointer; transition: all .15s; }
+    .mm-login-user:hover { background: var(--accent-dim); }
+    .mm-login-user.sel { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .mm-login-pass { width: 100%; border: 1px solid var(--border-2); border-radius: var(--radius-md); padding: 11px 14px; font: 500 14px 'Inter', sans-serif; color: var(--text); background: var(--bg); outline: none; text-align: center; letter-spacing: .15em; }
+    .mm-login-pass:focus { border-color: var(--accent); }
+    .mm-login-go { width: 100%; margin-top: 10px; border: 0; background: var(--accent); color: #fff; border-radius: var(--radius-md); padding: 11px 14px; font: 700 13px 'Inter', sans-serif; cursor: pointer; }
+    .mm-login-go:hover { background: var(--accent-hover); }
+    .mm-login-go:disabled { opacity: .6; cursor: wait; }
+    .mm-login-err { min-height: 16px; margin-top: 10px; font-size: 12px; color: #b42318; }
+    .sb-user { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text); }
+    .sb-user-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sb-user-out { border: 1px solid var(--border-2); background: transparent; color: var(--text-dim); border-radius: var(--radius-sm); padding: 4px 10px; font: 600 11px 'Inter', sans-serif; cursor: pointer; }
+    .sb-user-out:hover { background: var(--accent-dim); color: var(--text); }
+  </style>
+  <script>
+    try { if (!localStorage.getItem('mmui_auth')) document.documentElement.classList.add('mm-locked'); }
+    catch (e) { document.documentElement.classList.add('mm-locked'); }
+  </script>
 </head>
 <body>
+
+<!-- LOGIN -->
+<div id="mmLogin" role="dialog" aria-label="Entrar">
+  <form class="mm-login-card" id="mmLoginForm" autocomplete="off">
+    <img src="logo-vento-horizontal.png" alt="Vento Marketing" onerror="this.style.display='none'">
+    <div class="mm-login-tag">Sistema da Agência</div>
+    <div class="mm-login-users" id="mmLoginUsers"></div>
+    <input class="mm-login-pass" id="mmLoginPass" type="password" inputmode="numeric" placeholder="Senha" autocomplete="current-password">
+    <button class="mm-login-go" id="mmLoginGo" type="submit">Entrar</button>
+    <div class="mm-login-err" id="mmLoginErr" aria-live="polite"></div>
+  </form>
+</div>
+<script>
+(function () {
+  var USERS = {"paul":{"name":"Paul Lemos","salt":"6e2005f5c34ee42011ec4983672b89a0","hash":"956de9e2a3d2ee8e4193bfc09808da47db146b3d3c594f5a3c14f6017fe20d88"},"priscila":{"name":"Priscila Becker Lemos","salt":"d347fb4f4ecb97819e0a72759da4af0a","hash":"05a1eef17c7cff89945a0361e47de8f44f97ef5f232e673b0da3c2f46dbb74c0"}};
+  var ITER = 150000, KEY = 'mmui_auth', root = document.documentElement;
+  function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+  function unhex(s) { var a = new Uint8Array(s.length / 2); for (var i = 0; i < a.length; i++) a[i] = parseInt(s.substr(i * 2, 2), 16); return a; }
+  async function derive(pass, saltHex) {
+    var k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+    return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: unhex(saltHex), iterations: ITER }, k, 256));
+  }
+  function stored() {
+    try { var p = (localStorage.getItem(KEY) || '').split(':'); return (USERS[p[0]] && USERS[p[0]].hash === p[1]) ? p[0] : null; } catch (e) { return null; }
+  }
+  window.mmCurrentUser = function () { var u = stored(); return u ? USERS[u].name : null; };
+  window.mmLogout = function () { try { localStorage.removeItem(KEY); } catch (e) {} location.reload(); };
+  if (stored()) { root.classList.remove('mm-locked'); } else { root.classList.add('mm-locked'); try { localStorage.removeItem(KEY); } catch (e) {} }
+
+  var box = document.getElementById('mmLoginUsers'), sel = null;
+  Object.keys(USERS).forEach(function (id) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'mm-login-user'; b.textContent = USERS[id].name;
+    b.onclick = function () { sel = id; Array.prototype.forEach.call(box.children, function (x) { x.classList.remove('sel'); }); b.classList.add('sel'); document.getElementById('mmLoginPass').focus(); };
+    box.appendChild(b);
+  });
+  var err = document.getElementById('mmLoginErr');
+  document.getElementById('mmLoginForm').addEventListener('submit', async function (ev) {
+    ev.preventDefault(); err.textContent = '';
+    var pass = document.getElementById('mmLoginPass').value, go = document.getElementById('mmLoginGo');
+    if (!sel) { err.textContent = 'Escolha o usuário.'; return; }
+    if (!pass) { err.textContent = 'Digite a senha.'; return; }
+    if (!(window.crypto && crypto.subtle)) { err.textContent = 'Este navegador não suporta o login. Abra pelo endereço https.'; return; }
+    go.disabled = true;
+    try {
+      var h = await derive(pass, USERS[sel].salt);
+      if (h === USERS[sel].hash) { try { localStorage.setItem(KEY, sel + ':' + h); } catch (e) {} location.reload(); return; }
+      err.textContent = 'Senha incorreta.'; document.getElementById('mmLoginPass').value = '';
+    } catch (e) { err.textContent = 'Não foi possível entrar.'; }
+    go.disabled = false;
+  });
+})();
+</script>
 
 <!-- HEADER -->
 <header class="header">
@@ -3924,7 +4003,9 @@
     <button class="sb-tab" data-main-tab="projetos"><svg class="sb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>Projetos</span></button>
     <button class="sb-tab" data-main-tab="admin"><svg class="sb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Administrativo</span></button>
   </nav>
+  <div class="sb-user" id="sbUser"><span class="sb-user-name" id="sbUserName">—</span><button class="sb-user-out" type="button" onclick="mmLogout()">Sair</button></div>
 </aside>
+<script>(function(){var n=window.mmCurrentUser&&window.mmCurrentUser();var e=document.getElementById('sbUserName');if(e)e.textContent=n||'—';})();</script>
 
 <!-- TAB: INÍCIO -->
 <div class="main-tab active" id="main-inicio">
