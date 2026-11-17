@@ -3888,7 +3888,10 @@
     .sb-badge.on { display: inline-flex; }
     .chat-wrap { display: grid; grid-template-columns: 300px 1fr; height: calc(100vh - 24px); margin: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); overflow: hidden; }
     .chat-list { display: flex; flex-direction: column; border-right: 1px solid var(--border); min-height: 0; }
-    .chat-list-hdr { padding: 16px 16px 10px; font: 700 15px 'Syne', 'Inter', sans-serif; color: var(--text); }
+    .chat-list-hdr { padding: 16px 16px 10px; font: 700 15px 'Syne', 'Inter', sans-serif; color: var(--text); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .chat-snd { border: 1px solid var(--border-2); background: transparent; color: var(--text-dim); border-radius: 999px; padding: 4px 10px; font: 600 11px 'Inter', sans-serif; cursor: pointer; white-space: nowrap; }
+    .chat-snd:hover { background: var(--accent-dim); color: var(--text); }
+    .chat-snd.off { opacity: .6; }
     .chat-search { margin: 0 12px 10px; border: 1px solid var(--border-2); border-radius: var(--radius-sm); padding: 8px 10px; font: 500 12px 'Inter', sans-serif; background: var(--bg); color: var(--text); outline: none; }
     .chat-search:focus { border-color: var(--accent); }
     .chat-clients { flex: 1; overflow-y: auto; padding: 0 6px 8px; }
@@ -4358,7 +4361,7 @@
 <div class="main-tab" id="main-chat">
   <div class="chat-wrap" id="chatWrap">
     <aside class="chat-list">
-      <div class="chat-list-hdr">Chat Interno</div>
+      <div class="chat-list-hdr"><span>Chat Interno</span><button class="chat-snd" id="chatSnd" type="button" title="Som quando chegar mensagem nova">Som: ligado</button></div>
       <input class="chat-search" id="chatSearch" type="search" placeholder="Buscar cliente" autocomplete="off">
       <div class="chat-clients" id="chatClients"></div>
     </aside>
@@ -12548,6 +12551,25 @@ _subscribeToChanges();
   function prevYm() { var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return ymOf(d); }
   function docId(ym, cid) { return PREFIX + ym + '__' + cid; }
   function readMap() { try { return JSON.parse(localStorage.getItem('mmui_chatread') || '{}'); } catch (e) { return {}; } }
+  // Som de notificacao: bipe curto gerado por WebAudio (sem arquivo). Navegadores so liberam audio depois
+  // de um clique/tecla na pagina; o primeiro gesto destrava. Preferencia em mmui_chatsound (nao sincroniza).
+  var actx = null, metaReady = false;
+  function soundOn() { try { return localStorage.getItem('mmui_chatsound') !== 'off'; } catch (e) { return true; } }
+  function audio() { if (!actx) { var C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); } return actx; }
+  function unlockAudio() { var a = audio(); if (a && a.state === 'suspended') a.resume(); }
+  ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, unlockAudio, { passive: true }); });
+  function beep() {
+    if (!soundOn()) return;
+    var a = audio(); if (!a || a.state !== 'running') { if (a) a.resume(); return; }
+    [[880, 0], [1175, 0.14]].forEach(function (n) {
+      var o = a.createOscillator(), g = a.createGain(), t = a.currentTime + n[1];
+      o.type = 'sine'; o.frequency.value = n[0];
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + 0.32);
+    });
+  }
+  function paintSnd() { var b = $('chatSnd'); if (!b) return; var on = soundOn(); b.textContent = on ? 'Som: ligado' : 'Som: desligado'; b.classList.toggle('off', !on); }
+
   function chatVisible() { var t = document.getElementById('main-chat'); return !!(t && t.classList.contains('active')); }
   function setRead(cid, ms) { try { var m = readMap(); if (!m[cid] || ms > m[cid]) { m[cid] = ms; localStorage.setItem('mmui_chatread', JSON.stringify(m)); } } catch (e) {} }
   function unread(cid) { var m = meta[cid]; return !!(m && m.lastTs && m.lastFrom !== me() && m.lastTs > (readMap()[cid] || 0)); }
@@ -12680,17 +12702,22 @@ _subscribeToChanges();
     var ym = curYm();
     if (unsubMeta && metaYm === ym) return;
     if (unsubMeta) { unsubMeta(); unsubMeta = null; }
+    metaReady = false;
     metaYm = ym;
     var pfx = PREFIX + ym + '__', fid = firebase.firestore.FieldPath.documentId();
     // só os documentos de chat do mês corrente (um por sala) — não baixa os documentos de dados dos clientes
     unsubMeta = _fsdb.collection(COL).where(fid, '>=', pfx).where(fid, '<', pfx + '').onSnapshot(function (snap) {
+      var incoming = false;
       snap.docChanges().forEach(function (ch) {
         var cid = ch.doc.id.slice(pfx.length), arr = clean((ch.doc.data() || {}).msgs), l = arr[arr.length - 1];
         if (ch.type === 'removed' || !l) { delete meta[cid]; return; }
+        var prev = meta[cid];
+        if (metaReady && (l.from || '') !== me() && (!prev || l.ts > prev.lastTs)) incoming = true;
         meta[cid] = { lastTs: l.ts, lastFrom: l.from || '', lastText: String(l.text).slice(0, 80) };
       });
       if (cur && chatVisible() && meta[cur] && meta[cur].lastTs) setRead(cur, meta[cur].lastTs);
       renderList(); updateSbBadge();
+      metaReady = true; if (incoming) beep();
     }, function (e) { setErr(e); });
   }
 
@@ -12700,6 +12727,8 @@ _subscribeToChanges();
   $('chatInput').addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); send(); } });
   $('chatInput').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
   $('chatSearch').addEventListener('input', renderList);
+  $('chatSnd').addEventListener('click', function () { try { localStorage.setItem('mmui_chatsound', soundOn() ? 'off' : 'on'); } catch (e) {} paintSnd(); if (soundOn()) { unlockAudio(); beep(); } });
+  paintSnd();
   $('chatBack').addEventListener('click', function () { $('chatWrap').classList.remove('in-room'); });
 
   renderList(); startMeta();
