@@ -902,6 +902,44 @@
       background: var(--bg); color: var(--text-dim);
     }
     .tvl-group-list { display: flex; flex-direction: column; gap: 6px; }
+    /* ── GRUPOS DE TAREFAS (tag colorida + painel com % de conclusão) ───────── */
+    .task-group-tag { display:inline-flex; align-items:center; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; max-width:140px; overflow:hidden; text-overflow:ellipsis; }
+    .task-group-pill { border:1px solid var(--g, var(--border-2)); color:var(--g, var(--text-dim)); background:transparent; border-radius:999px; padding:4px 11px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; }
+    .task-group-pill:hover { background:rgba(255,255,255,.05); }
+    .task-group-pill.sel { background:var(--g, var(--accent)); border-color:var(--g, var(--accent)); color:#fff; }
+    .task-group-pill.task-group-new { border-style:dashed; color:var(--text-dim); }
+    .tg-dash { padding:8px 24px 4px; }
+    .tg-dash-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .tg-dash-title { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint); }
+    .tg-dash-new { background:var(--surface-2); border:1px solid var(--border-2); color:var(--text); border-radius:8px; padding:5px 12px; font-size:12px; cursor:pointer; font-family:inherit; }
+    .tg-dash-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:10px; }
+    .tg-card { background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--g, var(--border-2)); border-radius:10px; padding:12px 14px; cursor:pointer; position:relative; transition:all .15s; }
+    .tg-card:hover { background:var(--surface-2); border-color:var(--border-2); border-top-color:var(--g, var(--border-2)); }
+    .tg-card.active { outline:2px solid var(--g, var(--accent)); outline-offset:1px; }
+    .tg-card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .tg-card-pct { font-size:20px; font-weight:800; color:var(--g, var(--text)); }
+    .tg-card-bar { height:5px; background:var(--surface-2); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+    .tg-card-fill { height:100%; background:var(--g, var(--accent)); border-radius:3px; transition:width .4s; }
+    .tg-card-sub { font-size:11px; color:var(--text-dim); line-height:1.5; }
+    .tg-card-late { color:#ef4444; font-weight:600; }
+    .tg-card-edit { position:absolute; bottom:8px; right:8px; background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:12px; padding:2px 4px; opacity:0; transition:opacity .12s; }
+    .tg-card:hover .tg-card-edit { opacity:1; }
+    .tg-filter-bar { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); padding:0 0 10px; }
+    .tg-filter-bar button { background:none; border:1px solid var(--border-2); color:var(--text-dim); border-radius:6px; font-size:11px; padding:2px 8px; cursor:pointer; font-family:inherit; }
+    .tg-dlg-back { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:700; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .tg-dlg { background:var(--surface); border:1px solid var(--border-2); border-radius:12px; padding:20px; width:100%; max-width:360px; }
+    .tg-dlg h3 { margin:0 0 12px; font-size:15px; }
+    .tg-dlg label { display:block; font-size:11px; color:var(--text-dim); margin:10px 0 5px; }
+    .tg-dlg input[type=text] { width:100%; box-sizing:border-box; padding:9px 10px; border-radius:8px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); font-size:13px; }
+    .tg-swatches { display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
+    .tg-sw { width:24px; height:24px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0; }
+    .tg-sw.sel { border-color:var(--text); }
+    .tg-swatches input[type=color] { width:28px; height:28px; padding:0; border:1px solid var(--border-2); border-radius:50%; background:none; cursor:pointer; }
+    .tg-err { color:#ef4444; font-size:12px; min-height:16px; margin-top:8px; }
+    .tg-actions { display:flex; gap:8px; align-items:center; margin-top:14px; }
+    .tg-actions button { padding:8px 14px; border-radius:8px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); cursor:pointer; font-size:13px; font-family:inherit; }
+    .tg-actions button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .tg-actions button.tg-del { color:#ef4444; }
     .tvl-empty { padding: 48px 0; text-align: center; color: var(--text-faint); font-size: 13px; font-style: italic; }
 
     /* Calendario (mes) */
@@ -4123,6 +4161,8 @@
 <div class="main-tab" id="main-tarefas">
   <div class="hoje-wrap sec-anchor" id="sec-hoje-tarefas"></div>
 
+  <div class="tg-dash" id="tvGroupsDash"></div>
+
   <div class="tv-section sec-anchor" id="taskViewsWrap">
     <div class="tv-toolbar">
       <div class="tv-toolbar-left">
@@ -4154,6 +4194,7 @@
       <button class="tv-new-task-btn" id="tvNewTaskBtn">+ Nova tarefa</button>
     </div>
 
+    <div class="tg-filter-bar" id="tvGroupFilterBar" hidden></div>
     <div class="tv-panel active" data-panel="lista" id="tvPanelLista"></div>
     <div class="tv-panel" data-panel="calendario" id="tvPanelCalendario"></div>
     <div class="tv-panel" data-panel="board" id="tvPanelBoard"></div>
@@ -4635,6 +4676,11 @@
             <span class="tw-meta-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Urgência</span>
             <div class="tw-modal-row" id="twModalUrgency"></div>
           </div>
+        </div>
+
+        <div class="tw-meta-field tw-meta-field-rec">
+          <span class="tw-meta-label">Grupo</span>
+          <div class="tw-modal-row" id="twModalGroup"></div>
         </div>
 
         <div class="tw-meta-field tw-meta-field-rec">
@@ -5722,7 +5768,8 @@ function toggleTask(clientId, id) {
         assignees:  t.assignees  || [],
         recurrence: t.recurrence,
         recurrenceDays: t.recurrenceDays || [],
-        urgency:    t.urgency    || ''
+        urgency:    t.urgency    || '',
+        groupId:    t.groupId    || ''
       });
     }
     saveTasks(clientId, tasks);
@@ -6225,6 +6272,22 @@ buildTasksGrid();
   const doneBtn   = document.getElementById('twModalDoneBtn');
   let _clientId = null, _taskId = null, _modalAssignees = [], _modalRecurrence = '', _modalRecurrenceDays = [], _modalUrgency = '', _isNew = false, _modalDone = false;
   let _chkDraft = [], _cmtDraft = [];
+  let _modalGroup = '';
+
+  function renderModalGroups() {
+    const el = document.getElementById('twModalGroup');
+    if (!el) return;
+    const gs = loadTaskGroups();
+    if (_modalGroup && !gs.some(g => g.id === _modalGroup)) _modalGroup = '';
+    el.innerHTML = `<button type="button" class="task-group-pill${_modalGroup ? '' : ' sel'}" data-g="">Sem grupo</button>`
+      + gs.map(g => `<button type="button" class="task-group-pill${_modalGroup === g.id ? ' sel' : ''}" data-g="${escHtml(g.id)}" style="--g:${g.color}">${escHtml(g.name)}</button>`).join('')
+      + `<button type="button" class="task-group-pill task-group-new" data-g="__new">+ Novo grupo</button>`;
+    el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.g === '__new') { openGroupDialog(null, g => { if (g) _modalGroup = g.id; renderModalGroups(); }); return; }
+      _modalGroup = b.dataset.g;
+      renderModalGroups();
+    }));
+  }
 
   function autoGrow(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
 
@@ -6250,7 +6313,7 @@ buildTasksGrid();
   window.openTwNewTaskModal = function (iso) {
     _isNew = true; _taskId = null; _clientId = null; _modalDone = false;
     _modalAssignees = []; _modalRecurrence = ''; _modalRecurrenceDays = []; _modalUrgency = '';
-    _chkDraft = []; _cmtDraft = [];
+    _chkDraft = []; _cmtDraft = []; _modalGroup = '';
 
     const allClients = [MOVING_CLIENT, ...CLIENTS].filter(c => !c.noKanban);
     const sel = document.getElementById('twModalClientSel');
@@ -6266,6 +6329,7 @@ buildTasksGrid();
     setDoneUi(false);
 
     buildModalPills([], '', [], '');
+    renderModalGroups();
     renderChkList();
     renderCmtAuthorSel();
     renderCmtList();
@@ -6286,6 +6350,7 @@ buildTasksGrid();
     _modalUrgency    = task.urgency    || '';
     _chkDraft = JSON.parse(JSON.stringify(task.checklist || []));
     _cmtDraft = JSON.parse(JSON.stringify(task.comentarios || []));
+    _modalGroup = task.groupId || '';
 
     document.getElementById('twModalClientSel').style.display = 'none';
     const clientPill = document.getElementById('twModalClient');
@@ -6301,6 +6366,7 @@ buildTasksGrid();
     setDoneUi(_modalDone);
 
     buildModalPills(_modalAssignees, _modalRecurrence, _modalRecurrenceDays, _modalUrgency);
+    renderModalGroups();
     renderChkList();
     renderCmtAuthorSel();
     renderCmtList();
@@ -6486,6 +6552,7 @@ buildTasksGrid();
       if (created) {
         created.checklist   = _chkDraft;
         created.comentarios = _cmtDraft;
+        created.groupId     = _modalGroup;
         created.done = _modalDone;
         saveTasks(cid, tasks);
       }
@@ -6509,6 +6576,7 @@ buildTasksGrid();
       t.urgency    = _modalUrgency;
       t.checklist    = _chkDraft;
       t.comentarios  = _cmtDraft;
+      t.groupId      = _modalGroup;
       if (t.done !== _modalDone) { t.done = _modalDone; }
       saveTasks(_clientId, tasks);
       if (t.origemPlanilha && t.origemLinha) writeTaskStatusToSheet(t.origemPlanilha, t.origemLinha, t.done);
@@ -6588,8 +6656,143 @@ let tvUserFilter = 'all';
 let tvCalendarMonthOffset = 0; // meses a partir do mes atual
 let tvCalendarWeekOffset = 0;  // semanas a partir da semana atual
 let tvCalendarMode = 'month';  // 'month' | 'week'
+let tvGroupFilter = '';        // '' = todas | id do grupo | '__none' = sem grupo
 
-function getAllTasksFlat(userFilter) {
+// ── GRUPOS DE TAREFAS ──────────────────────────────────────────────────────
+// Lista global em mmtaskgroups ([{id, name, color}], sincroniza no doc "_global"); a tarefa
+// aponta pro grupo por task.groupId. Grupo excluído deixa groupId solto, que vale "sem grupo".
+const TASK_GROUP_COLORS = ['#ef4444','#f97316','#f59e0b','#84cc16','#10b981','#06b6d4','#3b82f6','#8b5cf6','#d946ef','#ec4899'];
+function loadTaskGroups() {
+  try {
+    const a = JSON.parse(mmGet('mmtaskgroups') || '[]');
+    return (Array.isArray(a) ? a : []).filter(g => g && typeof g.id === 'string' && typeof g.name === 'string' && /^#[0-9a-f]{6}$/i.test(g.color || ''));
+  } catch { return []; }
+}
+function saveTaskGroups(a) { mmSet('mmtaskgroups', JSON.stringify(a)); }
+function taskGroupById(id) { return id ? loadTaskGroups().find(g => g.id === id) : undefined; }
+function groupTagHtml(g) {
+  return g ? `<span class="task-group-tag" style="background:${g.color}26;color:${g.color};border:1px solid ${g.color}66" title="Grupo: ${escHtml(g.name)}">${escHtml(g.name)}</span>` : '';
+}
+
+function openGroupDialog(groupId, onDone) {
+  if (document.getElementById('tgDlgBack')) return;
+  const groups = loadTaskGroups();
+  const editing = groupId ? groups.find(g => g.id === groupId) : null;
+  let color = editing ? editing.color : TASK_GROUP_COLORS[groups.length % TASK_GROUP_COLORS.length];
+  const back = document.createElement('div');
+  back.className = 'tg-dlg-back'; back.id = 'tgDlgBack';
+  back.innerHTML = `
+    <div class="tg-dlg" role="dialog" aria-label="${editing ? 'Editar grupo' : 'Novo grupo'}">
+      <h3>${editing ? 'Editar grupo' : 'Novo grupo'}</h3>
+      <label for="tgName">Nome do grupo</label>
+      <input type="text" id="tgName" maxlength="40" autocomplete="off" value="${escHtml(editing ? editing.name : '')}">
+      <label>Cor</label>
+      <div class="tg-swatches" id="tgSw"></div>
+      <div class="tg-err" id="tgErr"></div>
+      <div class="tg-actions">
+        ${editing ? '<button type="button" class="tg-del" id="tgDel">Excluir grupo</button>' : ''}
+        <span style="flex:1"></span>
+        <button type="button" id="tgCancel">Cancelar</button>
+        <button type="button" class="primary" id="tgOk">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(back);
+  const $ = id => back.querySelector('#' + id);
+  const close = () => back.remove();
+  const paintSw = () => {
+    $('tgSw').innerHTML = TASK_GROUP_COLORS.map(c => `<button type="button" class="tg-sw${c.toLowerCase() === color.toLowerCase() ? ' sel' : ''}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')
+      + `<input type="color" id="tgCustom" value="${color}" title="Outra cor">`;
+    $('tgSw').querySelectorAll('.tg-sw').forEach(b => b.addEventListener('click', () => { color = b.dataset.c; paintSw(); }));
+    $('tgCustom').addEventListener('input', e => { color = e.target.value; $('tgSw').querySelectorAll('.tg-sw').forEach(x => x.classList.remove('sel')); });
+  };
+  paintSw();
+  $('tgName').focus();
+  $('tgCancel').addEventListener('click', close);
+  back.addEventListener('mousedown', e => { if (e.target === back) close(); });
+  const submit = () => {
+    const name = String($('tgName').value || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (!name) { $('tgErr').textContent = 'Digite o nome do grupo.'; return; }
+    const all = loadTaskGroups();
+    if (all.some(g => g.id !== (editing && editing.id) && g.name.toLowerCase() === name.toLowerCase())) { $('tgErr').textContent = 'Já existe um grupo com esse nome.'; return; }
+    let saved;
+    if (editing) { const g = all.find(x => x.id === editing.id); if (g) { g.name = name; g.color = color; saved = g; } }
+    else { saved = { id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, color }; all.push(saved); }
+    saveTaskGroups(all);
+    close();
+    renderActiveTaskView();
+    if (onDone) onDone(saved);
+  };
+  $('tgOk').addEventListener('click', submit);
+  if (editing) $('tgDel').addEventListener('click', () => {
+    if (!confirm(`Excluir o grupo "${editing.name}"? As tarefas continuam existindo, só ficam sem grupo.`)) return;
+    saveTaskGroups(loadTaskGroups().filter(g => g.id !== editing.id));
+    if (tvGroupFilter === editing.id) tvGroupFilter = '';
+    close();
+    renderActiveTaskView();
+    if (onDone) onDone(null);
+  });
+  back.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); submit(); }
+    else if (e.key === 'Escape') { e.stopPropagation(); close(); }
+  });
+}
+
+function setTaskGroupFilter(id) {
+  tvGroupFilter = (tvGroupFilter === id) ? '' : id;
+  if (tvGroupFilter && tvActiveView === 'gantt') document.querySelector('#tvViewSwitch [data-view="lista"]')?.click();
+  else renderActiveTaskView();
+}
+
+function renderTaskGroupsDash() {
+  const wrap = document.getElementById('tvGroupsDash');
+  if (!wrap) return;
+  const groups = loadTaskGroups();
+  const todayISO = isoFromDate(new Date());
+  const entries = getAllTasksFlat(tvUserFilter, true);
+  const stat = list => {
+    const total = list.length, done = list.filter(e => e.task.done).length;
+    const overdue = list.filter(e => !e.task.done && e.task.dueDate && e.task.dueDate < todayISO).length;
+    return { total, done, pending: total - done, overdue, pct: total ? Math.round(done / total * 100) : 0 };
+  };
+  const cardHtml = (id, label, color, s, editable) => `
+    <div class="tg-card${tvGroupFilter === id ? ' active' : ''}" data-tgid="${escHtml(id)}" style="${color ? `--g:${color}` : ''}" title="Clique para ver só estas tarefas">
+      ${editable ? `<button class="tg-card-edit" data-tgedit="${escHtml(id)}" title="Editar grupo">✎</button>` : ''}
+      <div class="tg-card-top">
+        ${color ? groupTagHtml({ name: label, color }) : `<span style="font-size:11px;font-weight:700">${escHtml(label)}</span>`}
+        <span class="tg-card-pct">${s.pct}%</span>
+      </div>
+      <div class="tg-card-bar"><div class="tg-card-fill" style="width:${s.pct}%"></div></div>
+      <div class="tg-card-sub">${s.done} de ${s.total} concluída${s.total !== 1 ? 's' : ''} · ${s.pending} pendente${s.pending !== 1 ? 's' : ''}${s.overdue ? ` · <span class="tg-card-late">${s.overdue} atrasada${s.overdue !== 1 ? 's' : ''}</span>` : ''}</div>
+    </div>`;
+  const ids = new Set(groups.map(g => g.id));
+  const noGroup = entries.filter(e => !ids.has(e.task.groupId));
+  wrap.innerHTML = `
+    <div class="tg-dash-hdr">
+      <span class="tg-dash-title">Grupos de tarefas</span>
+      <button type="button" class="tg-dash-new" id="tgDashNew">+ Novo grupo</button>
+    </div>
+    <div class="tg-dash-grid">
+      ${cardHtml('', 'Todas as tarefas', '', stat(entries), false)}
+      ${groups.map(g => cardHtml(g.id, g.name, g.color, stat(entries.filter(e => e.task.groupId === g.id)), true)).join('')}
+      ${groups.length && noGroup.length ? cardHtml('__none', 'Sem grupo', '', stat(noGroup), false) : ''}
+    </div>`;
+  wrap.querySelector('#tgDashNew').addEventListener('click', () => openGroupDialog(null));
+  wrap.querySelectorAll('.tg-card').forEach(c => c.addEventListener('click', () => setTaskGroupFilter(c.dataset.tgid)));
+  wrap.querySelectorAll('[data-tgedit]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); openGroupDialog(b.dataset.tgedit); }));
+}
+
+function renderTaskGroupFilterBar() {
+  const bar = document.getElementById('tvGroupFilterBar');
+  if (!bar) return;
+  if (!tvGroupFilter) { bar.hidden = true; bar.innerHTML = ''; return; }
+  const g = taskGroupById(tvGroupFilter);
+  if (tvGroupFilter !== '__none' && !g) { tvGroupFilter = ''; bar.hidden = true; bar.innerHTML = ''; return; }
+  bar.hidden = false;
+  bar.innerHTML = `Mostrando o grupo ${g ? groupTagHtml(g) : '<b>Sem grupo</b>'} <button type="button" id="tgClear">Limpar filtro</button>`;
+  bar.querySelector('#tgClear').addEventListener('click', () => setTaskGroupFilter(tvGroupFilter));
+}
+
+function getAllTasksFlat(userFilter, ignoreGroup) {
   let out = [];
   [...CLIENTS, MOVING_CLIENT].forEach(client => {
     loadTasks(client.id).forEach(task => {
@@ -6598,6 +6801,9 @@ function getAllTasksFlat(userFilter) {
   });
   if (userFilter && userFilter !== 'all') {
     out = out.filter(e => (e.task.assignees || []).includes(userFilter));
+  }
+  if (!ignoreGroup && tvGroupFilter) {
+    out = out.filter(e => tvGroupFilter === '__none' ? !taskGroupById(e.task.groupId) : e.task.groupId === tvGroupFilter);
   }
   return out;
 }
@@ -6630,6 +6836,8 @@ function buildTaskViews() {
 }
 
 function renderActiveTaskView() {
+  renderTaskGroupsDash();
+  renderTaskGroupFilterBar();
   if (tvActiveView === 'lista') renderListaView();
   else if (tvActiveView === 'calendario') renderCalendarioView();
   else if (tvActiveView === 'board') renderBoardView();
@@ -6659,7 +6867,7 @@ function taskItemHtml({ clientId, clientName, clientColor, task }) {
       <div class="tw-client-tag">${escHtml(clientName)}</div>
       <div class="tw-task-body">
         <div class="tw-task-text${task.done ? ' done' : ''}" style="${task.done ? 'text-decoration:line-through;color:var(--text-faint)' : ''}">${escHtml(task.text)}</div>
-        <div class="tw-task-badges">${dueBadge}${urgBadge}${recBadge}${userBadge}</div>
+        <div class="tw-task-badges">${groupTagHtml(taskGroupById(task.groupId))}${dueBadge}${urgBadge}${recBadge}${userBadge}</div>
       </div>
       <button class="tw-edit-btn" data-action="tv-edit" data-client="${clientId}" data-id="${task.id}" title="Editar">✏</button>
     </div>`;
@@ -6682,16 +6890,18 @@ function renderListaView() {
   const in7 = new Date(); in7.setDate(in7.getDate() + 7);
   const in7ISO = isoFromDate(in7);
 
-  const entries = getAllTasksFlat(tvUserFilter).filter(e => !e.task.done);
+  // Com um grupo selecionado, a lista também mostra as concluídas (seção própria no fim).
+  const entries = getAllTasksFlat(tvUserFilter).filter(e => tvGroupFilter || !e.task.done);
 
   const groups = {
-    overdue: [], today: [], tomorrow: [], week: [], later: [], none: [],
+    overdue: [], today: [], tomorrow: [], week: [], later: [], none: [], done: [],
   };
   const tomorrowISO = isoFromDate(new Date(Date.now() + 86400000));
 
   entries.forEach(e => {
     const d = e.task.dueDate;
-    if (!d) groups.none.push(e);
+    if (e.task.done) groups.done.push(e);
+    else if (!d) groups.none.push(e);
     else if (d < todayISO) groups.overdue.push(e);
     else if (d === todayISO) groups.today.push(e);
     else if (d === tomorrowISO) groups.tomorrow.push(e);
@@ -6713,11 +6923,14 @@ function renderListaView() {
     { key: 'week',     label: 'Esta semana',    cls: '' },
     { key: 'later',    label: 'Mais adiante',   cls: '' },
     { key: 'none',     label: 'Sem data',       cls: '' },
+    { key: 'done',     label: 'Concluídas',     cls: '' },
   ];
 
   const total = entries.length;
   if (!total) {
-    panel.innerHTML = `<div class="tvl-empty">Nenhuma tarefa pendente${tvUserFilter!=='all' ? ' para esta pessoa' : ''}. 🎉</div>`;
+    panel.innerHTML = tvGroupFilter
+      ? `<div class="tvl-empty">Nenhuma tarefa neste grupo${tvUserFilter!=='all' ? ' para esta pessoa' : ''}.</div>`
+      : `<div class="tvl-empty">Nenhuma tarefa pendente${tvUserFilter!=='all' ? ' para esta pessoa' : ''}. 🎉</div>`;
     return;
   }
 
@@ -6778,9 +6991,11 @@ function renderCalendarioView() {
     const items = (byDate[iso] || []).sort((a,b) => (a.task.done?1:0) - (b.task.done?1:0));
     const isOther = monthForOtherCheck !== null && d.getMonth() !== monthForOtherCheck;
     const isToday = iso === todayISO;
-    const pillsHtml = items.slice(0, cap).map(({clientId, clientColor, task}) => `
-      <span class="tvc-pill${task.done?' done':''}" style="--client-color:${clientColor}" data-c="${clientId}" data-id="${task.id}" title="${escHtml(task.text)}">${escHtml(task.text)}</span>
-    `).join('');
+    const pillsHtml = items.slice(0, cap).map(({clientId, clientColor, task}) => {
+      const g = taskGroupById(task.groupId);
+      return `
+      <span class="tvc-pill${task.done?' done':''}" style="--client-color:${clientColor}${g ? `;box-shadow:inset 3px 0 0 ${g.color}` : ''}" data-c="${clientId}" data-id="${task.id}" title="${escHtml(task.text)}${g ? ' · ' + escHtml(g.name) : ''}">${escHtml(task.text)}</span>
+    `; }).join('');
     const moreHtml = items.length > cap ? `<span class="tvc-more">+${items.length - cap}</span>` : '';
     return `
       <div class="tvc-day${isOther?' other-month':''}${isToday?' is-today':''}${tvCalendarMode==='week'?' tvc-day-week':''}">
@@ -6858,6 +7073,7 @@ function renderBoardView() {
           <div class="tvb-card" style="--client-color:${clientColor}" data-c="${clientId}" data-id="${task.id}">
             <div class="tvb-card-client">${escHtml(clientName)}</div>
             <div class="tvb-card-text">${escHtml(task.text)}</div>
+            ${task.groupId && taskGroupById(task.groupId) ? `<div style="margin-top:4px">${groupTagHtml(taskGroupById(task.groupId))}</div>` : ''}
             ${task.dueDate ? `<div class="tvb-card-due"><span class="task-due ${dueCls(task.dueDate)}">${dueFmt(task.dueDate)}</span></div>` : ''}
           </div>
         `).join('') : '<div class="tw-empty">Vazio</div>'}
