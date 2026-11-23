@@ -1874,6 +1874,20 @@
     .pauta-modal-ov.open { display:flex; }
     .pauta-modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px; width:480px; max-width:92vw; box-shadow:0 20px 60px rgba(0,0,0,.5); max-height:90vh; overflow-y:auto; }
     /* ── ONBOARDING ── */
+    .resumo-wrap { padding:16px; max-width:560px; }
+    .resumo-title { font-size:15px; font-weight:700; margin-bottom:4px; }
+    .resumo-links { display:flex; flex-direction:column; gap:6px; }
+    .resumo-row { display:flex; align-items:center; gap:8px; }
+    .resumo-lbl { width:96px; flex-shrink:0; font-size:11px; font-weight:600; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .resumo-in { flex:1; min-width:0; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:12px; color:var(--text); font-family:inherit; outline:none; }
+    .resumo-in:focus { border-color:rgba(124,92,252,.4); }
+    .resumo-open { color:var(--accent-text); text-decoration:none; font-size:13px; width:18px; text-align:center; flex-shrink:0; }
+    .resumo-open.off { opacity:.25; }
+    .resumo-del { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px; padding:0 2px; flex-shrink:0; }
+    .resumo-del:hover { color:#f87171; }
+    .resumo-escopo { list-style:disc; margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }
+    .resumo-escopo li { display:flex; align-items:center; gap:8px; list-style:none; margin-left:-18px; }
+    .resumo-escopo li::before { content:'•'; color:var(--text-dim); }
     .onboard-wrap { padding:16px; max-width:520px; }
     .onboard-prog-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
     .onboard-prog-lbl { font-size:10px; color:var(--text-dim); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
@@ -3460,6 +3474,23 @@
     .cli-card:hover { background: var(--surface-2); border-color: var(--border-2); }
     .cli-card-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .cli-card-name { font-size: 12px; font-weight: 500; }
+    .cli-logo { object-fit: contain; border-radius: 5px; flex-shrink: 0; background: rgba(255,255,255,.06); }
+    .cli-logo-btn { background: var(--surface-2); border: 1px solid var(--border-2); color: var(--text-dim); border-radius: 6px; font-size: 11px; padding: 3px 9px; cursor: pointer; margin-left: 6px; }
+    .cli-logo-btn:hover { color: var(--text); }
+    .sb-cli-item .cli-logo { vertical-align: middle; margin-right: 6px; }
+    .cli-card-add { border: 1px dashed var(--border-2); border-left: 1px dashed var(--border-2); color: var(--text-dim); justify-content: center; }
+    .cli-card-add:hover { color: var(--text); }
+    .addcli-back { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .addcli-box { background: var(--surface); border: 1px solid var(--border-2); border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; }
+    .addcli-box h3 { margin: 0 0 14px; font-size: 15px; }
+    .addcli-box label { display: block; font-size: 11px; color: var(--text-dim); margin: 10px 0 4px; }
+    .addcli-box input[type=text] { width: 100%; box-sizing: border-box; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border-2); background: var(--surface-2); color: var(--text); font-size: 13px; }
+    .addcli-box input[type=color] { width: 44px; height: 30px; padding: 0; border: 1px solid var(--border-2); border-radius: 6px; background: none; cursor: pointer; }
+    .addcli-err { color: #ef4444; font-size: 12px; min-height: 16px; margin-top: 8px; }
+    .addcli-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+    .addcli-actions button { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border-2); background: var(--surface-2); color: var(--text); cursor: pointer; font-size: 13px; }
+    .addcli-actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .addcli-actions button:disabled { opacity: .6; cursor: default; }
     .cli-section-hdr {
       font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
       color: var(--text-dim); padding: 4px 20px; margin-top: 4px;
@@ -5189,6 +5220,69 @@ const CLIENTS = [
   { id: 'lyon-mediacao-certa',       name: 'Mediação Certa',        color: '#059669', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
   { id: 'lyon-sublime-capital',      name: 'Sublime Capital',       color: '#7c3aed', platforms: [], noKanban: true, noFinanceiro: true, origemParceria: 'lyon' },
 ];
+
+// ── Logo do cliente (miniatura) ─────────────────────────────────────────────────
+// Chave mmlogo__{id} (sincroniza no documento do próprio cliente). Sempre reduzida a 96px
+// antes de salvar (~3-8KB), nunca guarda o arquivo original: o limite do doc é 1MB e a Lios já usa ~585KB.
+function loadLogo(cid) { try { const v = localStorage.getItem('mmlogo__' + cid); return v && /^data:image\/(png|webp|jpeg);base64,[A-Za-z0-9+\/=]+$/.test(v) ? v : ''; } catch (e) { return ''; } }
+function saveLogo(cid, dataUrl) { if (dataUrl) mmSet('mmlogo__' + cid, dataUrl); else mmRemove('mmlogo__' + cid); }
+function cliMarkHtml(c, px, dotCls, dotStyle) {
+  const l = loadLogo(c.id);
+  return l ? `<img class="cli-logo" src="${l}" alt="" style="width:${px}px;height:${px}px">`
+           : `<span class="${dotCls}" style="${dotStyle}"></span>`;
+}
+function resizeLogoFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\//.test(file.type) || file.type === 'image/svg+xml') return reject(new Error('Escolha uma imagem PNG, JPG ou WebP.'));
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const S = 96, k = Math.min(S / img.width, S / img.height, 1);
+      const w = Math.max(1, Math.round(img.width * k)), h = Math.max(1, Math.round(img.height * k));
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      let out = cv.toDataURL('image/webp', 0.85);
+      if (!out.startsWith('data:image/webp')) out = cv.toDataURL('image/png');
+      if (out.length > 60000) return reject(new Error('Imagem ficou grande demais depois de reduzida.'));
+      resolve(out);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Não consegui ler essa imagem.')); };
+    img.src = url;
+  });
+}
+// Atualiza logo no card, sidebar e cabeçalho sem recarregar a página.
+function refreshClientLogos(cid) {
+  const c = [...CLIENTS, MOVING_CLIENT].find(x => x.id === cid); if (!c) return;
+  const sb = document.querySelector(`.sb-cli-item[data-cid="${cid}"]`);
+  if (sb && sb.firstElementChild) sb.firstElementChild.outerHTML = cliMarkHtml(c, 16, 'sb-cli-dot', `background:${c.color}`);
+  const hd = document.getElementById('cliHdrLogo-' + cid);
+  if (hd) hd.innerHTML = loadLogo(cid) ? cliMarkHtml(c, 32, '', '') : '';
+  const rm = document.getElementById('cliLogoRm-' + cid); if (rm) rm.style.display = loadLogo(cid) ? '' : 'none';
+  if (typeof buildCliCards === 'function') buildCliCards();
+}
+
+// ── Clientes criados pelo botão "Adicionar cliente" (aba Clientes) ─────────────
+// Lista em mmcustomclients ([{id, name, color}]); a chave sincroniza (cai no doc "_global").
+// Entram no CLIENTS como cliente completo (IG Feed+Stories, kanban, financeiro), então
+// recebem automaticamente todas as abas dos demais (Onboarding, Acessos, Tarefas, Conteúdos,
+// Resultados, Satisfação), porque buildClientSections() gera as abas para todo item de CLIENTS.
+function sanitizeClientName(s) { return String(s || '').replace(/[<>"'`]/g, '').replace(/\$\{/g, '').replace(/\s+/g, ' ').trim().slice(0, 60); }
+function loadCustomClients() { try { const a = JSON.parse(localStorage.getItem('mmcustomclients') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+(function mergeCustomClients() {
+  const known = new Set(CLIENTS.map(c => c.id));
+  loadCustomClients().forEach(c => {
+    if (!c || typeof c.id !== 'string' || !/^[a-z0-9-]{1,60}$/.test(c.id) || known.has(c.id) || c.id === 'moving' || c.id === 'priscila-becker') return;
+    const name = sanitizeClientName(c.name);
+    if (!name) return;
+    known.add(c.id);
+    CLIENTS.push({
+      id: c.id, name,
+      color: /^#[0-9a-f]{6}$/i.test(c.color || '') ? c.color : '#7c5cfc',
+      platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }],
+      custom: true
+    });
+  });
+})();
 
 const USERS = [
   { id: 'priscila', name: 'Priscila', color: '#743410' },
@@ -9950,8 +10044,6 @@ function saveOnbLinks(cid,v){ lsSave(`mmonblinks__${cid}`, v); }
 function renderOnboard(cid){
   const wrap=document.getElementById(`onwrap-${cid}`); if(!wrap)return;
   const items=loadOnboard(cid), done=items.filter(i=>i.done).length, pct=items.length?Math.round(done/items.length*100):0;
-  const links=loadOnbLinks(cid);
-  const safeHref = url => /^https?:\/\//i.test(url || '') ? url : '';
   wrap.innerHTML=`
     <div class="onboard-prog-hdr"><span class="onboard-prog-lbl">Progresso de ativação</span><span class="onboard-prog-val">${done}/${items.length} — ${pct}%</span></div>
     <div class="onboard-prog-track"><div class="onboard-prog-fill" style="width:${pct}%"></div></div>
@@ -9966,19 +10058,7 @@ function renderOnboard(cid){
       <input class="onboard-add-in" id="obinput-${cid}" placeholder="Adicionar etapa personalizada…">
       <button class="onboard-add-btn" id="obadd-${cid}">+</button>
     </div>
-    <div class="onboard-section-title">Links Rápidos</div>
-    <div class="onboard-links-list" id="oblinks-${cid}">
-      ${links.length ? links.map(l=>`<div class="onboard-link-item">
-        <span class="onboard-link-label" title="${escHtml(l.label)}">${escHtml(l.label)}</span>
-        ${safeHref(l.url) ? `<a class="onboard-link-open" href="${escHtml(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="Abrir link">↗</a>` : ''}
-        <button class="onboard-link-del" data-obld="${l.id}">×</button>
-      </div>`).join('') : '<div class="onboard-empty">Nenhum link ainda.</div>'}
-    </div>
-    <div class="onboard-link-add-row">
-      <input class="onboard-link-label-in" id="oblabel-${cid}" placeholder="Do que é o link (ex: Drive, Canva)…">
-      <input class="onboard-link-url-in" id="oburl-${cid}" type="url" placeholder="https://…">
-      <button class="onboard-link-add-btn" id="obladd-${cid}">+</button>
-    </div>`;
+    `;
   wrap.querySelectorAll('[data-obid]').forEach(cb=>cb.addEventListener('change',()=>{
     const its=loadOnboard(cid),it=its.find(x=>x.id===cb.dataset.obid);
     if(it){it.done=cb.checked;saveOnboard(cid,its);renderOnboard(cid);}
@@ -9988,19 +10068,92 @@ function renderOnboard(cid){
   const doAdd=()=>{const t=inp.value.trim();if(!t)return;const its=loadOnboard(cid);its.push({id:'ob'+Date.now().toString(36),text:t,done:false});saveOnboard(cid,its);inp.value='';renderOnboard(cid);};
   btn?.addEventListener('click',doAdd);
   inp?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doAdd();}});
+}
 
-  wrap.querySelectorAll('[data-obld]').forEach(b=>b.addEventListener('click',()=>{
-    saveOnbLinks(cid,loadOnbLinks(cid).filter(x=>x.id!==b.dataset.obld));renderOnboard(cid);
-  }));
-  const linkLbl=document.getElementById(`oblabel-${cid}`), linkUrl=document.getElementById(`oburl-${cid}`), linkBtn=document.getElementById(`obladd-${cid}`);
-  const doAddLink=()=>{
-    const label=linkLbl.value.trim(), url=linkUrl.value.trim();
-    if(!label && !url) return;
-    const ls=loadOnbLinks(cid); ls.push({id:'obl'+Date.now().toString(36),label:label||url,url}); saveOnbLinks(cid,ls);
-    linkLbl.value=''; linkUrl.value=''; renderOnboard(cid);
+// ══════════════════════════════════════════════════════════════════════════════
+// RESUMO DO CLIENTE (1ª aba de cada cliente, com o nome do cliente)
+// Links rápidos fixos + extras, e escopo de entregas em tópicos. Chave mmresumo__{cid}.
+// Na 1ª abertura (sem chave salva) herda o que já existia: Drive/Canva e escopo da ficha
+// (mmficha__) e os links do antigo onboarding (mmonblinks__). Nenhuma chave antiga é apagada.
+// ══════════════════════════════════════════════════════════════════════════════
+const RESUMO_LINKS = [
+  { key: 'drive',     label: 'Drive' },
+  { key: 'canva',     label: 'Canva' },
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'gptcopy',   label: 'GPT Copy' },
+  { key: 'gptimg',    label: 'GPT Imagens' },
+  { key: 'claude',    label: 'Claude' },
+];
+function loadResumo(cid) {
+  const s = lsGet(`mmresumo__${cid}`);
+  if (s && typeof s === 'object') return { links: s.links || {}, extras: Array.isArray(s.extras) ? s.extras : [], escopo: Array.isArray(s.escopo) ? s.escopo : [] };
+  const f = loadFicha(cid) || {};
+  return {
+    links: { drive: f.driveLink || '', canva: f.canvaLink || '' },
+    extras: (loadOnbLinks(cid) || []).map(l => ({ id: l.id, label: l.label, url: l.url })),
+    escopo: String(f.escopo || '').split('\n').map(t => t.replace(/^\s*[-•*]\s*/, '').trim()).filter(Boolean).map((t, i) => ({ id: 'es' + i, text: t })),
   };
-  linkBtn?.addEventListener('click',doAddLink);
-  [linkLbl,linkUrl].forEach(el=>el?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doAddLink();}}));
+}
+function saveResumo(cid, v) { lsSave(`mmresumo__${cid}`, v); }
+function resumoUrl(u) { u = String(u || '').trim(); return !u ? '' : (/^https?:\/\//i.test(u) ? u : 'https://' + u); }
+function resumoOpenable(u) { return /^https?:\/\//i.test(u || '') ? u : ''; }
+
+function renderResumo(cid, panel) {
+  const r = loadResumo(cid);
+  const openBtn = u => resumoOpenable(u) ? `<a class="resumo-open" href="${escHtml(resumoOpenable(u))}" target="_blank" rel="noopener noreferrer" title="Abrir link">↗</a>` : `<span class="resumo-open off">↗</span>`;
+  panel.innerHTML = `
+    <div class="resumo-wrap">
+      <div class="resumo-title">Resumo do cliente</div>
+      <div class="onboard-section-title" style="margin-top:6px">Links rápidos</div>
+      <div class="resumo-links">
+        ${RESUMO_LINKS.map(L => `<div class="resumo-row">
+          <span class="resumo-lbl">${L.label}</span>
+          <input class="resumo-in" type="text" data-rlink="${L.key}" placeholder="https://…" value="${escHtml(r.links[L.key] || '')}">
+          ${openBtn(r.links[L.key])}
+        </div>`).join('')}
+        ${r.extras.map(x => `<div class="resumo-row">
+          <span class="resumo-lbl" title="${escHtml(x.label)}">${escHtml(x.label)}</span>
+          <input class="resumo-in" type="text" data-rextra="${escHtml(x.id)}" value="${escHtml(x.url || '')}">
+          ${openBtn(x.url)}
+          <button class="resumo-del" data-rextradel="${escHtml(x.id)}" title="Remover link">×</button>
+        </div>`).join('')}
+      </div>
+      <div class="onboard-link-add-row" style="margin-top:8px">
+        <input class="onboard-link-label-in" id="rxlabel-${cid}" placeholder="Link extra: nome (ex: Planilha)…">
+        <input class="onboard-link-url-in" id="rxurl-${cid}" type="text" placeholder="https://…">
+        <button class="onboard-link-add-btn" id="rxadd-${cid}" type="button">+</button>
+      </div>
+      <div class="onboard-section-title">Escopo de entregas</div>
+      <ul class="resumo-escopo">
+        ${r.escopo.map(t => `<li><input class="resumo-in" type="text" data-resc="${escHtml(t.id)}" value="${escHtml(t.text)}"><button class="resumo-del" data-rescdel="${escHtml(t.id)}" title="Remover tópico">×</button></li>`).join('')}
+      </ul>
+      ${r.escopo.length ? '' : '<div class="onboard-empty">Nenhum tópico ainda.</div>'}
+      <div class="onboard-add-row" style="margin-top:8px">
+        <input class="onboard-add-in" id="rescinput-${cid}" placeholder="Adicionar tópico (ex: 12 posts/mês)…">
+        <button class="onboard-add-btn" id="rescadd-${cid}" type="button">+</button>
+      </div>
+    </div>`;
+  const upd = fn => { const d = loadResumo(cid); fn(d); saveResumo(cid, d); };
+  panel.querySelectorAll('[data-rlink]').forEach(el => el.addEventListener('change', () => { upd(d => { d.links[el.dataset.rlink] = resumoUrl(el.value); }); renderResumo(cid, panel); }));
+  panel.querySelectorAll('[data-rextra]').forEach(el => el.addEventListener('change', () => { upd(d => { const x = d.extras.find(e => e.id === el.dataset.rextra); if (x) x.url = resumoUrl(el.value); }); renderResumo(cid, panel); }));
+  panel.querySelectorAll('[data-rextradel]').forEach(b => b.addEventListener('click', () => { upd(d => { d.extras = d.extras.filter(e => e.id !== b.dataset.rextradel); }); renderResumo(cid, panel); }));
+  const xl = panel.querySelector(`#rxlabel-${cid}`), xu = panel.querySelector(`#rxurl-${cid}`);
+  const addExtra = () => {
+    const label = xl.value.trim(), url = resumoUrl(xu.value);
+    if (!label && !url) return;
+    upd(d => d.extras.push({ id: 'rx' + Date.now().toString(36), label: label || url, url })); renderResumo(cid, panel);
+  };
+  panel.querySelector(`#rxadd-${cid}`).addEventListener('click', addExtra);
+  [xl, xu].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addExtra(); } }));
+  panel.querySelectorAll('[data-resc]').forEach(el => el.addEventListener('change', () => {
+    const t = el.value.trim();
+    upd(d => { if (t) { const x = d.escopo.find(e => e.id === el.dataset.resc); if (x) x.text = t; } else d.escopo = d.escopo.filter(e => e.id !== el.dataset.resc); }); renderResumo(cid, panel);
+  }));
+  panel.querySelectorAll('[data-rescdel]').forEach(b => b.addEventListener('click', () => { upd(d => { d.escopo = d.escopo.filter(e => e.id !== b.dataset.rescdel); }); renderResumo(cid, panel); }));
+  const ei = panel.querySelector(`#rescinput-${cid}`);
+  const addEsc = () => { const t = ei.value.trim(); if (!t) return; upd(d => d.escopo.push({ id: 'es' + Date.now().toString(36), text: t })); renderResumo(cid, panel); };
+  panel.querySelector(`#rescadd-${cid}`).addEventListener('click', addEsc);
+  ei.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addEsc(); } });
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -11668,6 +11821,77 @@ function renderUrgencias(cid, panelEl) {
   panelEl.appendChild(sec);
 }
 
+// ── ADICIONAR CLIENTE ────────────────────────────────────────────────────────
+// Grava em mmcustomclients, empurra pra nuvem e recarrega já abrindo a página do cliente novo.
+// Só recarrega se o push confirmou (reload com dado não sincronizado já causou perda antes).
+
+function slugifyClientId(name) {
+  let base = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'cliente';
+  const taken = new Set([...CLIENTS.map(c => c.id), 'moving', 'priscila-becker']);
+  let id = base, n = 2;
+  while (taken.has(id)) id = base + '-' + (n++);
+  return id;
+}
+
+function openAddClientModal() {
+  if (document.getElementById('addCliBack')) return;
+  const PALETTE = ['#ec4899','#8b5cf6','#f59e0b','#10b981','#3b82f6','#06b6d4','#f43f5e','#14b8a6','#84cc16','#f97316'];
+  const back = document.createElement('div');
+  back.className = 'addcli-back'; back.id = 'addCliBack';
+  back.innerHTML = `
+    <div class="addcli-box" role="dialog" aria-label="Adicionar cliente">
+      <h3>Adicionar cliente</h3>
+      <label for="addCliName">Nome do cliente</label>
+      <input type="text" id="addCliName" maxlength="60" autocomplete="off">
+      <label for="addCliColor">Cor</label>
+      <input type="color" id="addCliColor" value="${PALETTE[CLIENTS.length % PALETTE.length]}">
+      <label for="addCliLogo">Logo (opcional)</label>
+      <input type="file" id="addCliLogo" accept="image/png,image/jpeg,image/webp" style="font-size:12px;color:var(--text-dim)">
+      <div class="addcli-err" id="addCliErr"></div>
+      <div class="addcli-actions">
+        <button type="button" id="addCliCancel">Cancelar</button>
+        <button type="button" class="primary" id="addCliOk">Adicionar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(back);
+  const $ = id => back.querySelector('#' + id);
+  const close = () => back.remove();
+  const nameEl = $('addCliName'), errEl = $('addCliErr'), okBtn = $('addCliOk');
+  nameEl.focus();
+  $('addCliCancel').addEventListener('click', close);
+  back.addEventListener('mousedown', e => { if (e.target === back) close(); });
+  const submit = async () => {
+    const name = sanitizeClientName(nameEl.value);
+    errEl.textContent = '';
+    if (!name) { errEl.textContent = 'Digite o nome do cliente.'; return; }
+    const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    if ([...CLIENTS, MOVING_CLIENT].some(c => norm(c.name) === norm(name))) { errEl.textContent = 'Já existe um cliente com esse nome.'; return; }
+    const id = slugifyClientId(name);
+    const color = /^#[0-9a-f]{6}$/i.test($('addCliColor').value) ? $('addCliColor').value : '#7c5cfc';
+    let logo = '';
+    const lf = $('addCliLogo').files[0];
+    if (lf) { try { logo = await resizeLogoFile(lf); } catch (e) { errEl.textContent = e.message; return; } }
+    okBtn.disabled = true; okBtn.textContent = 'Salvando...';
+    if (logo) saveLogo(id, logo);
+    const list = loadCustomClients();
+    list.push({ id, name, color, createdAt: Date.now() });
+    mmSet('mmcustomclients', JSON.stringify(list));
+    // Já em CLIENTS antes do push: _ownerOf() manda mmlogo__{id} pro documento do cliente, não pro _global.
+    CLIENTS.push({ id, name, color, platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }], custom: true });
+    let ok = false;
+    try { ok = await _pushToCloud(); } catch (e) { ok = false; }
+    if (ok) {
+      try { localStorage.setItem('mmuiActiveTab', 'clientes'); localStorage.setItem('mmuiActiveClient', id); } catch (e) {}
+      location.reload();
+    } else {
+      errEl.textContent = 'Salvo neste navegador, mas não sincronizou com a nuvem. Recarregue a página quando a conexão voltar.';
+      okBtn.textContent = 'Adicionar';
+    }
+  };
+  okBtn.addEventListener('click', submit);
+  back.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); else if (e.key === 'Escape') close(); });
+}
+
 // ── CARDS DE CLIENTES (grid da aba Clientes) ─────────────────────────────────
 
 function buildCliCards() {
@@ -11682,10 +11906,15 @@ function buildCliCards() {
     const card = document.createElement('div');
     card.className = 'cli-card';
     card.style.setProperty('--client-color', c.color);
-    card.innerHTML = `<span class="cli-card-dot" style="background:${c.color}"></span><span class="cli-card-name">${c.name}</span>`;
+    card.innerHTML = `${cliMarkHtml(c, 28, 'cli-card-dot', 'background:' + c.color)}<span class="cli-card-name">${c.name}</span>`;
     card.addEventListener('click', () => selectClient(c.id));
     return card;
   };
+  const addCard = document.createElement('div');
+  addCard.className = 'cli-card cli-card-add';
+  addCard.innerHTML = '<span class="cli-card-name">+ Adicionar cliente</span>';
+  addCard.addEventListener('click', openAddClientModal);
+  grid.appendChild(addCard);
   ALL_CLI.filter(c => !c.isPersonal && !c.inactive).forEach(c => grid.appendChild(makeCliCard(c)));
   const inactiveClients = ALL_CLI.filter(c => !c.isPersonal && c.inactive);
   if (inactiveGrid) inactiveClients.forEach(c => inactiveGrid.appendChild(makeCliCard(c)));
@@ -11707,7 +11936,7 @@ function buildClientSections() {
     const sbItem = document.createElement('button');
     sbItem.className = 'sb-cli-item';
     sbItem.dataset.cid = c.id;
-    sbItem.innerHTML = `<span class="sb-cli-dot" style="background:${c.color}"></span>${c.name}`;
+    sbItem.innerHTML = `${cliMarkHtml(c, 16, 'sb-cli-dot', 'background:' + c.color)}${c.name}`;
     sbItem.addEventListener('click', () => selectClient(c.id));
     sbCliList.appendChild(sbItem);
   };
@@ -11724,6 +11953,7 @@ function buildClientSections() {
   ALL_CLI.forEach(c => {
     // Abas por cliente
     const tabDefs = [];
+    if (!c.isInternal) tabDefs.push({ id: 'resumo',    label: c.name });
     if (!c.isInternal) tabDefs.push({ id: 'onboard',   label: 'Onboarding' });
     if (c.id === 'dca') tabDefs.push({ id: 'briefing', label: 'Briefing' });
     tabDefs.push(                    { id: 'acessos',   label: 'Acessos'   });
@@ -11743,7 +11973,11 @@ function buildClientSections() {
       <button class="cli-back-btn" id="back-${c.id}">← Voltar</button>
       <div class="client-section-header">
         <span class="client-section-dot"></span>
+        <span id="cliHdrLogo-${c.id}">${loadLogo(c.id) ? cliMarkHtml(c, 32, '', '') : ''}</span>
         <span class="client-section-name">${c.name}</span>
+        ${c.isInternal ? '' : `<button class="cli-logo-btn" id="cliLogoBtn-${c.id}" type="button">Logo</button>
+        <button class="cli-logo-btn" id="cliLogoRm-${c.id}" type="button" style="${loadLogo(c.id) ? '' : 'display:none'}">Remover logo</button>
+        <input type="file" accept="image/png,image/jpeg,image/webp" id="cliLogoFile-${c.id}" style="display:none">`}
       </div>
       <div class="client-tabs">
         ${tabDefs.map((t, i) => `<button class="client-tab-btn${i === 0 ? ' active' : ''}" data-tab="${t.id}">${t.label}</button>`).join('')}
@@ -11754,6 +11988,19 @@ function buildClientSections() {
     `;
 
     wrap.appendChild(sec);
+
+    // Logo do cliente (escolher / remover)
+    const logoBtn = sec.querySelector(`#cliLogoBtn-${c.id}`), logoFile = sec.querySelector(`#cliLogoFile-${c.id}`), logoRm = sec.querySelector(`#cliLogoRm-${c.id}`);
+    if (logoBtn && logoFile) {
+      logoBtn.addEventListener('click', () => logoFile.click());
+      logoFile.addEventListener('change', async () => {
+        const f = logoFile.files[0]; logoFile.value = '';
+        if (!f) return;
+        try { saveLogo(c.id, await resizeLogoFile(f)); refreshClientLogos(c.id); }
+        catch (e) { alert(e.message || 'Não foi possível usar essa imagem.'); }
+      });
+      logoRm.addEventListener('click', () => { saveLogo(c.id, ''); refreshClientLogos(c.id); });
+    }
 
     // Botão Voltar
     const backBtn = sec.querySelector(`#back-${c.id}`);
@@ -11813,7 +12060,9 @@ function buildClientSections() {
       moveEl(`rescard-${c.id}`, 'result');
       const onPanel = document.getElementById(`cpanel-onboard-${c.id}`);
       if (onPanel) { onPanel.innerHTML=`<div class="onboard-wrap" id="onwrap-${c.id}"></div>`; renderOnboard(c.id); }
-      moveEl(`ficha-${c.id}`, 'onboard');
+      // Ficha do cliente fora do Onboarding (fica no staging oculto; dados em mmficha__ preservados)
+      const resPanel = document.getElementById(`cpanel-resumo-${c.id}`);
+      if (resPanel) renderResumo(c.id, resPanel);
       moveEl(`acc-${c.id}`,   'conteudos');
       moveEl(`capc-${c.id}`,  'conteudos');
     }
