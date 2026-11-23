@@ -161,3 +161,25 @@ Cliente novo no array `CLIENTS` já ganha classificação automática — não p
 `_ownerOf`. Feature nova que use uma chave fora do padrão `__{clientId}` cai no documento
 `_global` (compartilhado, mesmo risco de tamanho do documento único antigo, só que hoje bem menor —
 59 chaves, ~26KB). Preferir manter o padrão `__{clientId}` em features novas que sejam por cliente.
+
+## Decisao: cliente novo vive em lista própria (`mmcustomclients`) e logo é miniatura de 96px
+
+Motivo:
+O array `CLIENTS` é fixo no HTML; para a Priscila criar cliente sem editar código, a lista precisa ser dado sincronizado. A logo no Firestore concorre com o limite de 1MB por documento (Lios ~585KB).
+
+Impacto:
+Cliente criado entra em `CLIENTS` no carregamento e ganha todas as abas automaticamente. Logo guardada só como miniatura (~3-8KB) em `mmlogo__{id}`, no doc do próprio cliente.
+
+Regra:
+Nunca guardar o arquivo original da logo. Só recarregar a página depois que o push à nuvem confirmou. Chaves antigas (`mmficha__`, `mmonblinks__`) não são apagadas ao migrar para `mmresumo__`.
+
+## Decisao: grupos de tarefas são globais, com vínculo por `groupId`
+
+Motivo:
+Priscila precisa agrupar tarefas de vários clientes por iniciativa (ex.: "LL (Sprint inicial)") e ver o % de conclusão.
+
+Impacto:
+Lista única `mmtaskgroups` no doc `_global`; a tarefa guarda só `groupId`. Excluir grupo não apaga tarefas.
+
+Regra:
+`groupId` sem grupo correspondente é tratado como "sem grupo", nunca como erro.

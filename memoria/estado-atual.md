@@ -9,6 +9,18 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-11-23 — Claude (com Priscila): Adicionar cliente, logo, Resumo do cliente e Grupos de tarefas
+
+Origem: Claude (com Priscila). Registro feito na sessão seguinte (23/11): a sessão anterior fechou sem encerramento e estes dois commits ficaram sem memória. Reconstruído a partir dos diffs e de leitura do Firestore (somente leitura). Commits `dd959c4` (10:58) e `f9b98ff` (11:16), ambos já no `origin/main`.
+
+- **Adicionar cliente** (card "+ Adicionar cliente" na aba Clientes): modal com nome, cor e logo opcional. Grava em `mmcustomclients` (`[{id, name, color, createdAt}]`, cai no doc `_global`) e `mergeCustomClients()` injeta o cliente em `CLIENTS` no carregamento, com IG Feed+Stories, kanban e financeiro — por isso recebe todas as abas dos demais. Id por slug sem acento, com sufixo `-2`, `-3` se colidir; bloqueia nome duplicado (sem acento/caixa). Só recarrega a página se `_pushToCloud()` confirmou (reload sem sync já causou perda, ver 2026-09-29); se falhar, avisa que salvou só no navegador.
+- **Logo do cliente:** chave `mmlogo__{id}` (no doc do próprio cliente). Sempre reduzida a 96px e reencodada em WebP/PNG, rejeitada acima de ~60KB; nunca guarda o original (limite de 1MB do doc, Lios já em ~585KB). SVG não é aceito. Aparece no card, na sidebar e no cabeçalho; botões "Logo"/"Remover logo" no cabeçalho do cliente.
+- **Resumo do cliente:** nova 1ª aba de cada cliente (rótulo = nome do cliente), chave `mmresumo__{cid}` = `{links:{drive,canva,instagram,gptcopy,gptimg,claude}, extras:[{id,label,url}], escopo:[{id,text}]}`. Sem chave salva, herda Drive/Canva e escopo de `mmficha__` e os links de `mmonblinks__`. A ficha saiu do Onboarding (fica no staging oculto) e os "Links Rápidos" do onboarding foram removidos de lá; nenhuma chave antiga foi apagada.
+- **Grupos de tarefas:** lista global `mmtaskgroups` (`[{id, name, color}]`, doc `_global`); a tarefa aponta por `task.groupId`. Tag colorida na tarefa, painel com % de conclusão por grupo, barra de filtro. Com grupo selecionado, a lista também mostra as concluídas em seção própria. Grupo excluído deixa o `groupId` solto, que vale "sem grupo".
+- **Estado no Firestore em 23/11 ~12h (leitura REST):** 47 docs; 1 grupo ("LL (Sprint inicial)", 7 tarefas do cliente `moving`); salas de chat de novembro para aura, lios e sc-conecta. **Nenhum `mmcustomclients`, `mmlogo__` ou `mmresumo__` sincronizado ainda.**
+- **Não testado/verificado nesta sessão de registro:** o comportamento no navegador (só leitura de código e dados).
+- **Próximo passo crítico:** confirmar com a Priscila se algum cliente/resumo já foi criado e não sincronizou; se sim, investigar o push.
+
 ## Atualização 2026-11-17 (parte 2) — Claude (com Priscila): Chat Interno por cliente, em tempo real
 
 Origem: Claude (com Priscila)
