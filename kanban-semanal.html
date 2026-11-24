@@ -3492,7 +3492,8 @@
 
     @media (max-width: 900px) {
       body { padding-left: 0 !important; }
-      .mm-menu-btn { display: flex; }
+      .mm-menu-btn { display: flex; position: fixed; top: 10px; left: 10px; z-index: 150; width: 38px; height: 38px; box-shadow: var(--shadow-pop); }
+      body { padding-top: 54px; }
       .sidebar-right {
         transform: translateX(-100%);
         transition: transform 0.25s ease;
@@ -4063,6 +4064,9 @@
 })();
 </script>
 
+<!-- Botão do menu mobile: fora do header para aparecer em todas as abas -->
+<button class="mm-menu-btn" id="btnMobileMenu" aria-label="Abrir menu" title="Menu">☰</button>
+
 <!-- HEADER -->
 <header class="header">
   <div class="mm-brand-row">
@@ -4071,7 +4075,6 @@
     </div>
   </div>
   <div class="mm-nav-row">
-    <button class="mm-menu-btn" id="btnMobileMenu" aria-label="Abrir menu" title="Menu">☰</button>
     <div class="week-nav">
       <button class="btn" id="btnPrev" title="Semana anterior">‹</button>
       <span class="week-label" id="weekLabel">—</span>
