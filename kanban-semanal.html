@@ -6775,7 +6775,7 @@ function renderTaskGroupsDash() {
     const noGroup = list.filter(e => !ids.has(e.task.groupId));
     return `<div class="tg-dash-grid">
       ${cardHtml('', 'Todas as tarefas', '', stat(list), false)}
-      ${groups.map(g => cardHtml(g.id, g.name, g.color, stat(list.filter(e => e.task.groupId === g.id)), true)).join('')}
+      ${groups.map(g => [g, list.filter(e => e.task.groupId === g.id)]).filter(([, l]) => l.length).map(([g, l]) => cardHtml(g.id, g.name, g.color, stat(l), true)).join('')}
       ${groups.length && noGroup.length ? cardHtml('__none', 'Sem grupo', '', stat(noGroup), false) : ''}
     </div>`;
   };
