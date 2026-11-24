@@ -392,3 +392,16 @@ Origem: Claude (com Priscila)
   já usa 630KB do 1MB dela sozinha), reabrir a conversa sobre Firebase Storage (hoje bloqueado por
   custo, ver `decisoes.md`) ou arquivar meses antigos. `kanban-semanal-teste-hub.html` (untracked,
   máquina da Priscila) segue fora do Git de propósito, não tocado nesta sessão.
+
+## Atualização 2026-11-24 — Claude (sessão com Priscila)
+
+- **Bug corrigido e publicado:** campo "Título da tarefa" sumia no modal de tarefa (textarea encolhia a
+  altura 0 como item flex). Fix no CSS `.tw-modal-title-input` (`flex-shrink:0; min-height:34px`).
+  Deploy via scp feito com OK da Priscila, confirmado por ela em produção (commit `c680a8a`).
+- **Painel "Grupos de tarefas" por responsável (NÃO publicado):** com filtro "Todas", `renderTaskGroupsDash`
+  agora mostra uma faixa por pessoa (Priscila, Paul, e "Sem responsável" se houver), cada uma com seus
+  cards; tarefa com os dois responsáveis entra nas duas. Filtro individual segue igual. Só checada a
+  sintaxe dos scripts — **não testado no navegador**.
+- Obs.: esta máquina não tem Python; servidor local precisa ser subido com Node.
+- **Próximo passo crítico:** testar em localhost o painel por responsável e, com OK da Priscila, fazer o
+  scp para produção.

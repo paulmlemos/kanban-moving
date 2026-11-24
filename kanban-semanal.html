@@ -912,6 +912,8 @@
     .tg-dash-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
     .tg-dash-title { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint); }
     .tg-dash-new { background:var(--surface-2); border:1px solid var(--border-2); color:var(--text); border-radius:8px; padding:5px 12px; font-size:12px; cursor:pointer; font-family:inherit; }
+    .tg-person-label { font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#64748b; margin:16px 0 8px; }
+    .tg-dash-hdr + .tg-person-label { margin-top:4px; }
     .tg-dash-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:10px; }
     .tg-card { background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--g, var(--border-2)); border-radius:10px; padding:12px 14px; cursor:pointer; position:relative; transition:all .15s; }
     .tg-card:hover { background:var(--surface-2); border-color:var(--border-2); border-top-color:var(--g, var(--border-2)); }
@@ -6766,17 +6768,30 @@ function renderTaskGroupsDash() {
       <div class="tg-card-sub">${s.done} de ${s.total} concluída${s.total !== 1 ? 's' : ''} · ${s.pending} pendente${s.pending !== 1 ? 's' : ''}${s.overdue ? ` · <span class="tg-card-late">${s.overdue} atrasada${s.overdue !== 1 ? 's' : ''}</span>` : ''}</div>
     </div>`;
   const ids = new Set(groups.map(g => g.id));
-  const noGroup = entries.filter(e => !ids.has(e.task.groupId));
+  const gridHtml = list => {
+    const noGroup = list.filter(e => !ids.has(e.task.groupId));
+    return `<div class="tg-dash-grid">
+      ${cardHtml('', 'Todas as tarefas', '', stat(list), false)}
+      ${groups.map(g => cardHtml(g.id, g.name, g.color, stat(list.filter(e => e.task.groupId === g.id)), true)).join('')}
+      ${groups.length && noGroup.length ? cardHtml('__none', 'Sem grupo', '', stat(noGroup), false) : ''}
+    </div>`;
+  };
+  let body;
+  if (tvUserFilter === 'all') {
+    const people = [['priscila', 'Priscila'], ['paul', 'Paul']];
+    const sections = people.map(([uid, name]) => [name, entries.filter(e => (e.task.assignees || []).includes(uid))]);
+    const orphans = entries.filter(e => !(e.task.assignees || []).some(a => a === 'priscila' || a === 'paul'));
+    if (orphans.length) sections.push(['Sem responsável', orphans]);
+    body = sections.map(([name, list]) => `<div class="tg-person-label">${escHtml(name)}</div>${gridHtml(list)}`).join('');
+  } else {
+    body = gridHtml(entries);
+  }
   wrap.innerHTML = `
     <div class="tg-dash-hdr">
       <span class="tg-dash-title">Grupos de tarefas</span>
       <button type="button" class="tg-dash-new" id="tgDashNew">+ Novo grupo</button>
     </div>
-    <div class="tg-dash-grid">
-      ${cardHtml('', 'Todas as tarefas', '', stat(entries), false)}
-      ${groups.map(g => cardHtml(g.id, g.name, g.color, stat(entries.filter(e => e.task.groupId === g.id)), true)).join('')}
-      ${groups.length && noGroup.length ? cardHtml('__none', 'Sem grupo', '', stat(noGroup), false) : ''}
-    </div>`;
+    ${body}`;
   wrap.querySelector('#tgDashNew').addEventListener('click', () => openGroupDialog(null));
   wrap.querySelectorAll('.tg-card').forEach(c => c.addEventListener('click', () => setTaskGroupFilter(c.dataset.tgid)));
   wrap.querySelectorAll('[data-tgedit]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); openGroupDialog(b.dataset.tgedit); }));
