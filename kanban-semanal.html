@@ -5323,7 +5323,7 @@ function loadCustomClients() { try { const a = JSON.parse(localStorage.getItem('
 (function mergeCustomClients() {
   const known = new Set(CLIENTS.map(c => c.id));
   loadCustomClients().forEach(c => {
-    if (!c || typeof c.id !== 'string' || !/^[a-z0-9-]{1,60}$/.test(c.id) || known.has(c.id) || c.id === 'moving' || c.id === 'priscila-becker') return;
+    if (!c || typeof c.id !== 'string' || !/^[a-z0-9-]{1,60}$/.test(c.id) || known.has(c.id) || c.id === 'moving' || c.id === 'priscila-becker' || c.id === 'nossa-casa-de-tres-ugc') return;
     const name = sanitizeClientName(c.name);
     if (!name) return;
     known.add(c.id);
@@ -5349,12 +5349,15 @@ const MOVING_CLIENT = { id: 'moving', name: 'Vento Marketing', color: '#122A1E',
 const OWN_BOARD = [
   { ...MOVING_CLIENT, platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }] },
   { id: 'priscila-becker', name: 'Priscila Becker', color: '#f472b6', platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }] },
+  { id: 'nossa-casa-de-tres-ugc', name: 'Nossa Casa de Três - UGC', color: '#f59e0b', platforms: [{ id: 'ig', cls: 'plat-ig', label: 'IG', feed: 'Feed', stories: 'Stories' }] },
 ];
 function boardClientById(id) { return OWN_BOARD.find(c => c.id === id) || CLIENTS.find(c => c.id === id); }
 
 // Cliente aparece no Gestor de Postagens (quadro semanal) só se não for noKanban,
 // não estiver na pasta Inativos e não tiver sido retirado individualmente do quadro.
-function inBoard(c) { return !c.noKanban && !c.inactive && !c.hideFromBoard; }
+// Clientes retirados do quadro semanal por nome (cadastrados pelo botão Adicionar cliente, sem flag no código).
+const BOARD_HIDDEN_NAMES = new Set(['nostos capital', 'verti capital', 'investpre']);
+function inBoard(c) { return !c.noKanban && !c.inactive && !c.hideFromBoard && !BOARD_HIDDEN_NAMES.has(String(c.name || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()); }
 
 const taskFilters     = {}; // clientId → uid ('all'|'priscila'|'paul')
 const taskAssignees   = {}; // clientId → uid ('priscila'|'paul'|'')
@@ -12062,7 +12065,7 @@ function renderUrgencias(cid, panelEl) {
 
 function slugifyClientId(name) {
   let base = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'cliente';
-  const taken = new Set([...CLIENTS.map(c => c.id), 'moving', 'priscila-becker']);
+  const taken = new Set([...CLIENTS.map(c => c.id), 'moving', 'priscila-becker', 'nossa-casa-de-tres-ugc']);
   let id = base, n = 2;
   while (taken.has(id)) id = base + '-' + (n++);
   return id;
