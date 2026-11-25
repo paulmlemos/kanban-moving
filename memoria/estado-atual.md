@@ -405,3 +405,12 @@ Origem: Claude (com Priscila)
 - Obs.: esta máquina não tem Python; servidor local precisa ser subido com Node.
 - **Próximo passo crítico:** testar em localhost o painel por responsável e, com OK da Priscila, fazer o
   scp para produção.
+
+## Complemento 2026-11-24 — Claude (2ª parte da sessão com Priscila)
+
+Tudo abaixo publicado em kanban.movingg.com.br (scp com OK da Priscila) e commitado:
+- **Painel "Grupos de tarefas" por responsável** (`renderTaskGroupsDash`): faixas Priscila / Paul / "Sem responsável"; tarefa com os dois entra nas duas. Grupos sem tarefa da pessoa não aparecem (vale também no filtro individual; efeito colateral: grupo vazio some e o ✎ de editar some junto). Commits `b4f26c1`, `b06739b`.
+- **Menu mobile:** botão ☰ (`#btnMobileMenu`) ficava dentro de `.mm-nav-row`, visível só na aba Postagens; movido pra fora do header, fixo no canto (≤900px) + `body{padding-top:54px}`. Commit `9907ff7`.
+- **Quadro semanal:** Nostos Capital, Verti Capital e InvestPre saem do quadro via `BOARD_HIDDEN_NAMES` em `inBoard()` (são clientes custom em `mmcustomclients`, sem flag no código; seguem na aba Clientes). Perfil próprio novo em `OWN_BOARD`: "Nossa Casa de Três - UGC" (id `nossa-casa-de-tres-ugc`), só no quadro, sem ficha de cliente. Commit `c74c340`.
+- Nenhuma das mudanças foi testada em navegador por mim (só sintaxe dos scripts); Priscila validou o fix do título do modal em produção.
+- **Próximo passo crítico:** nenhum bloqueante. Priscila conferir painel de grupos, menu mobile e quadro semanal em produção.
