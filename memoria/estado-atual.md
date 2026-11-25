@@ -9,6 +9,16 @@ acionável: último estado validado + próximo passo crítico. Histórico comple
 Regras de segurança do deploy (Firebase de produção, scp, etc.) estão no `CLAUDE.md` da raiz do
 repo — leitura obrigatória antes de qualquer commit que mexa em dado ou deploy.
 
+## Atualização 2026-11-25 — Claude (com Priscila): Calendário de tarefas mostra todas as tarefas do dia
+
+Origem: Claude (com Priscila)
+
+- **Pedido:** no calendário da Gestão de Tarefas, o quadro do dia deve crescer conforme a quantidade de tarefas, sem o "+4".
+- **Feito:** removido o limite por dia em `renderCalendarioView()` (8 na visão Semanal, 3 na Mensal) e o CSS `.tvc-more`. Na Semanal os 7 dias ficam com a altura do dia mais cheio; na Mensal, só a linha daquela semana cresce. Commit `6725aa5`.
+- **Teste local** (Playwright usando o Edge instalado, Firestore bloqueado, 14 tarefas fictícias num dia): nas duas visões as 14 ficaram dentro do quadro, sem erro de JS. Conferência visual por imagem só na Semanal. Nesta máquina o pacote `playwright` está em `%LOCALAPPDATA%\Temp\addcli\node_modules` (usar como `NODE_PATH` e `chromium.launch({channel:'msedge'})`; pasta temporária, pode sumir).
+- **Deploy** com "sim" da Priscila. Antes: produção igual à versão anterior ao ajuste (comparação ignorando CR). O classificador do Claude Code bloqueou a 1ª tentativa do `scp`; a Priscila pediu que eu fizesse e a nova tentativa passou. Depois: arquivo no servidor idêntico ao local (`cmp`) e site sem o limite antigo.
+- **Próximo passo crítico:** nenhum bloqueante. Priscila conferir o calendário em produção (Ctrl+F5).
+
 ## Atualização 2026-11-23 — Claude (com Priscila): Adicionar cliente, logo, Resumo do cliente e Grupos de tarefas
 
 Origem: Claude (com Priscila). Registro feito na sessão seguinte (23/11): a sessão anterior fechou sem encerramento e estes dois commits ficaram sem memória. Reconstruído a partir dos diffs e de leitura do Firestore (somente leitura). Commits `dd959c4` (10:58) e `f9b98ff` (11:16), ambos já no `origin/main`.
