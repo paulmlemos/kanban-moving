@@ -958,7 +958,6 @@
     .tvc-day.is-today .tvc-day-num { color: var(--accent); }
     .tvc-pill { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: var(--client-color,var(--sand)); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
     .tvc-pill.done { opacity: .45; text-decoration: line-through; }
-    .tvc-more { font-size: 9px; color: var(--text-faint); font-weight: 700; padding-left: 2px; }
 
     /* Board por status */
     .tvb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
@@ -7007,22 +7006,20 @@ function renderCalendarioView() {
     labelHtml = `${MONTH_LBL[month]} ${year}`;
   }
 
-  const cap = tvCalendarMode === 'week' ? 8 : 3;
   const dayCells = days.map(d => {
     const iso = isoFromDate(d);
     const items = (byDate[iso] || []).sort((a,b) => (a.task.done?1:0) - (b.task.done?1:0));
     const isOther = monthForOtherCheck !== null && d.getMonth() !== monthForOtherCheck;
     const isToday = iso === todayISO;
-    const pillsHtml = items.slice(0, cap).map(({clientId, clientColor, task}) => {
+    const pillsHtml = items.map(({clientId, clientColor, task}) => {
       const g = taskGroupById(task.groupId);
       return `
       <span class="tvc-pill${task.done?' done':''}" style="--client-color:${clientColor}${g ? `;box-shadow:inset 3px 0 0 ${g.color}` : ''}" data-c="${clientId}" data-id="${task.id}" title="${escHtml(task.text)}${g ? ' · ' + escHtml(g.name) : ''}">${escHtml(task.text)}</span>
     `; }).join('');
-    const moreHtml = items.length > cap ? `<span class="tvc-more">+${items.length - cap}</span>` : '';
     return `
       <div class="tvc-day${isOther?' other-month':''}${isToday?' is-today':''}${tvCalendarMode==='week'?' tvc-day-week':''}">
         <span class="tvc-day-num">${d.getDate()}</span>
-        ${pillsHtml}${moreHtml}
+        ${pillsHtml}
       </div>`;
   }).join('');
 
